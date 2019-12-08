@@ -1,0 +1,60 @@
+name: main
+on: 
+  push:
+  pull_request:
+  release:
+    types: [created]
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+    - name: Set up Go 1.13
+      uses: actions/setup-go@v1
+      with:
+        go-version: 1.13
+      id: go
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v1
+    - name: Lint, test and build
+      run: | 
+        # Get golint
+        export PATH=$PATH:$(go env GOPATH)/bin
+        GO111MODULE=off go get -u golang.org/x/lint/golint
+        # Lint and test
+        make vendor
+        make lint
+        make unittest
+        # Build
+        if [ ${{ github.event_name }} == "release" ]; then
+          # github.ref is in the form refs/tags/VERSION, so apply regex to just get version
+          VERSION=$(echo "${{ github.ref }}" | grep -P '([^\/]+$)' -o) 
+        else
+          VERSION=$(git rev-parse --short ${{ github.sha }})
+        fi
+        make docker VERSION=${VERSION}
+    - uses: codecov/codecov-action@v1.0.3
+      if: github.repository == 'jthomperoo/predictive-horizontal-pod-autoscaler'
+      with:
+        token: ${{secrets.CODECOV_TOKEN}}
+        file: ./unit_cover.out
+        flags: unittests
+        name: predictive-horizontal-pod-autoscaler-unittests
+    - name: Deploy
+      env:
+        DOCKER_USER: ${{ secrets.DOCKER_USER }}
+        DOCKER_PASS: ${{ secrets.DOCKER_PASS }}
+      if: github.event_name != 'pull_request' && github.repository == 'jthomperoo/predictive-horizontal-pod-autoscaler'
+      run: |
+        if [ ${{ github.event_name }} == "release" ]; then
+          # github.ref is in the form refs/tags/VERSION, so apply regex to just get version
+          VERSION=$(echo "${{ github.ref }}" | grep -P '([^\/]+$)' -o) 
+        else
+          VERSION=$(git rev-parse --short ${{ github.sha }})
+        fi
+        echo "$DOCKER_PASS" | docker login --username=$DOCKER_USER --password-stdin
+        docker push jthomperoo/predictive-horizontal-pod-autoscaler:${VERSION}
+        if [ ${{ github.event_name }} == "release" ]; then
+          docker tag jthomperoo/predictive-horizontal-pod-autoscaler:${VERSION} jthomperoo/predictive-horizontal-pod-autoscaler:latest
+          docker push jthomperoo/predictive-horizontal-pod-autoscaler:latest
+        fi
