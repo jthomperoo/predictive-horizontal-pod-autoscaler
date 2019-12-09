@@ -130,7 +130,7 @@ func getEvaluation(stdin io.Reader, predictiveConfig *config.Config) {
 
 	// Read in resource metrics provided
 	var resourceMetrics cpametric.ResourceMetrics
-	err = yaml.NewYAMLOrJSONDecoder(bytes.NewReader(stdin), 10).Decode(&resourceMetrics)
+	err = yaml.NewYAMLOrJSONDecoder(stdin, 10).Decode(&resourceMetrics)
 	if err != nil {
 		log.Fatal(err)
 		os.Exit(1)
