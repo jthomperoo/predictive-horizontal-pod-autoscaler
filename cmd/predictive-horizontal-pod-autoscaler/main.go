@@ -38,15 +38,20 @@ import (
 	"strings"
 	"time"
 
+	"github.com/golang-migrate/migrate/v4"
+	"github.com/golang-migrate/migrate/v4/database/sqlite3"
+	_ "github.com/golang-migrate/migrate/v4/source/file" // Driver for loading evaluations from file system
 	cpametric "github.com/jthomperoo/custom-pod-autoscaler/metric"
+	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/prediction/holtwinters"
 	hpaevaluate "github.com/jthomperoo/horizontal-pod-autoscaler/evaluate"
 	"github.com/jthomperoo/horizontal-pod-autoscaler/metric"
 	"github.com/jthomperoo/horizontal-pod-autoscaler/podclient"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/config"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/evaluate"
+	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/prediction"
+	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/prediction/linear"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/stored"
-	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/stored/migrate"
-	_ "github.com/mattn/go-sqlite3" // Driver for sqlite3 database
+	_ "github.com/mattn/go-sqlite3" // Driver for sqlite3 database	appsv1 "k8s.io/api/apps/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	autoscalingv2 "k8s.io/api/autoscaling/v2beta2"
 	"k8s.io/apimachinery/pkg/util/yaml"
@@ -113,14 +118,27 @@ func setup(predictiveConfig *config.Config) {
 	}
 	defer db.Close()
 
-	// Migrate DB
-	err = migrate.Migrate(fmt.Sprintf("file:///%s", predictiveConfig.MigrationPath), db)
+	// Get DB driver
+	driver, err := sqlite3.WithInstance(db, &sqlite3.Config{})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Load migrations
+	m, err := migrate.NewWithDatabaseInstance(fmt.Sprintf("file:///%s", predictiveConfig.MigrationPath), "evaluations", driver)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Apply migrations
+	err = m.Up()
 	if err != nil {
 		log.Fatal(err)
 	}
 }
 
 func getEvaluation(stdin io.Reader, predictiveConfig *config.Config) {
+
 	// Open DB connection
 	db, err := sql.Open("sqlite3", predictiveConfig.DBPath)
 	if err != nil {
@@ -150,9 +168,13 @@ func getEvaluation(stdin io.Reader, predictiveConfig *config.Config) {
 
 	// Set up evaluator
 	evaluator := &evaluate.PredictiveEvaluate{
-		HPAEvaluator: &hpaevaluate.Evaluator{},
+		HPAEvaluator: hpaevaluate.NewEvaluate(0.1),
 		Store: &stored.LocalStore{
 			DB: db,
+		},
+		Predicters: []prediction.Predicter{
+			&linear.Predict{},
+			&holtwinters.Predict{},
 		},
 	}
 

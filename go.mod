@@ -3,17 +3,18 @@ module github.com/jthomperoo/predictive-horizontal-pod-autoscaler
 go 1.13
 
 require (
-	github.com/datastream/holtwinters v0.0.0-20181121060059-1de95a594e76
 	github.com/golang-migrate/migrate/v4 v4.7.0
 	github.com/google/go-cmp v0.3.1
 	github.com/jthomperoo/custom-pod-autoscaler v0.7.0
-	github.com/jthomperoo/horizontal-pod-autoscaler v0.1.0
+	github.com/jthomperoo/holtwinters v0.1.0
+	github.com/jthomperoo/horizontal-pod-autoscaler v0.2.0
 	github.com/mattn/go-sqlite3 v2.0.1+incompatible
 	gonum.org/v1/gonum v0.6.1
 	gopkg.in/yaml.v2 v2.2.2
 	k8s.io/api v0.0.0
 	k8s.io/apimachinery v0.0.0
 	k8s.io/client-go v11.0.0+incompatible
+	k8s.io/kube-state-metrics v1.8.0
 	k8s.io/kubernetes v1.15.0
 	k8s.io/metrics v0.0.0
 )

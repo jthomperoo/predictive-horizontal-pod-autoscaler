@@ -1,19 +1,13 @@
-# Persistent Linear Example
+# Simple Holt-Winters Example
 
 ## Overview
 
-This example is showing a predictive horizontal pod autoscaler using a linear regression model, with persistent volume storage, so if the scaler is deleted the data will persist.  
+This example is showing a predictive horizontal pod autoscaler using holt-winters exponential smoothing time series prediction, with no persistent storage, so if the scaler is deleted the data will not persist.  
 
 ## Usage
 If you want to deploy this onto your cluster, you first need to install the [Custom Pod Autoscaler Operator](https://github.com/jthomperoo/custom-pod-autoscaler-operator), follow the [installation guide for instructions for installing the operator](https://github.com/jthomperoo/custom-pod-autoscaler-operator/blob/master/INSTALL.md).  
 
-This example was based on the [Horizontal Pod Autoscaler Walkthrough](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale-walkthrough/).  
-
-You must first set up a Persistent volume on your cluster, this example will assume you are using Minikube.
-1. Open a shell to the node `minikube ssh`.
-2. Create a data dir `sudo mkdir /mnt/data`.
-3. Exit the shell `exit`.
-Now your persistent volume is set up, you can set up the autoscaler.
+This example was based on the [Horizontal Pod Autoscaler Walkthrough](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale-walkthrough/).
 
 1. Use `kubectl apply -f deployment.yaml` to spin up the app/deployment to manage, called `php-apache`.
 2. Use `kubectl apply -f phpa.yaml` to start the autoscaler, pointing at the previously created deployment.
@@ -27,31 +21,34 @@ Now your persistent volume is set up, you can set up the autoscaler.
 
 The example has some configuration
 ```yaml
-  config: 
-    - name: minReplicas
-      value: "1"
-    - name: maxReplicas
-      value: "5"
-    - name: metrics
-      value: |
-        - type: Resource
-          resource:
-            name: cpu
-            target:
-              type: Utilization
-              averageUtilization: 50
-    - name: predictiveConfig
-      value: |
-        models:
-        - type: Linear
-          name: LinearPrediction
-          perInterval: 1
-          linear:
-            lookAhead: 10000
-            storedValues: 6
-        decisionType: "maximum"
-    - name: interval
-      value: "10000"
+config: 
+  - name: minReplicas
+    value: "1"
+  - name: maxReplicas
+    value: "5"
+  - name: metrics
+    value: |
+    - type: Resource
+        resource:
+        name: cpu
+        target:
+            type: Utilization
+            averageUtilization: 50
+  - name: predictiveConfig
+    value: |
+      models:
+      - type: HoltWinters
+        name: HoltWintersPrediction
+        perInterval: 1
+        holtWinters:
+          alpha: 0.9
+          beta: 0.9
+          gamma: 0.9
+          seasonLength: 5
+          storedSeasons: 2
+      decisionType: "maximum"
+  - name: interval
+    value: "60000"
 ```
 The `minReplicas`, `maxReplicas` and `interval` are Custom Pod Autoscaler options, setting minimum and maximum replicas, and the time interval inbetween each autoscale being run, i.e. the autoscaler checks every 10 seconds.  
 The `metrics` option is a Horizontal Pod Autoscaler option, targeting CPU utilisation.  

@@ -17,6 +17,7 @@ limitations under the License.
 package linear
 
 import (
+	"errors"
 	"math"
 	"sort"
 	"time"
@@ -29,13 +30,23 @@ import (
 // Type linear is the type of the linear predicter
 const Type = "Linear"
 
+// Config represents a linear regression prediction model configuration
+type Config struct {
+	StoredValues int `yaml:"storedValues"`
+	LookAhead    int `yaml:"lookAhead"`
+}
+
 // Predict provides logic for using Linear Regression to make a prediction
 type Predict struct{}
 
 // GetPrediction uses a linear regression to predict what the replica count should be based on historical evaluations
 func (p *Predict) GetPrediction(model *config.Model, evaluations []*stored.Evaluation) (int32, error) {
+	if model.Linear == nil {
+		return 0, errors.New("No Linear configuration provided for model")
+	}
+
 	length := len(evaluations)
-	lookAhead := time.Now().UTC().Add(time.Duration(model.Linear.LookAhead) * time.Second)
+	lookAhead := time.Now().UTC().Add(time.Duration(model.Linear.LookAhead) * time.Millisecond)
 
 	var data = struct {
 		x []float64
@@ -73,15 +84,19 @@ func (p *Predict) GetPrediction(model *config.Model, evaluations []*stored.Evalu
 // GetIDsToRemove provides the list of stored evaluation IDs to remove, if there are too many stored values
 // it will remove the oldest ones
 func (p *Predict) GetIDsToRemove(model *config.Model, evaluations []*stored.Evaluation) ([]int, error) {
+	if model.Linear == nil {
+		return nil, errors.New("No Linear configuration provided for model")
+	}
+
 	// Sort by date created
 	sort.Slice(evaluations, func(i, j int) bool {
 		return evaluations[i].Created.Before(evaluations[j].Created)
 	})
 	var markedForRemove []int
 	// Remove any expired values
-	if int64(len(evaluations)) > model.Linear.StoredValues {
+	if len(evaluations) > model.Linear.StoredValues {
 		// Remove oldest to fit into requirements
-		for i := int64(0); i < int64(len(evaluations))-model.Linear.StoredValues; i++ {
+		for i := 0; i < len(evaluations)-model.Linear.StoredValues; i++ {
 			markedForRemove = append(markedForRemove, evaluations[i].ID)
 		}
 	}

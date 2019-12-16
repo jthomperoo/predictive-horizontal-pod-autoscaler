@@ -22,27 +22,10 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/config"
+	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/fake"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/prediction"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/stored"
 )
-
-type fakePredicter struct {
-	GetPredictionReactor  func(model *config.Model, evaluations []*stored.Evaluation) (int32, error)
-	GetIDsToRemoveReactor func(model *config.Model, evaluations []*stored.Evaluation) ([]int, error)
-	GetTypeReactor        func() string
-}
-
-func (f *fakePredicter) GetIDsToRemove(model *config.Model, evaluations []*stored.Evaluation) ([]int, error) {
-	return f.GetIDsToRemoveReactor(model, evaluations)
-}
-
-func (f *fakePredicter) GetPrediction(model *config.Model, evaluations []*stored.Evaluation) (int32, error) {
-	return f.GetPredictionReactor(model, evaluations)
-}
-
-func (f *fakePredicter) GetType() string {
-	return f.GetTypeReactor()
-}
 
 func TestModelPredict_GetPrediction(t *testing.T) {
 	equateErrorMessage := cmp.Comparer(func(x, y error) bool {
@@ -78,7 +61,7 @@ func TestModelPredict_GetPrediction(t *testing.T) {
 			0,
 			errors.New("fail to get prediction from child"),
 			[]prediction.Predicter{
-				&fakePredicter{
+				&fake.Predicter{
 					GetPredictionReactor: func(model *config.Model, evaluations []*stored.Evaluation) (int32, error) {
 						return 0, errors.New("fail to get prediction from child")
 					},
@@ -99,7 +82,7 @@ func TestModelPredict_GetPrediction(t *testing.T) {
 			3,
 			nil,
 			[]prediction.Predicter{
-				&fakePredicter{
+				&fake.Predicter{
 					GetPredictionReactor: func(model *config.Model, evaluations []*stored.Evaluation) (int32, error) {
 						return 3, nil
 					},
@@ -120,7 +103,7 @@ func TestModelPredict_GetPrediction(t *testing.T) {
 			5,
 			nil,
 			[]prediction.Predicter{
-				&fakePredicter{
+				&fake.Predicter{
 					GetPredictionReactor: func(model *config.Model, evaluations []*stored.Evaluation) (int32, error) {
 						return 0, errors.New("incorrect model")
 					},
@@ -128,7 +111,7 @@ func TestModelPredict_GetPrediction(t *testing.T) {
 						return "incorrect-model"
 					},
 				},
-				&fakePredicter{
+				&fake.Predicter{
 					GetPredictionReactor: func(model *config.Model, evaluations []*stored.Evaluation) (int32, error) {
 						return 0, errors.New("incorrect model")
 					},
@@ -136,7 +119,7 @@ func TestModelPredict_GetPrediction(t *testing.T) {
 						return "incorrect-model-2"
 					},
 				},
-				&fakePredicter{
+				&fake.Predicter{
 					GetPredictionReactor: func(model *config.Model, evaluations []*stored.Evaluation) (int32, error) {
 						return 5, nil
 					},
@@ -205,7 +188,7 @@ func TestModelPredict_GetIDsToRemove(t *testing.T) {
 			nil,
 			errors.New("fail to get IDs to remove"),
 			[]prediction.Predicter{
-				&fakePredicter{
+				&fake.Predicter{
 					GetIDsToRemoveReactor: func(model *config.Model, evaluations []*stored.Evaluation) ([]int, error) {
 						return nil, errors.New("fail to get IDs to remove")
 					},
@@ -226,7 +209,7 @@ func TestModelPredict_GetIDsToRemove(t *testing.T) {
 			[]int{5},
 			nil,
 			[]prediction.Predicter{
-				&fakePredicter{
+				&fake.Predicter{
 					GetIDsToRemoveReactor: func(model *config.Model, evaluations []*stored.Evaluation) ([]int, error) {
 						return []int{5}, nil
 					},
@@ -247,7 +230,7 @@ func TestModelPredict_GetIDsToRemove(t *testing.T) {
 			[]int{5},
 			nil,
 			[]prediction.Predicter{
-				&fakePredicter{
+				&fake.Predicter{
 					GetIDsToRemoveReactor: func(model *config.Model, evaluations []*stored.Evaluation) ([]int, error) {
 						return []int{1}, nil
 					},
@@ -255,7 +238,7 @@ func TestModelPredict_GetIDsToRemove(t *testing.T) {
 						return "incorrect-model"
 					},
 				},
-				&fakePredicter{
+				&fake.Predicter{
 					GetIDsToRemoveReactor: func(model *config.Model, evaluations []*stored.Evaluation) ([]int, error) {
 						return []int{2}, nil
 					},
@@ -263,7 +246,7 @@ func TestModelPredict_GetIDsToRemove(t *testing.T) {
 						return "incorrect-model-2"
 					},
 				},
-				&fakePredicter{
+				&fake.Predicter{
 					GetIDsToRemoveReactor: func(model *config.Model, evaluations []*stored.Evaluation) ([]int, error) {
 						return []int{5}, nil
 					},
