@@ -1,12 +1,12 @@
 apiVersion: custompodautoscaler.com/v1alpha1
 kind: CustomPodAutoscaler
 metadata:
-  name: simple-linear-example
+  name: simple-holt-winters-example
 spec:
   template:
     spec:
       containers:
-      - name: simple-linear-example
+      - name: simple-holt-winters-example
         image: jthomperoo/predictive-horizontal-pod-autoscaler:latest
         imagePullPolicy: IfNotPresent
   scaleTargetRef:
@@ -29,21 +29,24 @@ spec:
     - name: predictiveConfig
       value: |
         models:
-        - type: Linear
-          name: LinearPrediction
+        - type: HoltWinters
+          name: HoltWintersPrediction
           perInterval: 1
-          linear:
-            lookAhead: 10000
-            storedValues: 6
+          holtWinters:
+            alpha: 0.9
+            beta: 0.9
+            gamma: 0.9
+            seasonLength: 5
+            storedSeasons: 2
         decisionType: "maximum"
     - name: interval
-      value: "10000"
+      value: "60000"
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   creationTimestamp: null
-  name: simple-linear-example
+  name: simple-holt-winters-example
 rules:
 - apiGroups:
   - ""

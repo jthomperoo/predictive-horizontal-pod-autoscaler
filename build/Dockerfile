@@ -15,6 +15,10 @@
 # CPA base image
 FROM registry.access.redhat.com/ubi8/ubi
 
+
+ENV USER_UID=1001 \
+    USER_NAME=custom-pod-autoscaler-operator
+
 # Install sqlite and container deps
 RUN dnf install sqlite wget -y
 
@@ -30,5 +34,12 @@ COPY build/entrypoint.sh /
 COPY config.yaml dist/* ./
 # Add in db migrations
 COPY sql ./sql
+
+RUN mkdir -p ${HOME} && \
+    chown ${USER_UID}:0 ${HOME} && \
+    chmod ug+rwx $HOME && \
+    chmod g+rw /etc/passwd
+
+USER ${USER_UID}
 
 CMD [ "/entrypoint.sh" ]

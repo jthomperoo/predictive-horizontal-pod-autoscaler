@@ -17,6 +17,7 @@ limitations under the License.
 package linear_test
 
 import (
+	"errors"
 	"testing"
 	"time"
 
@@ -42,13 +43,21 @@ func TestPredict_GetPrediction(t *testing.T) {
 		evaluations []*stored.Evaluation
 	}{
 		{
+			"Fail no Linear configuration",
+			0,
+			errors.New("No Linear configuration provided for model"),
+			&config.Model{},
+			[]*stored.Evaluation{},
+		},
+		{
 			"Successful prediction",
-			6,
+			5,
 			nil,
 			&config.Model{
 				Type: linear.Type,
 				Linear: &config.Linear{
-					LookAhead: 10,
+					StoredValues: 5,
+					LookAhead:    0,
 				},
 			},
 			[]*stored.Evaluation{
@@ -109,6 +118,13 @@ func TestModelPredict_GetIDsToRemove(t *testing.T) {
 		model       *config.Model
 		evaluations []*stored.Evaluation
 	}{
+		{
+			"Fail no Linear configuration",
+			nil,
+			errors.New("No Linear configuration provided for model"),
+			&config.Model{},
+			[]*stored.Evaluation{},
+		},
 		{
 			"3 IDs too many, mark 3 for removal",
 			[]int{5, 3, 8},

@@ -41,7 +41,7 @@ The example has some configuration
           name: LinearPrediction
           perInterval: 1
           linear:
-            lookAhead: 10
+            lookAhead: 10000
             storedValues: 6
         decisionType: "maximum"
     - name: interval

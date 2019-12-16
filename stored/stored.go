@@ -53,16 +53,16 @@ type Evaluation struct {
 type Model struct {
 	ID              int    `db:"id"`
 	Name            string `db:"model_name"`
-	IntervalsPassed int64  `db:"intervals_passed"`
+	IntervalsPassed int    `db:"intervals_passed"`
 }
 
-// Store allows updating/retrieving evaluations from a data source
-type Store interface {
-	Get(model string) ([]*Evaluation, error)
-	Add(model string, evaluation *evaluate.Evaluation) error
-	Remove(id int) error
+// Storer allows updating/retrieving evaluations from a data source
+type Storer interface {
+	GetEvaluation(model string) ([]*Evaluation, error)
+	AddEvaluation(model string, evaluation *evaluate.Evaluation) error
+	RemoveEvaluation(id int) error
 	GetModel(model string) (*Model, error)
-	UpdateModel(model string, intervalsPassed int64) error
+	UpdateModel(model string, intervalsPassed int) error
 }
 
 // LocalStore is the implementation of a Store for updating/retrieving evaluations from a SQL db
@@ -70,8 +70,8 @@ type LocalStore struct {
 	DB *sql.DB
 }
 
-// Get returns all evaluations associated with a model
-func (s *LocalStore) Get(model string) ([]*Evaluation, error) {
+// GetEvaluation returns all evaluations associated with a model
+func (s *LocalStore) GetEvaluation(model string) ([]*Evaluation, error) {
 	rows, err := s.DB.Query("SELECT evaluation.id, evaluation.created, evaluation.val FROM evaluation, model WHERE evaluation.model_id = model.id AND model.model_name = ?;", model)
 	if err != nil {
 		return nil, err
@@ -90,8 +90,8 @@ func (s *LocalStore) Get(model string) ([]*Evaluation, error) {
 	return saved, nil
 }
 
-// Add inserts a new evaluation associated with a model
-func (s *LocalStore) Add(model string, evaluation *evaluate.Evaluation) error {
+// AddEvaluation inserts a new evaluation associated with a model
+func (s *LocalStore) AddEvaluation(model string, evaluation *evaluate.Evaluation) error {
 	// Get the model for the evaluation
 	modelObj, err := s.GetModel(model)
 	if err != nil {
@@ -122,8 +122,8 @@ func (s *LocalStore) Add(model string, evaluation *evaluate.Evaluation) error {
 	return tx.Commit()
 }
 
-// Remove deletes an evaluation by the ID provided
-func (s *LocalStore) Remove(id int) error {
+// RemoveEvaluation deletes an evaluation by the ID provided
+func (s *LocalStore) RemoveEvaluation(id int) error {
 	_, err := s.DB.Exec("DELETE FROM evaluation WHERE id = $1;", id)
 	return err
 }
@@ -142,7 +142,7 @@ func (s *LocalStore) GetModel(model string) (*Model, error) {
 }
 
 // UpdateModel updates the model in the DB with the name provided, setting the intervals_passed value
-func (s *LocalStore) UpdateModel(model string, intervalsPassed int64) error {
+func (s *LocalStore) UpdateModel(model string, intervalsPassed int) error {
 	modelObj, err := s.GetModel(model)
 	if err == sql.ErrNoRows {
 		// Start db transaction
