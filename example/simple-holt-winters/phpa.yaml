@@ -36,10 +36,12 @@ spec:
             alpha: 0.9
             beta: 0.9
             gamma: 0.9
-            seasonLength: 5
-            storedSeasons: 2
+            seasonLength: 6
+            storedSeasons: 4
         decisionType: "maximum"
     - name: interval
+      value: "20000"
+    - name: startTime
       value: "60000"
 ---
 apiVersion: rbac.authorization.k8s.io/v1
