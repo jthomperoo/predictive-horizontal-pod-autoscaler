@@ -23,7 +23,7 @@ ENV USER_UID=1001 \
 RUN dnf install sqlite wget -y
 
 # Install CPA
-RUN wget -qO- https://github.com/jthomperoo/custom-pod-autoscaler/releases/download/v0.7.0/custom-pod-autoscaler.tar.gz | tar xvz && mv dist cpa
+RUN wget -qO- https://github.com/jthomperoo/custom-pod-autoscaler/releases/download/v0.8.0/custom-pod-autoscaler.tar.gz | tar xvz && mv dist cpa
 
 WORKDIR /app
 
@@ -39,6 +39,9 @@ RUN mkdir -p ${HOME} && \
     chown ${USER_UID}:0 ${HOME} && \
     chmod ug+rwx $HOME && \
     chmod g+rw /etc/passwd
+
+RUN mkdir /store && \
+    chown ${USER_UID}:0 /store
 
 USER ${USER_UID}
 

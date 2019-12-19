@@ -12,4 +12,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Added the ability to use Linear Regression models to predict future scaling.
 
+[Unreleased]: https://github.com/jthomperoo/predictive-horizontal-pod-autoscaler/compare/v0.1.0...HEAD
 [v0.1.0]: https://github.com/jthomperoo/predictive-horizontal-pod-autoscaler/releases/tag/v0.1.0
