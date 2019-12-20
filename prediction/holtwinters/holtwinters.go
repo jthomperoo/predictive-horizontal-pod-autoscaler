@@ -18,6 +18,7 @@ package holtwinters
 
 import (
 	"errors"
+	"fmt"
 	"math"
 	"sort"
 
@@ -28,6 +29,13 @@ import (
 
 // Type HoltWinters is the type of the HoltWinters predicter
 const Type = "HoltWinters"
+
+const (
+	// MethodAdditive specifies a HoltWinters time series prediction using the additive method
+	MethodAdditive = "additive"
+	// MethodMultiplicative specifies a HoltWinters time series prediction using the multiplicative method
+	MethodMultiplicative = "multiplicative"
+)
 
 // Predict provides logic for using Linear Regression to make a prediction
 type Predict struct{}
@@ -49,10 +57,26 @@ func (p *Predict) GetPrediction(model *config.Model, evaluations []*stored.Evalu
 		series[i] = float64(evaluation.Evaluation.TargetReplicas)
 	}
 
-	// Build prediction 1 ahead
-	prediction, err := holtwinters.Predict(series, model.HoltWinters.SeasonLength, model.HoltWinters.Alpha, model.HoltWinters.Beta, model.HoltWinters.Gamma, 1)
-	if err != nil {
-		return 0, err
+	var prediction []float64
+	var err error
+
+	switch model.HoltWinters.Method {
+	case MethodAdditive:
+		// Build prediction 1 ahead
+		prediction, err = holtwinters.PredictAdditive(series, model.HoltWinters.SeasonLength, model.HoltWinters.Alpha, model.HoltWinters.Beta, model.HoltWinters.Gamma, 1)
+		if err != nil {
+			return 0, err
+		}
+		break
+	case MethodMultiplicative:
+		// Build prediction 1 ahead
+		prediction, err = holtwinters.PredictMultiplicative(series, model.HoltWinters.SeasonLength, model.HoltWinters.Alpha, model.HoltWinters.Beta, model.HoltWinters.Gamma, 1)
+		if err != nil {
+			return 0, err
+		}
+		break
+	default:
+		return 0, fmt.Errorf("Unknown HoltWinters method '%s'", model.HoltWinters.Method)
 	}
 
 	// Return last value in prediction

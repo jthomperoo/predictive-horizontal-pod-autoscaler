@@ -51,13 +51,16 @@ func TestPredict_GetPrediction(t *testing.T) {
 			[]*stored.Evaluation{},
 		},
 		{
-			"Fail invalid parameters",
+			"Fail invalid method",
 			0,
-			errors.New("Invalid parameter for prediction; alpha must be between 0 and 1, is -1.000000"),
+			errors.New("Unknown HoltWinters method 'invalid'"),
 			&config.Model{
 				HoltWinters: &config.HoltWinters{
+					Alpha:        0.9,
+					Beta:         0.9,
+					Gamma:        0.9,
 					SeasonLength: 2,
-					Alpha:        -1.0,
+					Method:       "invalid",
 				},
 			},
 			[]*stored.Evaluation{
@@ -70,7 +73,27 @@ func TestPredict_GetPrediction(t *testing.T) {
 			},
 		},
 		{
-			"Success less than a full season",
+			"Fail, additive, invalid parameters",
+			0,
+			errors.New("Invalid parameter for prediction; alpha must be between 0 and 1, is -1.000000"),
+			&config.Model{
+				HoltWinters: &config.HoltWinters{
+					SeasonLength: 2,
+					Alpha:        -1.0,
+					Method:       "additive",
+				},
+			},
+			[]*stored.Evaluation{
+				&stored.Evaluation{
+					ID: 1,
+				},
+				&stored.Evaluation{
+					ID: 2,
+				},
+			},
+		},
+		{
+			"Success, additive, less than a full season",
 			0,
 			nil,
 			&config.Model{
@@ -79,12 +102,13 @@ func TestPredict_GetPrediction(t *testing.T) {
 					Beta:         0.9,
 					Gamma:        0.9,
 					SeasonLength: 5,
+					Method:       "additive",
 				},
 			},
 			[]*stored.Evaluation{},
 		},
 		{
-			"Successful prediction",
+			"Successful, additive",
 			4,
 			nil,
 			&config.Model{
@@ -95,6 +119,102 @@ func TestPredict_GetPrediction(t *testing.T) {
 					Gamma:         0.9,
 					SeasonLength:  3,
 					StoredSeasons: 3,
+					Method:        "additive",
+				},
+			},
+			[]*stored.Evaluation{
+				&stored.Evaluation{
+					Created: time.Now().UTC().Add(time.Duration(-80) * time.Second),
+					Evaluation: stored.DBEvaluation{
+						TargetReplicas: 1,
+					},
+				},
+				&stored.Evaluation{
+					Created: time.Now().UTC().Add(time.Duration(-70) * time.Second),
+					Evaluation: stored.DBEvaluation{
+						TargetReplicas: 3,
+					},
+				},
+				&stored.Evaluation{
+					Created: time.Now().UTC().Add(time.Duration(-60) * time.Second),
+					Evaluation: stored.DBEvaluation{
+						TargetReplicas: 1,
+					},
+				},
+				&stored.Evaluation{
+					Created: time.Now().UTC().Add(time.Duration(-50) * time.Second),
+					Evaluation: stored.DBEvaluation{
+						TargetReplicas: 1,
+					},
+				},
+				&stored.Evaluation{
+					Created: time.Now().UTC().Add(time.Duration(-40) * time.Second),
+					Evaluation: stored.DBEvaluation{
+						TargetReplicas: 3,
+					},
+				},
+				&stored.Evaluation{
+					Created: time.Now().UTC().Add(time.Duration(-30) * time.Second),
+					Evaluation: stored.DBEvaluation{
+						TargetReplicas: 1,
+					},
+				},
+				&stored.Evaluation{
+					Created: time.Now().UTC().Add(time.Duration(-20) * time.Second),
+					Evaluation: stored.DBEvaluation{
+						TargetReplicas: 1,
+					},
+				},
+			},
+		},
+		{
+			"Fail, multiplicative, invalid parameters",
+			0,
+			errors.New("Invalid parameter for prediction; alpha must be between 0 and 1, is -1.000000"),
+			&config.Model{
+				HoltWinters: &config.HoltWinters{
+					SeasonLength: 2,
+					Alpha:        -1.0,
+					Method:       "multiplicative",
+				},
+			},
+			[]*stored.Evaluation{
+				&stored.Evaluation{
+					ID: 1,
+				},
+				&stored.Evaluation{
+					ID: 2,
+				},
+			},
+		},
+		{
+			"Success, multiplicative, less than a full season",
+			0,
+			nil,
+			&config.Model{
+				HoltWinters: &config.HoltWinters{
+					Alpha:        0.9,
+					Beta:         0.9,
+					Gamma:        0.9,
+					SeasonLength: 5,
+					Method:       "multiplicative",
+				},
+			},
+			[]*stored.Evaluation{},
+		},
+		{
+			"Successful, multiplicative",
+			4,
+			nil,
+			&config.Model{
+				Type: linear.Type,
+				HoltWinters: &config.HoltWinters{
+					Alpha:         0.9,
+					Beta:          0.9,
+					Gamma:         0.9,
+					SeasonLength:  3,
+					StoredSeasons: 3,
+					Method:        "multiplicative",
 				},
 			},
 			[]*stored.Evaluation{

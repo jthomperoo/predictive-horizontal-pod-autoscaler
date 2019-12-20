@@ -6,7 +6,7 @@ require (
 	github.com/golang-migrate/migrate/v4 v4.7.0
 	github.com/google/go-cmp v0.3.1
 	github.com/jthomperoo/custom-pod-autoscaler v0.8.0
-	github.com/jthomperoo/holtwinters v0.1.0
+	github.com/jthomperoo/holtwinters v0.2.0
 	github.com/jthomperoo/horizontal-pod-autoscaler v0.3.0
 	github.com/mattn/go-sqlite3 v2.0.1+incompatible
 	gonum.org/v1/gonum v0.6.1

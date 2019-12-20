@@ -54,6 +54,7 @@ type HoltWinters struct {
 	Gamma         float64 `yaml:"gamma"`
 	SeasonLength  int     `yaml:"seasonLength"`
 	StoredSeasons int     `yaml:"storedSeasons"`
+	Method        string  `yaml:"method"`
 }
 
 // Linear represents a linear regression prediction model configuration

@@ -38,6 +38,7 @@ spec:
             gamma: 0.9
             seasonLength: 6
             storedSeasons: 4
+            method: "additive"
         decisionType: "maximum"
     - name: interval
       value: "20000"
