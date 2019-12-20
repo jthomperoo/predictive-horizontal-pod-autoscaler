@@ -54,6 +54,7 @@ config:
           gamma: 0.9
           seasonLength: 6
           storedSeasons: 4
+          method: "additive"
       decisionType: "maximum"
   - name: interval
     value: "20000"
@@ -70,4 +71,6 @@ config:
       * **alpha**, **beta**, **gamma** - these are the smoothing coefficients for level, trend and seasonality respectively.
       * **seasonLength** - the length of a season in base unit intervals, for this example interval is `20000` (20 seconds), and season length is `6`, resulting in a season length of 20 * 6 = 120 seconds = 2 minutes.
       * **storedSeasons** - the number of seasons to store, for this example `4`, if there are more than 4 seasons stored, the oldest ones are removed.
+      * **method** - the Holt-Winters method to use, either `additive` or `multiplicative`.
+  * **decisionType** - strategy for resolving multiple models, either `maximum`, `minimum` or `mean`, in this case `maximum`, meaning take the highest predicted value.
 
