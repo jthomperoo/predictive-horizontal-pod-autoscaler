@@ -33,7 +33,7 @@ config:
   - name: minReplicas
     value: "1"
   - name: maxReplicas
-    value: "5"
+    value: "10"
   - name: metrics
     value: |
       - type: Resource
