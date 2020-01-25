@@ -20,8 +20,8 @@ import (
 	"database/sql"
 	"math"
 
+	"github.com/jthomperoo/custom-pod-autoscaler/autoscaler"
 	cpaevaluate "github.com/jthomperoo/custom-pod-autoscaler/evaluate"
-	"github.com/jthomperoo/custom-pod-autoscaler/scaler"
 	hpaevaluate "github.com/jthomperoo/horizontal-pod-autoscaler/evaluate"
 	"github.com/jthomperoo/horizontal-pod-autoscaler/metric"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/config"
@@ -68,7 +68,7 @@ func (p *PredictiveEvaluate) GetEvaluation(predictiveConfig *config.Config, metr
 		}
 
 		isRunInterval := dbModel.IntervalsPassed >= model.PerInterval
-		isRunType := runType == scaler.RunType
+		isRunType := runType == autoscaler.RunType
 
 		// If not enough intervals have passed, increment the number of intervals passed,
 		// prediction will still be calculated, but current value will not be inserted/values

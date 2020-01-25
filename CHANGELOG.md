@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Multiplicative method for Holt-Winters time series prediction.
 ### Changed
+- Update Custom Pod Autoscaler version to v0.10.0.
+- Update Horizontal Pod Autoscaler version to v0.4.0.
 - Holt-Winters no longer additive by default, must specify a method, either `additive` or `multiplicative` in the Holt-Winters configuration.
 
 ## [v0.2.0] - 2019-12-19

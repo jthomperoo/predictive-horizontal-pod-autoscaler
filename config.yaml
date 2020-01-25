@@ -1,9 +1,17 @@
 evaluate: 
   type: shell
   timeout: 5000
-  shell: "/app/predictive-horizontal-pod-autoscaler -mode=evaluate"
+  shell: 
+    entrypoint: "/bin/sh"
+    command: 
+      - "-c"
+      - "/app/predictive-horizontal-pod-autoscaler -mode=evaluate"
 metric: 
   type: shell
   timeout: 5000
-  shell: "/app/predictive-horizontal-pod-autoscaler -mode=metric"
+  shell: 
+    entrypoint: "/bin/sh"
+    command: 
+      - "-c"
+      - "/app/predictive-horizontal-pod-autoscaler -mode=metric"
 runMode: per-resource

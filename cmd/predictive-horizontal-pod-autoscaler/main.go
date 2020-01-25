@@ -42,21 +42,24 @@ import (
 	"github.com/golang-migrate/migrate/v4/database/sqlite3"
 	_ "github.com/golang-migrate/migrate/v4/source/file" // Driver for loading evaluations from file system
 	cpametric "github.com/jthomperoo/custom-pod-autoscaler/metric"
-	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/prediction/holtwinters"
 	hpaevaluate "github.com/jthomperoo/horizontal-pod-autoscaler/evaluate"
 	"github.com/jthomperoo/horizontal-pod-autoscaler/metric"
 	"github.com/jthomperoo/horizontal-pod-autoscaler/podclient"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/config"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/evaluate"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/prediction"
+	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/prediction/holtwinters"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/prediction/linear"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/stored"
 	_ "github.com/mattn/go-sqlite3" // Driver for sqlite3 database	appsv1 "k8s.io/api/apps/v1"
-	appsv1 "k8s.io/api/apps/v1"
 	autoscalingv2 "k8s.io/api/autoscaling/v2beta2"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/yaml"
 	cacheddiscovery "k8s.io/client-go/discovery/cached"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/restmapper"
 	"k8s.io/kubernetes/pkg/controller/podautoscaler/metrics"
@@ -138,7 +141,6 @@ func setup(predictiveConfig *config.Config) {
 }
 
 func getEvaluation(stdin io.Reader, predictiveConfig *config.Config) {
-
 	// Open DB connection
 	db, err := sql.Open("sqlite3", predictiveConfig.DBPath)
 	if err != nil {
@@ -195,12 +197,29 @@ func getEvaluation(stdin io.Reader, predictiveConfig *config.Config) {
 }
 
 func getMetrics(stdin io.Reader) {
-	var deployment appsv1.Deployment
-	err := yaml.NewYAMLOrJSONDecoder(stdin, 10).Decode(&deployment)
+	// Get piped value as unstructured k8s resource
+	var unstructuredResource unstructured.Unstructured
+	err := yaml.NewYAMLOrJSONDecoder(stdin, 10).Decode(&unstructuredResource)
 	if err != nil {
 		log.Fatal(err)
 		os.Exit(1)
 	}
+
+	// Create object from version and kind of piped value
+	resourceGVK := unstructuredResource.GroupVersionKind()
+	resourceRuntime, err := scheme.Scheme.New(resourceGVK)
+	if err != nil {
+		log.Fatal(err)
+		os.Exit(1)
+	}
+
+	// Parse the unstructured k8s resource into the object created, then convert to generic metav1.Object
+	err = runtime.DefaultUnstructuredConverter.FromUnstructured(unstructuredResource.Object, resourceRuntime)
+	if err != nil {
+		log.Fatal(err)
+		os.Exit(1)
+	}
+	resource := resourceRuntime.(metav1.Object)
 
 	metricSpecsValue, exists := os.LookupEnv("metrics")
 	if !exists {
@@ -247,7 +266,7 @@ func getMetrics(stdin io.Reader) {
 	), &podclient.OnDemandPodLister{Clientset: clientset}, 5*time.Minute, 30*time.Second)
 
 	// Get metrics for deployment
-	metrics, err := gatherer.GetMetrics(&deployment, metricSpecs, deployment.ObjectMeta.Namespace)
+	metrics, err := gatherer.GetMetrics(resource, metricSpecs, resource.GetNamespace())
 	if err != nil {
 		log.Fatal(err)
 		os.Exit(1)
