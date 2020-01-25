@@ -22,8 +22,8 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/jthomperoo/custom-pod-autoscaler/autoscaler"
 	cpaevaluate "github.com/jthomperoo/custom-pod-autoscaler/evaluate"
-	"github.com/jthomperoo/custom-pod-autoscaler/scaler"
 	hpaevaluate "github.com/jthomperoo/horizontal-pod-autoscaler/evaluate"
 	"github.com/jthomperoo/horizontal-pod-autoscaler/metric"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/config"
@@ -65,7 +65,7 @@ func TestGetEvaluation(t *testing.T) {
 			nil,
 			nil,
 			nil,
-			scaler.RunType,
+			autoscaler.RunType,
 		},
 		{
 			"Fail, fail to retrieve evaluations from store",
@@ -98,7 +98,7 @@ func TestGetEvaluation(t *testing.T) {
 				},
 			},
 			nil,
-			scaler.RunType,
+			autoscaler.RunType,
 		},
 		{
 			"Fail, no model exists, fail to add new",
@@ -134,7 +134,7 @@ func TestGetEvaluation(t *testing.T) {
 				},
 			},
 			nil,
-			scaler.RunType,
+			autoscaler.RunType,
 		},
 		{
 			"Fail, no model exists, add new and fail to retrieve newly added",
@@ -178,7 +178,7 @@ func TestGetEvaluation(t *testing.T) {
 				},
 			},
 			nil,
-			scaler.RunType,
+			autoscaler.RunType,
 		},
 		{
 			"Fail, scaler not interval run, fail to update model",
@@ -218,7 +218,7 @@ func TestGetEvaluation(t *testing.T) {
 				},
 			},
 			nil,
-			scaler.RunType,
+			autoscaler.RunType,
 		},
 		{
 			"Fail, scaler interval run, fail to update model",
@@ -258,7 +258,7 @@ func TestGetEvaluation(t *testing.T) {
 				},
 			},
 			nil,
-			scaler.RunType,
+			autoscaler.RunType,
 		},
 		{
 			"Fail, scaler inteval run, fail to add evaluation",
@@ -301,7 +301,7 @@ func TestGetEvaluation(t *testing.T) {
 				},
 			},
 			nil,
-			scaler.RunType,
+			autoscaler.RunType,
 		},
 		{
 			"Fail, scaler inteval run, fail to get evaluations",
@@ -347,7 +347,7 @@ func TestGetEvaluation(t *testing.T) {
 				},
 			},
 			nil,
-			scaler.RunType,
+			autoscaler.RunType,
 		},
 		{
 			"Fail, scaler inteval run, fail to get prediction",
@@ -396,7 +396,7 @@ func TestGetEvaluation(t *testing.T) {
 				},
 			},
 			nil,
-			scaler.RunType,
+			autoscaler.RunType,
 		},
 		{
 			"Fail, scaler inteval run, fail to get IDs to remove",
@@ -448,7 +448,7 @@ func TestGetEvaluation(t *testing.T) {
 				},
 			},
 			nil,
-			scaler.RunType,
+			autoscaler.RunType,
 		},
 		{
 			"Fail, scaler inteval run, fail to remove evaluations",
@@ -503,7 +503,7 @@ func TestGetEvaluation(t *testing.T) {
 				},
 			},
 			nil,
-			scaler.RunType,
+			autoscaler.RunType,
 		},
 		{
 			"Success, two models, pick maximum replicas, evaluation lower than prediction",
@@ -570,7 +570,7 @@ func TestGetEvaluation(t *testing.T) {
 				DecisionType: config.DecisionMaximum,
 			},
 			nil,
-			scaler.RunType,
+			autoscaler.RunType,
 		},
 		{
 			"Success, two models, pick minimum replicas, evaluation lower than prediction",
@@ -637,7 +637,7 @@ func TestGetEvaluation(t *testing.T) {
 				DecisionType: config.DecisionMinimum,
 			},
 			nil,
-			scaler.RunType,
+			autoscaler.RunType,
 		},
 		{
 			"Success, two models, pick mean replicas, evaluation lower than prediction",
@@ -704,7 +704,7 @@ func TestGetEvaluation(t *testing.T) {
 				DecisionType: config.DecisionMean,
 			},
 			nil,
-			scaler.RunType,
+			autoscaler.RunType,
 		},
 		{
 			"Success, one model, evaluation higher than prediction",
@@ -763,7 +763,7 @@ func TestGetEvaluation(t *testing.T) {
 				DecisionType: config.DecisionMaximum,
 			},
 			nil,
-			scaler.RunType,
+			autoscaler.RunType,
 		},
 	}
 	for _, test := range tests {
