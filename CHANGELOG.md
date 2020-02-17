@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [v0.3.0] - 2020-02-17
 ### Added
 - Multiplicative method for Holt-Winters time series prediction.
 ### Changed
@@ -20,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Added the ability to use Linear Regression models to predict future scaling.
 
-[Unreleased]: https://github.com/jthomperoo/predictive-horizontal-pod-autoscaler/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/jthomperoo/predictive-horizontal-pod-autoscaler/compare/v0.3.0...HEAD
+[v0.3.0]: https://github.com/jthomperoo/predictive-horizontal-pod-autoscaler/compare/v0.2.0...v0.3.0
 [v0.2.0]: https://github.com/jthomperoo/predictive-horizontal-pod-autoscaler/compare/v0.1.0...v0.2.0
 [v0.1.0]: https://github.com/jthomperoo/predictive-horizontal-pod-autoscaler/releases/tag/v0.1.0
