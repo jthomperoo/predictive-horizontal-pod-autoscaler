@@ -52,7 +52,6 @@ import (
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/prediction/linear"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/stored"
 	_ "github.com/mattn/go-sqlite3" // Driver for sqlite3 database	appsv1 "k8s.io/api/apps/v1"
-	autoscalingv2 "k8s.io/api/autoscaling/v2beta2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -89,14 +88,14 @@ func main() {
 	}
 
 	// Parse config
-	predictiveConfig, err := config.LoadConfig([]byte(predictiveConfigEnv))
+	predictiveConfig, err := config.LoadConfig(strings.NewReader(predictiveConfigEnv))
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	switch *modePtr {
 	case "metric":
-		getMetrics(bytes.NewReader(stdin))
+		getMetrics(bytes.NewReader(stdin), predictiveConfig)
 	case "evaluate":
 		getEvaluation(bytes.NewReader(stdin), predictiveConfig)
 	case "setup":
@@ -196,7 +195,7 @@ func getEvaluation(stdin io.Reader, predictiveConfig *config.Config) {
 	fmt.Print(string(jsonEvaluation))
 }
 
-func getMetrics(stdin io.Reader) {
+func getMetrics(stdin io.Reader, predictiveConfig *config.Config) {
 	// Get piped value as unstructured k8s resource
 	var unstructuredResource unstructured.Unstructured
 	err := yaml.NewYAMLOrJSONDecoder(stdin, 10).Decode(&unstructuredResource)
@@ -221,21 +220,7 @@ func getMetrics(stdin io.Reader) {
 	}
 	resource := resourceRuntime.(metav1.Object)
 
-	metricSpecsValue, exists := os.LookupEnv("metrics")
-	if !exists {
-		log.Fatal("Metric specs not supplied")
-		os.Exit(1)
-	}
-
-	// Read in metric specs to evaluate
-	var metricSpecs []autoscalingv2.MetricSpec
-	err = yaml.NewYAMLOrJSONDecoder(strings.NewReader(metricSpecsValue), 10).Decode(&metricSpecs)
-	if err != nil {
-		log.Fatal(err)
-		os.Exit(1)
-	}
-
-	if len(metricSpecs) == 0 {
+	if len(predictiveConfig.Metrics) == 0 {
 		log.Fatal("Metric specs not supplied")
 		os.Exit(1)
 	}
@@ -266,7 +251,7 @@ func getMetrics(stdin io.Reader) {
 	), &podclient.OnDemandPodLister{Clientset: clientset}, 5*time.Minute, 30*time.Second)
 
 	// Get metrics for deployment
-	metrics, err := gatherer.GetMetrics(resource, metricSpecs, resource.GetNamespace())
+	metrics, err := gatherer.GetMetrics(resource, predictiveConfig.Metrics, resource.GetNamespace())
 	if err != nil {
 		log.Fatal(err)
 		os.Exit(1)

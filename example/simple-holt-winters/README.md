@@ -29,40 +29,38 @@ This example was based on the [Horizontal Pod Autoscaler Walkthrough](https://ku
 
 The example has some configuration:
 ```yaml
-config: 
-  - name: minReplicas
-    value: "1"
-  - name: maxReplicas
-    value: "10"
-  - name: metrics
-    value: |
-      - type: Resource
-        resource:
-          name: cpu
-          target:
-            type: Utilization
-            averageUtilization: 50
-  - name: predictiveConfig
-    value: |
-      models:
-      - type: HoltWinters
-        name: HoltWintersPrediction
-        perInterval: 1
-        holtWinters:
-          alpha: 0.9
-          beta: 0.9
-          gamma: 0.9
-          seasonLength: 6
-          storedSeasons: 4
-          method: "additive"
-      decisionType: "maximum"
-  - name: interval
-    value: "20000"
-  - name: startTime
-    value: "60000"
+  config: 
+    - name: minReplicas
+      value: "1"
+    - name: maxReplicas
+      value: "10"
+    - name: predictiveConfig
+      value: |
+        models:
+        - type: HoltWinters
+          name: HoltWintersPrediction
+          perInterval: 1
+          holtWinters:
+            alpha: 0.9
+            beta: 0.9
+            gamma: 0.9
+            seasonLength: 6
+            storedSeasons: 4
+            method: "additive"
+        decisionType: "maximum"
+        metrics:
+        - type: Resource
+          resource:
+            name: cpu
+            target:
+              type: Utilization
+              averageUtilization: 50
+    - name: interval
+      value: "20000"
+    - name: startTime
+      value: "60000"
 ```
 - **minReplicas**, **maxReplicas**, **startTime** and **interval** - Custom Pod Autoscaler options, setting minimum and maximum replicas, the starting time - for this example will start at the nearest full minute, and the time interval inbetween each autoscale being run, i.e. the autoscaler checks every 20 seconds.
-- **metrics** - Horizontal Pod Autoscaler option, targeting 50% CPU utilisation.
 - **predictiveConfig** - configuration of the predictive elements.
   * **models** - predictive models to apply.
     - **type** - 'HoltWinters', using a Holt-Winters predictive model.
@@ -73,4 +71,5 @@ config:
       * **storedSeasons** - the number of seasons to store, for this example `4`, if there are more than 4 seasons stored, the oldest ones are removed.
       * **method** - the Holt-Winters method to use, either `additive` or `multiplicative`.
   * **decisionType** - strategy for resolving multiple models, either `maximum`, `minimum` or `mean`, in this case `maximum`, meaning take the highest predicted value.
+  * **metrics** - Horizontal Pod Autoscaler option, targeting 50% CPU utilisation.
 

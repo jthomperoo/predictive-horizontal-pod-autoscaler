@@ -1,3 +1,34 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: simple-holt-winters-example
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  - replicationcontrollers
+  - replicationcontrollers/scale
+  verbs:
+  - '*'
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  - deployments/scale
+  - replicasets
+  - replicasets/scale
+  - statefulsets
+  - statefulsets/scale
+  verbs:
+  - '*'
+- apiGroups:
+  - metrics.k8s.io
+  resources:
+  - '*'
+  verbs:
+  - '*'
+---
 apiVersion: custompodautoscaler.com/v1alpha1
 kind: CustomPodAutoscaler
 metadata:
@@ -18,14 +49,6 @@ spec:
       value: "1"
     - name: maxReplicas
       value: "10"
-    - name: metrics
-      value: |
-        - type: Resource
-          resource:
-            name: cpu
-            target:
-              type: Utilization
-              averageUtilization: 50
     - name: predictiveConfig
       value: |
         models:
@@ -40,42 +63,14 @@ spec:
             storedSeasons: 4
             method: "additive"
         decisionType: "maximum"
+        metrics:
+        - type: Resource
+          resource:
+            name: cpu
+            target:
+              type: Utilization
+              averageUtilization: 50
     - name: interval
       value: "20000"
     - name: startTime
       value: "60000"
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
-  creationTimestamp: null
-  name: simple-holt-winters-example
-rules:
-- apiGroups:
-  - ""
-  resources:
-  - pods
-  verbs:
-  - '*'
-- apiGroups:
-  - apps
-  resources:
-  - replicasets
-  - deployments
-  - daemonsets
-  - replicasets
-  - statefulsets
-  verbs:
-  - '*'
-- apiGroups:
-  - custompodautoscaler.com
-  resources:
-  - '*'
-  verbs:
-  - '*'
-- apiGroups:
-  - metrics.k8s.io
-  resources:
-  - '*'
-  verbs:
-  - '*'

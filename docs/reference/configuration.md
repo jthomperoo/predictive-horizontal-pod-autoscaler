@@ -103,3 +103,8 @@ The path of the SQL migrations for the SQLite3 database.
 
 List of statistical models to apply.  
 See [the models section for details](../models).
+
+## metrics
+
+List of metrics to target for evaluating replica counts.  
+See [the metrics section for details](../metrics).

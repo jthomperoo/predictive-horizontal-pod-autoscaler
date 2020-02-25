@@ -18,7 +18,10 @@ limitations under the License.
 package config
 
 import (
-	"gopkg.in/yaml.v2"
+	"io"
+
+	autoscalingv2 "k8s.io/api/autoscaling/v2beta2"
+	"k8s.io/apimachinery/pkg/util/yaml"
 )
 
 const (
@@ -34,41 +37,42 @@ const (
 
 // Config holds the configuration of the Predictive element of the PHPA
 type Config struct {
-	Models        []*Model `yaml:"models"`
-	DecisionType  string   `yaml:"decisionType"`
-	DBPath        string   `yaml:"dbPath"`
-	MigrationPath string   `yaml:"migrationPath"`
+	Models        []*Model                   `json:"models"`
+	Metrics       []autoscalingv2.MetricSpec `json:"metrics"`
+	DecisionType  string                     `json:"decisionType"`
+	DBPath        string                     `json:"dbPath"`
+	MigrationPath string                     `json:"migrationPath"`
 }
 
 // Model represents a prediction model to use, e.g. a linear regression
 type Model struct {
-	Type        string       `yaml:"type"`
-	Name        string       `yaml:"name"`
-	PerInterval int          `yaml:"perInterval"`
-	Linear      *Linear      `yaml:"linear"`
-	HoltWinters *HoltWinters `yaml:"holtWinters"`
+	Type        string       `json:"type"`
+	Name        string       `json:"name"`
+	PerInterval int          `json:"perInterval"`
+	Linear      *Linear      `json:"linear"`
+	HoltWinters *HoltWinters `json:"holtWinters"`
 }
 
 // HoltWinters represents a holt-winters exponential smoothing prediction model configuration
 type HoltWinters struct {
-	Alpha         float64 `yaml:"alpha"`
-	Beta          float64 `yaml:"beta"`
-	Gamma         float64 `yaml:"gamma"`
-	SeasonLength  int     `yaml:"seasonLength"`
-	StoredSeasons int     `yaml:"storedSeasons"`
-	Method        string  `yaml:"method"`
+	Alpha         float64 `json:"alpha"`
+	Beta          float64 `json:"beta"`
+	Gamma         float64 `json:"gamma"`
+	SeasonLength  int     `json:"seasonLength"`
+	StoredSeasons int     `json:"storedSeasons"`
+	Method        string  `json:"method"`
 }
 
 // Linear represents a linear regression prediction model configuration
 type Linear struct {
-	StoredValues int `yaml:"storedValues"`
-	LookAhead    int `yaml:"lookAhead"`
+	StoredValues int `json:"storedValues"`
+	LookAhead    int `json:"lookAhead"`
 }
 
 // LoadConfig takes in the predictive config as a byte array and uses it to build the config, overriding default values
-func LoadConfig(configEnv []byte) (*Config, error) {
+func LoadConfig(configEnv io.Reader) (*Config, error) {
 	config := newDefaultConfig()
-	err := yaml.Unmarshal(configEnv, config)
+	err := yaml.NewYAMLOrJSONDecoder(configEnv, 10).Decode(&config)
 	if err != nil {
 		return nil, err
 	}

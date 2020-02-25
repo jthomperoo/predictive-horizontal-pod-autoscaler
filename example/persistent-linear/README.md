@@ -32,14 +32,6 @@ The example has some configuration
       value: "1"
     - name: maxReplicas
       value: "5"
-    - name: metrics
-      value: |
-        - type: Resource
-          resource:
-            name: cpu
-            target:
-              type: Utilization
-              averageUtilization: 50
     - name: predictiveConfig
       value: |
         models:
@@ -50,9 +42,16 @@ The example has some configuration
             lookAhead: 10000
             storedValues: 6
         decisionType: "maximum"
+        metrics:
+        - type: Resource
+          resource:
+            name: cpu
+            target:
+              type: Utilization
+              averageUtilization: 50
     - name: interval
       value: "10000"
 ```
 The `minReplicas`, `maxReplicas` and `interval` are Custom Pod Autoscaler options, setting minimum and maximum replicas, and the time interval inbetween each autoscale being run, i.e. the autoscaler checks every 10 seconds.  
-The `metrics` option is a Horizontal Pod Autoscaler option, targeting CPU utilisation.  
-The `predictiveConfig` option is the Predictive Horizontal Pod Autoscaler options, detailing a linear regression model that runs on every interval, looking 10 seconds ahead, keeping track of the past 6 replica values in order to predict the next result, and the `decisionType` is maximum, which if there were multiple models provided would mean that the PHPA would use the one with the highest replica count; there are two other options, `mean` and `minimum`.  
+The `predictiveConfig` option is the Predictive Horizontal Pod Autoscaler options, detailing a linear regression model that runs on every interval, looking 10 seconds ahead, keeping track of the past 6 replica values in order to predict the next result, and the `decisionType` is maximum, which if there were multiple models provided would mean that the PHPA would use the one with the highest replica count; there are two other options, `mean` and `minimum`. The `metrics` option is a Horizontal Pod Autoscaler option, targeting CPU utilisation.  
+

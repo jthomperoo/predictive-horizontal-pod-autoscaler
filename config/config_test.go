@@ -18,11 +18,14 @@ package config_test
 
 import (
 	"errors"
+	"io"
 	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/config"
+	autoscalingv2 "k8s.io/api/autoscaling/v2beta2"
+	v1 "k8s.io/api/core/v1"
 )
 
 func TestLoadConfig(t *testing.T) {
@@ -37,13 +40,13 @@ func TestLoadConfig(t *testing.T) {
 		description string
 		expected    *config.Config
 		expectedErr error
-		configBytes []byte
+		configBytes io.Reader
 	}{
 		{
 			"Invalid YAML",
 			nil,
-			errors.New("yaml: unmarshal errors:\n  line 1: cannot unmarshal !!str `invalid...` into config.Config"),
-			[]byte("invalid-test"),
+			errors.New(`error unmarshaling JSON: while decoding JSON: json: cannot unmarshal string into Go value of type config.Config`),
+			strings.NewReader("invalid-test"),
 		},
 		{
 			"Success default config",
@@ -53,10 +56,10 @@ func TestLoadConfig(t *testing.T) {
 				MigrationPath: "/app/sql",
 			},
 			nil,
-			[]byte(""),
+			strings.NewReader("valid: true"),
 		},
 		{
-			"Success custom config",
+			"Success custom config, YAML",
 			&config.Config{
 				DecisionType:  "testDecision",
 				DBPath:        "testPath",
@@ -72,9 +75,21 @@ func TestLoadConfig(t *testing.T) {
 						},
 					},
 				},
+				Metrics: []autoscalingv2.MetricSpec{
+					autoscalingv2.MetricSpec{
+						Type: autoscalingv2.ResourceMetricSourceType,
+						Resource: &autoscalingv2.ResourceMetricSource{
+							Name: v1.ResourceCPU,
+							Target: autoscalingv2.MetricTarget{
+								Type:               autoscalingv2.UtilizationMetricType,
+								AverageUtilization: func() *int32 { i := int32(50); return &i }(),
+							},
+						},
+					},
+				},
 			},
 			nil,
-			[]byte(strings.Replace(`
+			strings.NewReader(strings.Replace(`
 			decisionType: testDecision
 			dbPath: testPath
 			migrationPath: testMigrationPath
@@ -85,6 +100,75 @@ func TestLoadConfig(t *testing.T) {
 			  linear:
 			    lookAhead: 50
 			    storedValues: 10
+			metrics:
+			- type: Resource
+			  resource:
+			    name: cpu
+			    target:
+			      type: Utilization
+			      averageUtilization: 50
+			`, "\t", "", -1)),
+		},
+		{
+			"Success custom config, JSON",
+			&config.Config{
+				DecisionType:  "testDecision",
+				DBPath:        "testPath",
+				MigrationPath: "testMigrationPath",
+				Models: []*config.Model{
+					&config.Model{
+						Type:        "test",
+						Name:        "testPrediction",
+						PerInterval: 1,
+						Linear: &config.Linear{
+							LookAhead:    50,
+							StoredValues: 10,
+						},
+					},
+				},
+				Metrics: []autoscalingv2.MetricSpec{
+					autoscalingv2.MetricSpec{
+						Type: autoscalingv2.ResourceMetricSourceType,
+						Resource: &autoscalingv2.ResourceMetricSource{
+							Name: v1.ResourceCPU,
+							Target: autoscalingv2.MetricTarget{
+								Type:               autoscalingv2.UtilizationMetricType,
+								AverageUtilization: func() *int32 { i := int32(50); return &i }(),
+							},
+						},
+					},
+				},
+			},
+			nil,
+			strings.NewReader(strings.Replace(`
+			{
+				"decisionType": "testDecision",
+				"dbPath": "testPath",
+				"migrationPath": "testMigrationPath",
+				"models": [
+				  {
+					"type": "test",
+					"name": "testPrediction",
+					"perInterval": 1,
+					"linear": {
+					  "lookAhead": 50,
+					  "storedValues": 10
+					}
+				  }
+				],
+				"metrics": [
+				  {
+					"type": "Resource",
+					"resource": {
+					  "name": "cpu",
+					  "target": {
+						"type": "Utilization",
+						"averageUtilization": 50
+					  }
+					}
+				  }
+				]
+			  }
 			`, "\t", "", -1)),
 		},
 	}

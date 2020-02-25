@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Documentation as code; configuration reference.
 - New decision type `median`, returns the median average of the predictions.
+- JSON support for configuration options.
+
+### Changed
+- Metric specs now defined in `predictiveConfig` rather than in their own section.
 
 ## [v0.3.0] - 2020-02-17
 ### Added
