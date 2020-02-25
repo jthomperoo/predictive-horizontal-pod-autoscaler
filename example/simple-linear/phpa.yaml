@@ -38,7 +38,7 @@ spec:
     spec:
       containers:
       - name: simple-linear-example
-        image: jthomperoo/predictive-horizontal-pod-autoscaler:latest
+        image: jthomperoo/predictive-horizontal-pod-autoscaler:e923fc8
         imagePullPolicy: Always
   scaleTargetRef:
     apiVersion: apps/v1
@@ -64,7 +64,7 @@ spec:
           resource:
             name: cpu
             target:
-              type: Utilization
               averageUtilization: 50
+              type: Utilization
     - name: interval
       value: "10000"

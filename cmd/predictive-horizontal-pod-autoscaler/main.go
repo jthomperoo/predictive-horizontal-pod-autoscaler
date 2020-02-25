@@ -88,7 +88,7 @@ func main() {
 	}
 
 	// Parse config
-	predictiveConfig, err := config.LoadConfig([]byte(predictiveConfigEnv))
+	predictiveConfig, err := config.LoadConfig(strings.NewReader(predictiveConfigEnv))
 	if err != nil {
 		log.Fatal(err)
 	}
