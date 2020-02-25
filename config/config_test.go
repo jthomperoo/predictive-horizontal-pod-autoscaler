@@ -23,6 +23,8 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/config"
+	autoscalingv2 "k8s.io/api/autoscaling/v2beta2"
+	v1 "k8s.io/api/core/v1"
 )
 
 func TestLoadConfig(t *testing.T) {
@@ -72,6 +74,17 @@ func TestLoadConfig(t *testing.T) {
 						},
 					},
 				},
+				Metrics: []autoscalingv2.MetricSpec{
+					autoscalingv2.MetricSpec{
+						Type: autoscalingv2.ResourceMetricSourceType,
+						Resource: &autoscalingv2.ResourceMetricSource{
+							Name: v1.ResourceCPU,
+							Target: autoscalingv2.MetricTarget{
+								Type: autoscalingv2.UtilizationMetricType,
+							},
+						},
+					},
+				},
 			},
 			nil,
 			[]byte(strings.Replace(`
@@ -85,6 +98,12 @@ func TestLoadConfig(t *testing.T) {
 			  linear:
 			    lookAhead: 50
 			    storedValues: 10
+			metrics:
+			- type: Resource
+			  resource:
+			    name: cpu
+			    target:
+			      type: Utilization
 			`, "\t", "", -1)),
 		},
 	}

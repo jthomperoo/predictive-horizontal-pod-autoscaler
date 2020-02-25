@@ -19,6 +19,7 @@ package config
 
 import (
 	"gopkg.in/yaml.v2"
+	autoscalingv2 "k8s.io/api/autoscaling/v2beta2"
 )
 
 const (
@@ -34,10 +35,11 @@ const (
 
 // Config holds the configuration of the Predictive element of the PHPA
 type Config struct {
-	Models        []*Model `yaml:"models"`
-	DecisionType  string   `yaml:"decisionType"`
-	DBPath        string   `yaml:"dbPath"`
-	MigrationPath string   `yaml:"migrationPath"`
+	Models        []*Model                   `yaml:"models"`
+	Metrics       []autoscalingv2.MetricSpec `yaml:"metrics"`
+	DecisionType  string                     `yaml:"decisionType"`
+	DBPath        string                     `yaml:"dbPath"`
+	MigrationPath string                     `yaml:"migrationPath"`
 }
 
 // Model represents a prediction model to use, e.g. a linear regression

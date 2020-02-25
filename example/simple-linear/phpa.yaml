@@ -49,14 +49,6 @@ spec:
       value: "1"
     - name: maxReplicas
       value: "5"
-    - name: metrics
-      value: |
-        - type: Resource
-          resource:
-            name: cpu
-            target:
-              type: Utilization
-              averageUtilization: 50
     - name: predictiveConfig
       value: |
         models:
@@ -67,5 +59,12 @@ spec:
             lookAhead: 10000
             storedValues: 6
         decisionType: "maximum"
+        metrics:
+        - type: Resource
+          resource:
+            name: cpu
+            target:
+              type: Utilization
+              averageUtilization: 50
     - name: interval
       value: "10000"
