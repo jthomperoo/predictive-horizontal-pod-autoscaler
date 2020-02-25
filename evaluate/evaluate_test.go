@@ -707,6 +707,180 @@ func TestGetEvaluation(t *testing.T) {
 			autoscaler.RunType,
 		},
 		{
+			"Success, four models, pick median replicas, evaluation lower than prediction",
+			&cpaevaluate.Evaluation{
+				TargetReplicas: 6,
+			},
+			nil,
+			&fake.Evaluater{
+				GetEvaluationReactor: func(gatheredMetrics []*metric.Metric) (*cpaevaluate.Evaluation, error) {
+					return &cpaevaluate.Evaluation{
+						TargetReplicas: 0,
+					}, nil
+				},
+			},
+			&fake.Store{
+				GetModelReactor: func(model string) (*stored.Model, error) {
+					return &stored.Model{
+						ID:              2,
+						IntervalsPassed: 3,
+					}, nil
+				},
+				UpdateModelReactor: func(model string, intervalsPassed int) error {
+					return nil
+				},
+				AddEvaluationReactor: func(model string, evaluation *cpaevaluate.Evaluation) error {
+					return nil
+				},
+				GetEvaluationReactor: func(model string) ([]*stored.Evaluation, error) {
+					return []*stored.Evaluation{}, nil
+				},
+				RemoveEvaluationReactor: func(id int) error {
+					return nil
+				},
+			},
+			[]prediction.Predicter{
+				&fake.Predicter{
+					GetTypeReactor: func() string {
+						return "fake"
+					},
+					GetPredictionReactor: func(model *config.Model, evaluations []*stored.Evaluation) (int32, error) {
+						if model.Name == "a" {
+							return 10, nil
+						}
+						if model.Name == "b" {
+							return 2, nil
+						}
+						if model.Name == "c" {
+							return 3, nil
+						}
+						return 9, nil
+					},
+					GetIDsToRemoveReactor: func(model *config.Model, evaluations []*stored.Evaluation) ([]int, error) {
+						return []int{0, 1, 2}, nil
+					},
+				},
+			},
+			&config.Config{
+				Models: []*config.Model{
+					&config.Model{
+						Type:        "fake",
+						PerInterval: 3,
+						Name:        "a",
+					},
+					&config.Model{
+						Type:        "fake",
+						PerInterval: 3,
+						Name:        "b",
+					},
+					&config.Model{
+						Type:        "fake",
+						PerInterval: 3,
+						Name:        "c",
+					},
+					&config.Model{
+						Type:        "fake",
+						PerInterval: 3,
+						Name:        "d",
+					},
+				},
+				DecisionType: config.DecisionMedian,
+			},
+			nil,
+			autoscaler.RunType,
+		},
+		{
+			"Success, five models, pick median replicas, evaluation lower than prediction",
+			&cpaevaluate.Evaluation{
+				TargetReplicas: 5,
+			},
+			nil,
+			&fake.Evaluater{
+				GetEvaluationReactor: func(gatheredMetrics []*metric.Metric) (*cpaevaluate.Evaluation, error) {
+					return &cpaevaluate.Evaluation{
+						TargetReplicas: 0,
+					}, nil
+				},
+			},
+			&fake.Store{
+				GetModelReactor: func(model string) (*stored.Model, error) {
+					return &stored.Model{
+						ID:              2,
+						IntervalsPassed: 3,
+					}, nil
+				},
+				UpdateModelReactor: func(model string, intervalsPassed int) error {
+					return nil
+				},
+				AddEvaluationReactor: func(model string, evaluation *cpaevaluate.Evaluation) error {
+					return nil
+				},
+				GetEvaluationReactor: func(model string) ([]*stored.Evaluation, error) {
+					return []*stored.Evaluation{}, nil
+				},
+				RemoveEvaluationReactor: func(id int) error {
+					return nil
+				},
+			},
+			[]prediction.Predicter{
+				&fake.Predicter{
+					GetTypeReactor: func() string {
+						return "fake"
+					},
+					GetPredictionReactor: func(model *config.Model, evaluations []*stored.Evaluation) (int32, error) {
+						if model.Name == "a" {
+							return 10, nil
+						}
+						if model.Name == "b" {
+							return 2, nil
+						}
+						if model.Name == "c" {
+							return 3, nil
+						}
+						if model.Name == "d" {
+							return 5, nil
+						}
+						return 9, nil
+					},
+					GetIDsToRemoveReactor: func(model *config.Model, evaluations []*stored.Evaluation) ([]int, error) {
+						return []int{0, 1, 2}, nil
+					},
+				},
+			},
+			&config.Config{
+				Models: []*config.Model{
+					&config.Model{
+						Type:        "fake",
+						PerInterval: 3,
+						Name:        "a",
+					},
+					&config.Model{
+						Type:        "fake",
+						PerInterval: 3,
+						Name:        "b",
+					},
+					&config.Model{
+						Type:        "fake",
+						PerInterval: 3,
+						Name:        "c",
+					},
+					&config.Model{
+						Type:        "fake",
+						PerInterval: 3,
+						Name:        "d",
+					},
+					&config.Model{
+						Type:        "fake",
+						PerInterval: 3,
+						Name:        "e",
+					},
+				},
+				DecisionType: config.DecisionMedian,
+			},
+			nil,
+			autoscaler.RunType,
+		},
+		{
 			"Success, one model, evaluation higher than prediction",
 			&cpaevaluate.Evaluation{
 				TargetReplicas: 4,

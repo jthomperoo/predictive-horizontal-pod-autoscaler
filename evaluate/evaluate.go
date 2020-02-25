@@ -19,6 +19,7 @@ package evaluate
 import (
 	"database/sql"
 	"math"
+	"sort"
 
 	"github.com/jthomperoo/custom-pod-autoscaler/autoscaler"
 	cpaevaluate "github.com/jthomperoo/custom-pod-autoscaler/evaluate"
@@ -122,6 +123,9 @@ func (p *PredictiveEvaluate) GetEvaluation(predictiveConfig *config.Config, metr
 		}
 	}
 
+	// Sort predictions
+	sort.Slice(predictions, func(i, j int) bool { return predictions[i] < predictions[j] })
+
 	// Decide which prediction to use
 	targetPrediction := evaluation.TargetReplicas
 	switch predictiveConfig.DecisionType {
@@ -133,6 +137,7 @@ func (p *PredictiveEvaluate) GetEvaluation(predictiveConfig *config.Config, metr
 			}
 		}
 		targetPrediction = max
+		break
 	case config.DecisionMinimum:
 		min := int32(0)
 		for i, prediction := range predictions {
@@ -141,12 +146,23 @@ func (p *PredictiveEvaluate) GetEvaluation(predictiveConfig *config.Config, metr
 			}
 		}
 		targetPrediction = min
+		break
 	case config.DecisionMean:
 		total := int32(0)
 		for _, prediction := range predictions {
 			total += prediction
 		}
 		targetPrediction = int32(math.Ceil(float64(int(total) / len(predictions))))
+		break
+	case config.DecisionMedian:
+		halfIndex := len(predictions) / 2
+		if len(predictions)%2 == 0 {
+			// Even
+			targetPrediction = (predictions[halfIndex-1] + predictions[halfIndex]) / 2
+		} else {
+			// Odd
+			targetPrediction = predictions[halfIndex]
+		}
 	}
 
 	// Only use predicted if the predicted value is above the current value
