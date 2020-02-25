@@ -38,7 +38,7 @@ spec:
     spec:
       containers:
       - name: simple-linear-example
-        image: jthomperoo/predictive-horizontal-pod-autoscaler:e923fc8
+        image: jthomperoo/predictive-horizontal-pod-autoscaler:latest
         imagePullPolicy: Always
   scaleTargetRef:
     apiVersion: apps/v1
