@@ -28,6 +28,8 @@ const (
 	DecisionMinimum = "minimum"
 	// DecisionMean means use the mean average of predicted values
 	DecisionMean = "mean"
+	// DecisionMedian means use the median average of predicted values
+	DecisionMedian = "median"
 )
 
 // Config holds the configuration of the Predictive element of the PHPA

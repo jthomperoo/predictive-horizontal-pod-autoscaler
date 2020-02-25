@@ -74,9 +74,9 @@ Possible values:
 - **maximum** - pick the highest evaluation of the models.
 - **minimum** - pick the lowest evaluation of the models.
 - **mean** - calculate the mean number of replicas between the models.
+- **median** - calculate the median number of replicas between the models.
 
 Decider on which evaluation to pick if there are multiple models provided.
-
 
 ## dbPath
 

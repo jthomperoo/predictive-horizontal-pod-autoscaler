@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - Documentation as code; configuration reference.
+- New decision type `median`, returns the median average of the predictions.
 
 ## [v0.3.0] - 2020-02-17
 ### Added
