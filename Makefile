@@ -19,5 +19,9 @@ docker: default
 	@echo "=============Building docker images============="
 	docker build -f build/Dockerfile -t $(REGISTRY)/$(NAME):$(VERSION) .
 
+doc:
+	@echo "=============Serving docs============="
+	mkdocs serve
+    
 vendor:
 	go mod vendor
