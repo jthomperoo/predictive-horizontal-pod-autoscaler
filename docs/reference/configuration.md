@@ -109,3 +109,32 @@ See [the models section for details](../../user-guide/models).
 
 List of metrics to target for evaluating replica counts.  
 See [the metrics section for details](../../user-guide/metrics).
+
+## cpuInitializationPeriod
+
+Example:
+```yaml
+cpuInitializationPeriod: 150
+```
+Default value: `300` (5 minutes).  
+Set in seconds.  
+Equivalent to `--horizontal-pod-autoscaler-cpu-initialization-period`; the period after pod start when CPU samples might be skipped.  
+
+## initialReadinessDelay
+
+Example:
+```yaml
+initialReadinessDelay: 45
+```
+Default value: `30` (30 seconds).  
+Set in seconds.  
+Equivalent to `--horizontal-pod-autoscaler-initial-readiness-delay`; the period after pod start during which readiness changes will be treated as initial readiness.
+
+## tolerance
+
+Example:
+```yaml
+tolerance: 0.25
+```
+Default value: `0.1`.  
+Equivalent to `--horizontal-pod-autoscaler-tolerance`; the minimum change (from 1.0) in the desired-to-actual metrics ratio for the horizontal pod autoscaler to consider scaling.

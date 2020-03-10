@@ -27,31 +27,34 @@ Now your persistent volume is set up, you can set up the autoscaler.
 
 The example has some configuration
 ```yaml
-  config: 
-    - name: minReplicas
-      value: "1"
-    - name: maxReplicas
-      value: "5"
-    - name: predictiveConfig
-      value: |
-        models:
-        - type: Linear
-          name: LinearPrediction
-          perInterval: 1
-          linear:
-            lookAhead: 10000
-            storedValues: 6
-        decisionType: "maximum"
-        metrics:
-        - type: Resource
-          resource:
-            name: cpu
-            target:
-              type: Utilization
-              averageUtilization: 50
-    - name: interval
-      value: "10000"
+config: 
+  - name: minReplicas
+    value: "1"
+  - name: maxReplicas
+    value: "5"
+  - name: predictiveConfig
+    value: |
+      models:
+      - type: Linear
+        name: LinearPrediction
+        perInterval: 1
+        linear:
+          lookAhead: 10000
+          storedValues: 6
+      decisionType: "maximum"
+      metrics:
+      - type: Resource
+        resource:
+          name: cpu
+          target:
+            averageUtilization: 50
+            type: Utilization
+  - name: interval
+    value: "10000"
+  - name: downscaleStabilization
+    value: "30"
 ```
 The `minReplicas`, `maxReplicas` and `interval` are Custom Pod Autoscaler options, setting minimum and maximum replicas, and the time interval inbetween each autoscale being run, i.e. the autoscaler checks every 10 seconds.  
+The `downscaleStabilization` is also a Custom Pod Autoscaler option, in this case changing the `downscaleStabilization` from the default 300 seconds (5 minutes), to 30 seconds. The `downscaleStabilization` option handles how quickly an autoscaler can scale down, ensuring that it will pick the highest evaluation that has occurred within the last time period described, in this case it will pick the highest evaluation over the past 30 seconds.  
 The `predictiveConfig` option is the Predictive Horizontal Pod Autoscaler options, detailing a linear regression model that runs on every interval, looking 10 seconds ahead, keeping track of the past 6 replica values in order to predict the next result, and the `decisionType` is maximum, which if there were multiple models provided would mean that the PHPA would use the one with the highest replica count; there are two other options, `mean` and `minimum`. The `metrics` option is a Horizontal Pod Autoscaler option, targeting CPU utilisation.  
 

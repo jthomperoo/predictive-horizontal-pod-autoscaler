@@ -74,3 +74,5 @@ spec:
       value: "20000"
     - name: startTime
       value: "60000"
+    - name: downscaleStabilization
+      value: "30"
