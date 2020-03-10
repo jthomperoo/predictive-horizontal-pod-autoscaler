@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Changed
+- Update Custom Pod Autoscaler version to v0.11.0.
+- Update Horizontal Pod Autoscaler version to v0.5.0.
 ### Added
 - Documentation as code; configuration reference.
 - New decision type `median`, returns the median average of the predictions.

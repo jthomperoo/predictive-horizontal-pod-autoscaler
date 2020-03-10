@@ -1,4 +1,4 @@
-# Copyright 2019 The Predictive Horizontal Pod Autoscaler Authors.
+# Copyright 2020 The Predictive Horizontal Pod Autoscaler Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,13 +17,13 @@ FROM registry.access.redhat.com/ubi8/ubi
 
 
 ENV USER_UID=1001 \
-    USER_NAME=custom-pod-autoscaler-operator
+    USER_NAME=predictive-horizontal-pod-autoscaler
 
 # Install sqlite and container deps
 RUN dnf install sqlite wget -y
 
 # Install CPA
-RUN wget -qO- https://github.com/jthomperoo/custom-pod-autoscaler/releases/download/v0.10.0/custom-pod-autoscaler.tar.gz | tar xvz && mv dist cpa
+RUN wget -qO- https://github.com/jthomperoo/custom-pod-autoscaler/releases/download/v0.11.0/custom-pod-autoscaler.tar.gz | tar xvz && mv dist cpa
 
 WORKDIR /app
 
