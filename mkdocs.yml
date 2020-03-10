@@ -2,7 +2,11 @@ site_name: Predictive Horizontal Pod Autoscaler
 theme: readthedocs
 nav:
 - Home: 'index.md'
+- 'User Guide':
+  - Metrics: 'user-guide/metrics.md'
+  - Models: 'user-guide/models.md'
+  - 'Sync Period': 'user-guide/sync-period.md'
+  - 'Downscale Stabilization': 'user-guide/downscale-stabilization.md'
+  - 'Minimum and Maximum Replicas': 'user-guide/min-max-replicas.md'
 - Reference:
   - Configuration: 'reference/configuration.md'
-  - Metrics: 'reference/metrics.md'
-  - Models: 'reference/models.md'

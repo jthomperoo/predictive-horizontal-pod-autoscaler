@@ -15,14 +15,14 @@ Example:
 ```yaml
 - name: predictiveConfig
   value: |
-  models:
-  - type: Linear
-    name: LinearPrediction
-    perInterval: 1
-    linear:
-      lookAhead: 10000
-      storedValues: 6
-    decisionType: "maximum"
+    models:
+    - type: Linear
+      name: LinearPrediction
+      perInterval: 1
+      linear:
+        lookAhead: 10000
+        storedValues: 6
+      decisionType: "maximum"
 ```
 The **linear** component of the configuration handles configuration of the Linear regression options:
 

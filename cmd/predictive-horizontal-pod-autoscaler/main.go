@@ -1,5 +1,5 @@
 /*
-Copyright 2019 The Predictive Horizontal Pod Autoscaler Authors.
+Copyright 2020 The Predictive Horizontal Pod Autoscaler Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -70,6 +70,21 @@ import (
 const (
 	predictiveConfigEnvName = "predictiveConfig"
 )
+
+// EvaluateSpec represents the information fed to the evaluator
+type EvaluateSpec struct {
+	Metrics              []*cpametric.Metric       `json:"metrics"`
+	UnstructuredResource unstructured.Unstructured `json:"resource"`
+	Resource             metav1.Object             `json:"-"`
+	RunType              string                    `json:"runType"`
+}
+
+// MetricSpec represents the information fed to the metric gatherer
+type MetricSpec struct {
+	UnstructuredResource unstructured.Unstructured `json:"resource"`
+	Resource             metav1.Object             `json:"-"`
+	RunType              string                    `json:"runType"`
+}
 
 func main() {
 	stdin, err := ioutil.ReadAll(os.Stdin)
@@ -147,21 +162,31 @@ func getEvaluation(stdin io.Reader, predictiveConfig *config.Config) {
 	}
 	defer db.Close()
 
-	// Read in resource metrics provided
-	var resourceMetrics cpametric.ResourceMetrics
-	err = yaml.NewYAMLOrJSONDecoder(stdin, 10).Decode(&resourceMetrics)
+	var spec EvaluateSpec
+	err = yaml.NewYAMLOrJSONDecoder(stdin, 10).Decode(&spec)
 	if err != nil {
 		log.Fatal(err)
 		os.Exit(1)
 	}
 
-	if len(resourceMetrics.Metrics) != 1 {
-		log.Fatalf("Expected 1 CPA metric, got %d", len(resourceMetrics.Metrics))
+	// Create object from version and kind of piped value
+	resourceGVK := spec.UnstructuredResource.GroupVersionKind()
+	resourceRuntime, err := scheme.Scheme.New(resourceGVK)
+	if err != nil {
+		log.Fatal(err)
 		os.Exit(1)
 	}
 
+	// Parse the unstructured k8s resource into the object created, then convert to generic metav1.Object
+	err = runtime.DefaultUnstructuredConverter.FromUnstructured(spec.UnstructuredResource.Object, resourceRuntime)
+	if err != nil {
+		log.Fatal(err)
+		os.Exit(1)
+	}
+	spec.Resource = resourceRuntime.(metav1.Object)
+
 	var combinedMetrics []*metric.Metric
-	err = yaml.NewYAMLOrJSONDecoder(strings.NewReader(resourceMetrics.Metrics[0].Value), 10).Decode(&combinedMetrics)
+	err = yaml.NewYAMLOrJSONDecoder(strings.NewReader(spec.Metrics[0].Value), 10).Decode(&combinedMetrics)
 	if err != nil {
 		log.Fatal(err)
 		os.Exit(1)
@@ -180,7 +205,7 @@ func getEvaluation(stdin io.Reader, predictiveConfig *config.Config) {
 	}
 
 	// Get evaluation
-	result, err := evaluator.GetEvaluation(predictiveConfig, combinedMetrics, resourceMetrics.RunType)
+	result, err := evaluator.GetEvaluation(predictiveConfig, combinedMetrics, spec.RunType)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -196,16 +221,15 @@ func getEvaluation(stdin io.Reader, predictiveConfig *config.Config) {
 }
 
 func getMetrics(stdin io.Reader, predictiveConfig *config.Config) {
-	// Get piped value as unstructured k8s resource
-	var unstructuredResource unstructured.Unstructured
-	err := yaml.NewYAMLOrJSONDecoder(stdin, 10).Decode(&unstructuredResource)
+	var spec MetricSpec
+	err := yaml.NewYAMLOrJSONDecoder(stdin, 10).Decode(&spec)
 	if err != nil {
 		log.Fatal(err)
 		os.Exit(1)
 	}
 
 	// Create object from version and kind of piped value
-	resourceGVK := unstructuredResource.GroupVersionKind()
+	resourceGVK := spec.UnstructuredResource.GroupVersionKind()
 	resourceRuntime, err := scheme.Scheme.New(resourceGVK)
 	if err != nil {
 		log.Fatal(err)
@@ -213,12 +237,12 @@ func getMetrics(stdin io.Reader, predictiveConfig *config.Config) {
 	}
 
 	// Parse the unstructured k8s resource into the object created, then convert to generic metav1.Object
-	err = runtime.DefaultUnstructuredConverter.FromUnstructured(unstructuredResource.Object, resourceRuntime)
+	err = runtime.DefaultUnstructuredConverter.FromUnstructured(spec.UnstructuredResource.Object, resourceRuntime)
 	if err != nil {
 		log.Fatal(err)
 		os.Exit(1)
 	}
-	resource := resourceRuntime.(metav1.Object)
+	spec.Resource = resourceRuntime.(metav1.Object)
 
 	if len(predictiveConfig.Metrics) == 0 {
 		log.Fatal("Metric specs not supplied")
@@ -251,7 +275,7 @@ func getMetrics(stdin io.Reader, predictiveConfig *config.Config) {
 	), &podclient.OnDemandPodLister{Clientset: clientset}, 5*time.Minute, 30*time.Second)
 
 	// Get metrics for deployment
-	metrics, err := gatherer.GetMetrics(resource, predictiveConfig.Metrics, resource.GetNamespace())
+	metrics, err := gatherer.GetMetrics(spec.Resource, predictiveConfig.Metrics, spec.Resource.GetNamespace())
 	if err != nil {
 		log.Fatal(err)
 		os.Exit(1)

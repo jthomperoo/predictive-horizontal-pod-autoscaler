@@ -27,14 +27,6 @@ spec:
       value: "1"
     - name: maxReplicas
       value: "5"
-    - name: metrics
-      value: |
-        - type: Resource
-          resource:
-            name: cpu
-            target:
-              type: Utilization
-              averageUtilization: 50
     - name: predictiveConfig
       value: |
         models:
@@ -45,6 +37,15 @@ spec:
             lookAhead: 10000
             storedValues: 6
         decisionType: "maximum"
+        metrics:
+        - type: Resource
+          resource:
+            name: cpu
+            target:
+              averageUtilization: 50
+              type: Utilization
+    - name: interval
+      value: "10000"
 ```
 
 The predictiveConfig is provided through this environment variable, and represented in YAML:
@@ -102,9 +103,9 @@ The path of the SQL migrations for the SQLite3 database.
 ## models
 
 List of statistical models to apply.  
-See [the models section for details](../models).
+See [the models section for details](../../user-guide/models).
 
 ## metrics
 
 List of metrics to target for evaluating replica counts.  
-See [the metrics section for details](../metrics).
+See [the metrics section for details](../../user-guide/metrics).
