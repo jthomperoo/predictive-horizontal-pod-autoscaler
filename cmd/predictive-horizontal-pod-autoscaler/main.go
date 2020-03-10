@@ -194,7 +194,7 @@ func getEvaluation(stdin io.Reader, predictiveConfig *config.Config) {
 
 	// Set up evaluator
 	evaluator := &evaluate.PredictiveEvaluate{
-		HPAEvaluator: hpaevaluate.NewEvaluate(0.1),
+		HPAEvaluator: hpaevaluate.NewEvaluate(predictiveConfig.Tolerance),
 		Store: &stored.LocalStore{
 			DB: db,
 		},
@@ -272,7 +272,11 @@ func getMetrics(stdin io.Reader, predictiveConfig *config.Config) {
 			customclient.NewAvailableAPIsGetter(clientset.Discovery()),
 		),
 		externalclient.NewForConfigOrDie(clusterConfig),
-	), &podclient.OnDemandPodLister{Clientset: clientset}, 5*time.Minute, 30*time.Second)
+	),
+		&podclient.OnDemandPodLister{Clientset: clientset},
+		time.Duration(predictiveConfig.CPUInitializationPeriod)*time.Second,
+		time.Duration(predictiveConfig.InitialReadinessDelay)*time.Second,
+	)
 
 	// Get metrics for deployment
 	metrics, err := gatherer.GetMetrics(spec.Resource, predictiveConfig.Metrics, spec.Resource.GetNamespace())

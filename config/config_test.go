@@ -28,6 +28,12 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
+const (
+	defaultTolerance               = float64(0.1)
+	defaultCPUInitializationPeriod = 300
+	defaultInitialReadinessDelay   = 30
+)
+
 func TestLoadConfig(t *testing.T) {
 	equateErrorMessage := cmp.Comparer(func(x, y error) bool {
 		if x == nil || y == nil {
@@ -51,9 +57,12 @@ func TestLoadConfig(t *testing.T) {
 		{
 			"Success default config",
 			&config.Config{
-				DecisionType:  "maximum",
-				DBPath:        "/store/predictive-horizontal-pod-autoscaler.db",
-				MigrationPath: "/app/sql",
+				DecisionType:            "maximum",
+				DBPath:                  "/store/predictive-horizontal-pod-autoscaler.db",
+				MigrationPath:           "/app/sql",
+				Tolerance:               defaultTolerance,
+				CPUInitializationPeriod: defaultCPUInitializationPeriod,
+				InitialReadinessDelay:   defaultInitialReadinessDelay,
 			},
 			nil,
 			strings.NewReader("valid: true"),
@@ -61,9 +70,12 @@ func TestLoadConfig(t *testing.T) {
 		{
 			"Success custom config, YAML",
 			&config.Config{
-				DecisionType:  "testDecision",
-				DBPath:        "testPath",
-				MigrationPath: "testMigrationPath",
+				DecisionType:            "testDecision",
+				DBPath:                  "testPath",
+				MigrationPath:           "testMigrationPath",
+				Tolerance:               0.5,
+				CPUInitializationPeriod: 25,
+				InitialReadinessDelay:   321,
 				Models: []*config.Model{
 					&config.Model{
 						Type:        "test",
@@ -93,6 +105,9 @@ func TestLoadConfig(t *testing.T) {
 			decisionType: testDecision
 			dbPath: testPath
 			migrationPath: testMigrationPath
+			tolerance: 0.5
+			cpuInitializationPeriod: 25
+			initialReadinessDelay: 321
 			models:
 			- type: test
 			  name: testPrediction
@@ -112,9 +127,12 @@ func TestLoadConfig(t *testing.T) {
 		{
 			"Success custom config, JSON",
 			&config.Config{
-				DecisionType:  "testDecision",
-				DBPath:        "testPath",
-				MigrationPath: "testMigrationPath",
+				DecisionType:            "testDecision",
+				DBPath:                  "testPath",
+				MigrationPath:           "testMigrationPath",
+				Tolerance:               defaultTolerance,
+				CPUInitializationPeriod: defaultCPUInitializationPeriod,
+				InitialReadinessDelay:   defaultInitialReadinessDelay,
 				Models: []*config.Model{
 					&config.Model{
 						Type:        "test",

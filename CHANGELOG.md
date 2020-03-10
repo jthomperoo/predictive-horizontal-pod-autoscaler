@@ -5,16 +5,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-### Changed
-- Update Custom Pod Autoscaler version to v0.11.0.
-- Update Horizontal Pod Autoscaler version to v0.5.0.
 ### Added
 - Documentation as code; configuration reference.
 - New decision type `median`, returns the median average of the predictions.
 - JSON support for configuration options.
-
+- Can now configure `tolerance`, `initialReadinessDelay` and `initializationPeriod` that are available to be configured in the K8s HPA.
+- Default `downscaleStabilization` set to `300` (5 minutes) to match K8s HPA.
 ### Changed
 - Metric specs now defined in `predictiveConfig` rather than in their own section.
+- Update Custom Pod Autoscaler version to v0.11.0.
+- Update Horizontal Pod Autoscaler version to v0.5.0.
+- Default `interval` set to `15000` (15 seconds) to match K8s HPA.
+- Default `minReplicas` set to `1` to match K8s HPA.
+- Default `maxReplicas` set to `10` to match K8s HPA.
 
 ## [v0.3.0] - 2020-02-17
 ### Added

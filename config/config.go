@@ -1,5 +1,5 @@
 /*
-Copyright 2019 The Predictive Horizontal Pod Autoscaler Authors.
+Copyright 2020 The Predictive Horizontal Pod Autoscaler Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -35,13 +35,24 @@ const (
 	DecisionMedian = "median"
 )
 
+const (
+	defaultTolerance = float64(0.1)
+	// 5 minute CPU initialization period
+	defaultCPUInitializationPeriod = 300
+	// 30 second initial readiness delay
+	defaultInitialReadinessDelay = 30
+)
+
 // Config holds the configuration of the Predictive element of the PHPA
 type Config struct {
-	Models        []*Model                   `json:"models"`
-	Metrics       []autoscalingv2.MetricSpec `json:"metrics"`
-	DecisionType  string                     `json:"decisionType"`
-	DBPath        string                     `json:"dbPath"`
-	MigrationPath string                     `json:"migrationPath"`
+	Models                  []*Model                   `json:"models"`
+	Metrics                 []autoscalingv2.MetricSpec `json:"metrics"`
+	DecisionType            string                     `json:"decisionType"`
+	DBPath                  string                     `json:"dbPath"`
+	MigrationPath           string                     `json:"migrationPath"`
+	Tolerance               float64                    `json:"tolerance"`
+	CPUInitializationPeriod int                        `json:"cpuInitializationPeriod"`
+	InitialReadinessDelay   int                        `json:"initialReadinessDelay"`
 }
 
 // Model represents a prediction model to use, e.g. a linear regression
@@ -81,8 +92,11 @@ func LoadConfig(configEnv io.Reader) (*Config, error) {
 
 func newDefaultConfig() *Config {
 	return &Config{
-		DecisionType:  "maximum",
-		DBPath:        "/store/predictive-horizontal-pod-autoscaler.db",
-		MigrationPath: "/app/sql",
+		DecisionType:            "maximum",
+		DBPath:                  "/store/predictive-horizontal-pod-autoscaler.db",
+		MigrationPath:           "/app/sql",
+		Tolerance:               defaultTolerance,
+		CPUInitializationPeriod: defaultCPUInitializationPeriod,
+		InitialReadinessDelay:   defaultInitialReadinessDelay,
 	}
 }
