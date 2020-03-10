@@ -68,3 +68,5 @@ spec:
               type: Utilization
     - name: interval
       value: "10000"
+    - name: downscaleStabilization
+      value: "30"

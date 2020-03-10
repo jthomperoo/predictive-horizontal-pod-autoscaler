@@ -99,7 +99,9 @@ spec:
           resource:
             name: cpu
             target:
-              type: Utilization
               averageUtilization: 50
+              type: Utilization
     - name: interval
       value: "10000"
+    - name: downscaleStabilization
+      value: "30"
