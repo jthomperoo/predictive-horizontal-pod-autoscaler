@@ -581,7 +581,7 @@ func TestGetEvaluation(t *testing.T) {
 			&fake.Evaluater{
 				GetEvaluationReactor: func(gatheredMetrics []*metric.Metric) (*cpaevaluate.Evaluation, error) {
 					return &cpaevaluate.Evaluation{
-						TargetReplicas: 0,
+						TargetReplicas: 2,
 					}, nil
 				},
 			},
@@ -642,7 +642,7 @@ func TestGetEvaluation(t *testing.T) {
 		{
 			"Success, two models, pick mean replicas, evaluation lower than prediction",
 			&cpaevaluate.Evaluation{
-				TargetReplicas: 2,
+				TargetReplicas: 1,
 			},
 			nil,
 			&fake.Evaluater{
@@ -707,9 +707,9 @@ func TestGetEvaluation(t *testing.T) {
 			autoscaler.RunType,
 		},
 		{
-			"Success, four models, pick median replicas, evaluation lower than prediction",
+			"Success, four models, pick median replicas",
 			&cpaevaluate.Evaluation{
-				TargetReplicas: 6,
+				TargetReplicas: 3,
 			},
 			nil,
 			&fake.Evaluater{
@@ -790,9 +790,9 @@ func TestGetEvaluation(t *testing.T) {
 			autoscaler.RunType,
 		},
 		{
-			"Success, five models, pick median replicas, evaluation lower than prediction",
+			"Success, five models, pick median replicas",
 			&cpaevaluate.Evaluation{
-				TargetReplicas: 5,
+				TargetReplicas: 4,
 			},
 			nil,
 			&fake.Evaluater{

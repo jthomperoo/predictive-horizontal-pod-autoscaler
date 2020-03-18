@@ -18,6 +18,7 @@ package evaluate
 
 import (
 	"database/sql"
+	"fmt"
 	"math"
 	"sort"
 
@@ -45,7 +46,7 @@ func (p *PredictiveEvaluate) GetEvaluation(predictiveConfig *config.Config, metr
 		return nil, err
 	}
 
-	var predictions []int32
+	predictions := []int32{evaluation.TargetReplicas}
 
 	// Set up predicter with available models
 	predicter := prediction.ModelPredict{
@@ -163,11 +164,12 @@ func (p *PredictiveEvaluate) GetEvaluation(predictiveConfig *config.Config, metr
 			// Odd
 			targetPrediction = predictions[halfIndex]
 		}
+		break
+	default:
+		return nil, fmt.Errorf("Unknown decision type '%s'", predictiveConfig.DecisionType)
 	}
 
-	// Only use predicted if the predicted value is above the current value
-	if targetPrediction > evaluation.TargetReplicas {
-		evaluation.TargetReplicas = targetPrediction
-	}
-	return evaluation, nil
+	return &cpaevaluate.Evaluation{
+		TargetReplicas: targetPrediction,
+	}, nil
 }

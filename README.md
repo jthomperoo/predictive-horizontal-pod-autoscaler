@@ -20,10 +20,6 @@ values and using statistical models against them to produce predictions for the 
 These predictions are compared and can be used instead of the raw replica count calculated by the 
 Horizontal Pod Autoscaler logic.
 
-## Getting started
-
-Check out [this getting started guide for a quick start](https://predictive-horizontal-pod-autoscaler.readthedocs.io/en/latest/user-guide/getting-started).
-
 ## More information
 
 See the [wiki for more information, such as guides and references](https://predictive-horizontal-pod-autoscaler.readthedocs.io/en/latest/).
