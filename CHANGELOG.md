@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Changed
+- Evaluation from HPA now included in list of predicted replica counts, rather than being treated separately at the end. Now included in mean, median, minimum calculations rather than just the maximum calculation.
 
 ## [v0.4.0] - 2020-03-10
 ### Added

@@ -506,6 +506,71 @@ func TestGetEvaluation(t *testing.T) {
 			autoscaler.RunType,
 		},
 		{
+			"Fail, unknown decision type",
+			nil,
+			errors.New("Unknown decision type 'unknown'"),
+			&fake.Evaluater{
+				GetEvaluationReactor: func(gatheredMetrics []*metric.Metric) (*cpaevaluate.Evaluation, error) {
+					return &cpaevaluate.Evaluation{
+						TargetReplicas: 0,
+					}, nil
+				},
+			},
+			&fake.Store{
+				GetModelReactor: func(model string) (*stored.Model, error) {
+					return &stored.Model{
+						ID:              2,
+						IntervalsPassed: 3,
+					}, nil
+				},
+				UpdateModelReactor: func(model string, intervalsPassed int) error {
+					return nil
+				},
+				AddEvaluationReactor: func(model string, evaluation *cpaevaluate.Evaluation) error {
+					return nil
+				},
+				GetEvaluationReactor: func(model string) ([]*stored.Evaluation, error) {
+					return []*stored.Evaluation{}, nil
+				},
+				RemoveEvaluationReactor: func(id int) error {
+					return nil
+				},
+			},
+			[]prediction.Predicter{
+				&fake.Predicter{
+					GetTypeReactor: func() string {
+						return "fake"
+					},
+					GetPredictionReactor: func(model *config.Model, evaluations []*stored.Evaluation) (int32, error) {
+						if model.Name == "lower" {
+							return 1, nil
+						}
+						return 3, nil
+					},
+					GetIDsToRemoveReactor: func(model *config.Model, evaluations []*stored.Evaluation) ([]int, error) {
+						return []int{0, 1, 2}, nil
+					},
+				},
+			},
+			&config.Config{
+				Models: []*config.Model{
+					&config.Model{
+						Type:        "fake",
+						PerInterval: 3,
+						Name:        "lower",
+					},
+					&config.Model{
+						Type:        "fake",
+						PerInterval: 3,
+						Name:        "higher",
+					},
+				},
+				DecisionType: "unknown",
+			},
+			nil,
+			autoscaler.RunType,
+		},
+		{
 			"Success, two models, pick maximum replicas, evaluation lower than prediction",
 			&cpaevaluate.Evaluation{
 				TargetReplicas: 3,
@@ -581,7 +646,7 @@ func TestGetEvaluation(t *testing.T) {
 			&fake.Evaluater{
 				GetEvaluationReactor: func(gatheredMetrics []*metric.Metric) (*cpaevaluate.Evaluation, error) {
 					return &cpaevaluate.Evaluation{
-						TargetReplicas: 0,
+						TargetReplicas: 2,
 					}, nil
 				},
 			},
@@ -642,7 +707,7 @@ func TestGetEvaluation(t *testing.T) {
 		{
 			"Success, two models, pick mean replicas, evaluation lower than prediction",
 			&cpaevaluate.Evaluation{
-				TargetReplicas: 2,
+				TargetReplicas: 1,
 			},
 			nil,
 			&fake.Evaluater{
@@ -707,9 +772,9 @@ func TestGetEvaluation(t *testing.T) {
 			autoscaler.RunType,
 		},
 		{
-			"Success, four models, pick median replicas, evaluation lower than prediction",
+			"Success, four models, pick median replicas",
 			&cpaevaluate.Evaluation{
-				TargetReplicas: 6,
+				TargetReplicas: 3,
 			},
 			nil,
 			&fake.Evaluater{
@@ -790,9 +855,9 @@ func TestGetEvaluation(t *testing.T) {
 			autoscaler.RunType,
 		},
 		{
-			"Success, five models, pick median replicas, evaluation lower than prediction",
+			"Success, five models, pick median replicas",
 			&cpaevaluate.Evaluation{
-				TargetReplicas: 5,
+				TargetReplicas: 4,
 			},
 			nil,
 			&fake.Evaluater{
