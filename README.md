@@ -20,6 +20,22 @@ values and using statistical models against them to produce predictions for the 
 These predictions are compared and can be used instead of the raw replica count calculated by the 
 Horizontal Pod Autoscaler logic.
 
+## Features
+
+* Functionally identical to Horizontal Pod Autoscaler for calculating replica
+  counts without prediction.
+* Choice of statistical models to apply over Horizontal Pod Autoscaler replica
+  counting logic.
+    * Holt-Winters Smoothing
+    * Linear Regression
+* Allows customisation of Kubernetes autoscaling options without master node
+  access. Can therefore work on managed solutions such as EKS or GCP.
+    * CPU Initialization Period.
+    * Downscale Stabilization.
+    * Sync Period.
+    * Initial Readiness Delay.
+* Runs in Kubernetes as a standard Deployment.
+
 ## More information
 
 See the [wiki for more information, such as guides and references](https://predictive-horizontal-pod-autoscaler.readthedocs.io/en/latest/).
