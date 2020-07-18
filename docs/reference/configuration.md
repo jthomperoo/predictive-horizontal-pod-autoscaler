@@ -7,7 +7,7 @@ Beyond specifying models, other configuration options can be set in the `predict
 Predictive Configuration is provided through environment variables, which can be supplied through the Custom Pod Autoscaler YAML shorthand:
 
 ```yaml
-apiVersion: custompodautoscaler.com/v1alpha1
+apiVersion: custompodautoscaler.com/v1
 kind: CustomPodAutoscaler
 metadata:
   name: simple-linear-example
@@ -22,6 +22,7 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: php-apache
+  provisionRole: false
   config: 
     - name: minReplicas
       value: "1"
