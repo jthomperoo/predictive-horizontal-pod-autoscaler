@@ -57,7 +57,7 @@ spec:
     requests:
       storage: 10Mi
 ---
-apiVersion: custompodautoscaler.com/v1alpha1
+apiVersion: custompodautoscaler.com/v1
 kind: CustomPodAutoscaler
 metadata:
   name: predictive-horizontal-pod-autoscaler-example
@@ -79,6 +79,7 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: php-apache
+  provisionRole: false
   config: 
     - name: minReplicas
       value: "1"
