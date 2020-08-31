@@ -237,12 +237,12 @@ github.com/json-iterator/go v1.1.7 h1:KfgG9LzI+pYjr4xvmz/5H4FXjokeP+rlHLhv3iH62F
 github.com/json-iterator/go v1.1.7/go.mod h1:KdQUCv79m/52Kvf8AW2vK1V8akMuk1QjK/uOdHXbAo4=
 github.com/jstemmer/go-junit-report v0.0.0-20190106144839-af01ea7f8024/go.mod h1:6v2b51hI/fHJwM22ozAgKL4VKDeJcHhJFhtBdhmNjmU=
 github.com/jteeuwen/go-bindata v0.0.0-20151023091102-a0ff2567cfb7/go.mod h1:JVvhzYOiGBnFSYRyV00iY8q7/0PThjIYav1p9h5dmKs=
-github.com/jthomperoo/custom-pod-autoscaler v0.11.0 h1:D+pqvvPqhBic5GPOFuARyeU5lu6IEbliHiFFB1MykMQ=
-github.com/jthomperoo/custom-pod-autoscaler v0.11.0/go.mod h1:IXqowId2V8CtKih/aK0ulVxjBfUI5Er6S6iR2EAzFM8=
+github.com/jthomperoo/custom-pod-autoscaler v1.0.0 h1:QvYuoidDCsks7gspno6QMwKFWu7fUQKy/AeK+wnRjhQ=
+github.com/jthomperoo/custom-pod-autoscaler v1.0.0/go.mod h1:u17XF4vuU55t2/U9FesZ5gypneyGJR4avmofHQvnm2Q=
 github.com/jthomperoo/holtwinters v0.2.0 h1:4NcU3z6EfEtqlRF2P9xXv3DSY3TsRekgoJfWnprlI4Y=
 github.com/jthomperoo/holtwinters v0.2.0/go.mod h1:uo/ij0URykDyHDOIGK+Ivt5JsH0xn+uGDpYuvhnIWsU=
-github.com/jthomperoo/horizontal-pod-autoscaler v0.5.0 h1:ZT1ONEwCg3UcdVHjj0+cSD5OAJTI2cCmJbbXlkNQjqs=
-github.com/jthomperoo/horizontal-pod-autoscaler v0.5.0/go.mod h1:rMNmbitxBtL8O0Gx76U/ao3AN0LULqx79ivIlY8aXM4=
+github.com/jthomperoo/horizontal-pod-autoscaler v0.6.0 h1:2IZ/EMUFX7UKt60coesHDoBhZsMi4Buq/ceCO80lf5Y=
+github.com/jthomperoo/horizontal-pod-autoscaler v0.6.0/go.mod h1:xVxTdSmKtrKEq0eWWGm5ODck/7oLcPMizPclFSQKtnA=
 github.com/jtolds/gls v4.20.0+incompatible/go.mod h1:QJZ7F/aHp+rZTRtaJ1ow/lLfFfVYBRgL+9YlvaHOwJU=
 github.com/julienschmidt/httprouter v1.2.0/go.mod h1:SYymIcj16QtmaHHD7aYtjjsJG7VTCxuUUipMqKk8s4w=
 github.com/jung-kurt/gofpdf v1.0.3-0.20190309125859-24315acbbda5/go.mod h1:7Id9E/uU8ce6rXgefFLlgrJj/GYY22cpxn+r32jIOes=
