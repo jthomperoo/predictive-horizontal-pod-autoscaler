@@ -6,6 +6,8 @@ and this project adheres to [Semantic
 Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [v0.6.0] - 2020-08-31
 ### Changed
 - Update Custom Pod Autoscaler version to `v1.0.0`.
 - Update Horizontal Pod Autoscaler version to `v0.6.0`.
@@ -51,7 +53,9 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 - Added the ability to use Linear Regression models to predict future scaling.
 
 [Unreleased]:
-https://github.com/jthomperoo/predictive-horizontal-pod-autoscaler/compare/v0.5.0...HEAD
+https://github.com/jthomperoo/predictive-horizontal-pod-autoscaler/compare/v0.6.0...HEAD
+[v0.6.0]:
+https://github.com/jthomperoo/predictive-horizontal-pod-autoscaler/compare/v0.5.0...v0.6.0
 [v0.5.0]:
 https://github.com/jthomperoo/predictive-horizontal-pod-autoscaler/compare/v0.4.0...v0.5.0
 [v0.4.0]:
