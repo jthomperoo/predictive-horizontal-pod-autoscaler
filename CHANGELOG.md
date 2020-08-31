@@ -6,6 +6,9 @@ and this project adheres to [Semantic
 Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Changed
+- Update Custom Pod Autoscaler version to `v1.0.0`.
+- Update Horizontal Pod Autoscaler version to `v0.6.0`.
 
 ## [v0.5.0] - 2020-03-27
 ### Changed
