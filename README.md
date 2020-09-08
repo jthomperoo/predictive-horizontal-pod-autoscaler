@@ -13,9 +13,8 @@
 </p>
 
 # Predictive Horizontal Pod Autoscaler
-This is a [Custom Pod Autoscaler](https://www.github.com/jthomperoo/custom-pod-autoscaler); aiming
-to have identical functionality to the Horizontal Pod Autoscaler, however with added predictive
-elements.
+This is a [Custom Pod Autoscaler](https://www.github.com/jthomperoo/custom-pod-autoscaler); building on the Horizontal
+Pod Autoscaler functionality to add predictive capabilities by using various statistical methods.
 
 This uses the
 [Horizontal Pod Autoscaler Custom Pod Autoscaler](https://www.github.com/jthomperoo/horizontal-pod-autoscaler)
@@ -23,21 +22,18 @@ extensively to provide most functionality for the Horizontal Pod Autoscaler part
 
 ## How does it work?
 
-This project works by calculating the number of replicas a resource should have, then storing these
-values and using statistical models against them to produce predictions for the future.
-These predictions are compared and can be used instead of the raw replica count calculated by the
-Horizontal Pod Autoscaler logic.
+This project works by calculating the number of replicas a resource should have, then storing these values and using
+statistical models against them to produce predictions for the future. These predictions are compared and can be used
+instead of the raw replica count calculated by the Horizontal Pod Autoscaler logic.
 
 ## Features
 
-* Functionally identical to Horizontal Pod Autoscaler for calculating replica
-  counts without prediction.
-* Choice of statistical models to apply over Horizontal Pod Autoscaler replica
-  counting logic.
+* Functionally identical to Horizontal Pod Autoscaler for calculating replica counts without prediction.
+* Choice of statistical models to apply over Horizontal Pod Autoscaler replica counting logic.
     * Holt-Winters Smoothing
     * Linear Regression
-* Allows customisation of Kubernetes autoscaling options without master node
-  access. Can therefore work on managed solutions such as EKS or GCP.
+* Allows customisation of Kubernetes autoscaling options without master node access. Can therefore work on managed
+solutions such as EKS or GCP.
     * CPU Initialization Period.
     * Downscale Stabilization.
     * Sync Period.
@@ -46,7 +42,8 @@ Horizontal Pod Autoscaler logic.
 
 ## More information
 
-See the [wiki for more information, such as guides and references](https://predictive-horizontal-pod-autoscaler.readthedocs.io/en/latest/).
+See the
+[wiki for more information, such as guides and references](https://predictive-horizontal-pod-autoscaler.readthedocs.io/en/latest/).
 
 ## Developing this project
 ### Environment
