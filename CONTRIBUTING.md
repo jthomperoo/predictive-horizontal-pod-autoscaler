@@ -147,7 +147,7 @@ Project code should pass the linter and all tests should pass.
 ### Pull Requests
 
 All pull requests must pass the CI (linting, tests), and be approved by a maintainer. If your pull request changes
-functionality the changes should be documented.
+functionality the changes should be documented, both in the `CHANGELOG.md` and the `docs/`.
 
 All pull requests are squashed on merge.
 
