@@ -1,5 +1,5 @@
 name: main
-on: 
+on:
   push:
   pull_request:
   release:
@@ -17,18 +17,18 @@ jobs:
     - name: Check out code into the Go module directory
       uses: actions/checkout@v1
     - name: Lint, test and build
-      run: | 
+      run: |
         # Get golint
         export PATH=$PATH:$(go env GOPATH)/bin
         GO111MODULE=off go get -u golang.org/x/lint/golint
         # Lint and test
-        make vendor
+        go mod vendor
         make lint
         make unittest
         # Build
         if [ ${{ github.event_name }} == "release" ]; then
           # github.ref is in the form refs/tags/VERSION, so apply regex to just get version
-          VERSION=$(echo "${{ github.ref }}" | grep -P '([^\/]+$)' -o) 
+          VERSION=$(echo "${{ github.ref }}" | grep -P '([^\/]+$)' -o)
         else
           VERSION=$(git rev-parse --short ${{ github.sha }})
         fi
@@ -48,7 +48,7 @@ jobs:
       run: |
         if [ ${{ github.event_name }} == "release" ]; then
           # github.ref is in the form refs/tags/VERSION, so apply regex to just get version
-          VERSION=$(echo "${{ github.ref }}" | grep -P '([^\/]+$)' -o) 
+          VERSION=$(echo "${{ github.ref }}" | grep -P '([^\/]+$)' -o)
         else
           VERSION=$(git rev-parse --short ${{ github.sha }})
         fi

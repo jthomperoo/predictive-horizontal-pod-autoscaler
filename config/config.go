@@ -20,6 +20,7 @@ package config
 import (
 	"io"
 
+	"github.com/jthomperoo/custom-pod-autoscaler/config"
 	autoscalingv2 "k8s.io/api/autoscaling/v2beta2"
 	"k8s.io/apimachinery/pkg/util/yaml"
 )
@@ -66,12 +67,13 @@ type Model struct {
 
 // HoltWinters represents a holt-winters exponential smoothing prediction model configuration
 type HoltWinters struct {
-	Alpha         float64 `json:"alpha"`
-	Beta          float64 `json:"beta"`
-	Gamma         float64 `json:"gamma"`
-	SeasonLength  int     `json:"seasonLength"`
-	StoredSeasons int     `json:"storedSeasons"`
-	Method        string  `json:"method"`
+	Alpha              *float64       `json:"alpha"`
+	Beta               *float64       `json:"beta"`
+	Gamma              *float64       `json:"gamma"`
+	RuntimeTuningFetch *config.Method `json:"runtimeTuningFetch"`
+	SeasonLength       int            `json:"seasonLength"`
+	StoredSeasons      int            `json:"storedSeasons"`
+	Method             string         `json:"method"`
 }
 
 // Linear represents a linear regression prediction model configuration

@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    run: load-tester
+  name: load-tester
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      run: load-tester
+  template:
+    metadata:
+      labels:
+        run: load-tester
+    spec:
+      containers:
+      - image: load-tester
+        imagePullPolicy: IfNotPresent
+        name: load-tester
+      restartPolicy: Always

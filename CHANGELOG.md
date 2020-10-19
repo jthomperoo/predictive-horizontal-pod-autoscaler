@@ -6,6 +6,8 @@ and this project adheres to [Semantic
 Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- Holt Winters values can now be fetched at runtime, rather than simply being hardcoded.
 
 ## [v0.6.0] - 2020-08-31
 ### Changed

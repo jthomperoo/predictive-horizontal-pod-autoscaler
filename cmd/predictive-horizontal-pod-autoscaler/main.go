@@ -34,6 +34,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
@@ -41,6 +42,9 @@ import (
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/sqlite3"
 	_ "github.com/golang-migrate/migrate/v4/source/file" // Driver for loading evaluations from file system
+	"github.com/jthomperoo/custom-pod-autoscaler/execute"
+	"github.com/jthomperoo/custom-pod-autoscaler/execute/http"
+	"github.com/jthomperoo/custom-pod-autoscaler/execute/shell"
 	cpametric "github.com/jthomperoo/custom-pod-autoscaler/metric"
 	hpaevaluate "github.com/jthomperoo/horizontal-pod-autoscaler/evaluate"
 	"github.com/jthomperoo/horizontal-pod-autoscaler/metric"
@@ -192,6 +196,21 @@ func getEvaluation(stdin io.Reader, predictiveConfig *config.Config) {
 		os.Exit(1)
 	}
 
+	// Set up shell executer
+	shellExec := &shell.Execute{
+		Command: exec.Command,
+	}
+
+	httpExec := &http.Execute{}
+
+	// Combine executers
+	combinedExecute := &execute.CombinedExecute{
+		Executers: []execute.Executer{
+			shellExec,
+			httpExec,
+		},
+	}
+
 	// Set up evaluator
 	evaluator := &evaluate.PredictiveEvaluate{
 		HPAEvaluator: hpaevaluate.NewEvaluate(predictiveConfig.Tolerance),
@@ -200,7 +219,9 @@ func getEvaluation(stdin io.Reader, predictiveConfig *config.Config) {
 		},
 		Predicters: []prediction.Predicter{
 			&linear.Predict{},
-			&holtwinters.Predict{},
+			&holtwinters.Predict{
+				Execute: combinedExecute,
+			},
 		},
 	}
 
