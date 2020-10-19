@@ -22,11 +22,17 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
+	cpaconfig "github.com/jthomperoo/custom-pod-autoscaler/config"
+	"github.com/jthomperoo/custom-pod-autoscaler/fake"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/config"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/prediction/holtwinters"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/prediction/linear"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/stored"
 )
+
+func float64Ptr(val float64) *float64 {
+	return &val
+}
 
 func TestPredict_GetPrediction(t *testing.T) {
 	equateErrorMessage := cmp.Comparer(func(x, y error) bool {
@@ -40,6 +46,7 @@ func TestPredict_GetPrediction(t *testing.T) {
 		description string
 		expected    int32
 		expectedErr error
+		predicter   *holtwinters.Predict
 		model       *config.Model
 		evaluations []*stored.Evaluation
 	}{
@@ -47,18 +54,150 @@ func TestPredict_GetPrediction(t *testing.T) {
 			"Fail no HoltWinters configuration",
 			0,
 			errors.New("No HoltWinters configuration provided for model"),
+			&holtwinters.Predict{},
 			&config.Model{},
 			[]*stored.Evaluation{},
+		},
+		{
+			"Fail, fail to runtime fetch",
+			0,
+			errors.New("fail runtime fetch"),
+			&holtwinters.Predict{
+				Execute: func() *fake.Execute {
+					execute := fake.Execute{}
+					execute.ExecuteWithValueReactor = func(method *cpaconfig.Method, value string) (string, error) {
+						return "", errors.New("fail runtime fetch")
+					}
+					return &execute
+				}(),
+			},
+			&config.Model{
+				HoltWinters: &config.HoltWinters{
+					RuntimeTuningFetch: &cpaconfig.Method{
+						Type:    "test",
+						Timeout: 2500,
+					},
+					SeasonLength: 2,
+					Method:       "additive",
+				},
+			},
+			[]*stored.Evaluation{
+				&stored.Evaluation{
+					ID: 1,
+				},
+				&stored.Evaluation{
+					ID: 2,
+				},
+			},
+		},
+		{
+			"Fail, invalid runtime fetch response",
+			0,
+			errors.New("invalid character 'i' looking for beginning of value"),
+			&holtwinters.Predict{
+				Execute: func() *fake.Execute {
+					execute := fake.Execute{}
+					execute.ExecuteWithValueReactor = func(method *cpaconfig.Method, value string) (string, error) {
+						return "invalid json", nil
+					}
+					return &execute
+				}(),
+			},
+			&config.Model{
+				HoltWinters: &config.HoltWinters{
+					RuntimeTuningFetch: &cpaconfig.Method{
+						Type:    "test",
+						Timeout: 2500,
+					},
+					SeasonLength: 2,
+					Method:       "additive",
+				},
+			},
+			[]*stored.Evaluation{
+				&stored.Evaluation{
+					ID: 1,
+				},
+				&stored.Evaluation{
+					ID: 2,
+				},
+			},
+		},
+		{
+			"Fail no alpha value",
+			0,
+			errors.New("No alpha tuning value provided for Holt-Winters prediction"),
+			&holtwinters.Predict{},
+			&config.Model{
+				HoltWinters: &config.HoltWinters{
+					Beta:         float64Ptr(0.9),
+					Gamma:        float64Ptr(0.9),
+					SeasonLength: 2,
+					Method:       "invalid",
+				},
+			},
+			[]*stored.Evaluation{
+				&stored.Evaluation{
+					ID: 1,
+				},
+				&stored.Evaluation{
+					ID: 2,
+				},
+			},
+		},
+		{
+			"Fail no beta value",
+			0,
+			errors.New("No beta tuning value provided for Holt-Winters prediction"),
+			&holtwinters.Predict{},
+			&config.Model{
+				HoltWinters: &config.HoltWinters{
+					Alpha:        float64Ptr(0.9),
+					Gamma:        float64Ptr(0.9),
+					SeasonLength: 2,
+					Method:       "invalid",
+				},
+			},
+			[]*stored.Evaluation{
+				&stored.Evaluation{
+					ID: 1,
+				},
+				&stored.Evaluation{
+					ID: 2,
+				},
+			},
+		},
+		{
+			"Fail no gamma value",
+			0,
+			errors.New("No gamma tuning value provided for Holt-Winters prediction"),
+			&holtwinters.Predict{},
+			&config.Model{
+				HoltWinters: &config.HoltWinters{
+					Alpha:        float64Ptr(0.9),
+					Beta:         float64Ptr(0.9),
+					SeasonLength: 2,
+					Method:       "invalid",
+				},
+			},
+			[]*stored.Evaluation{
+				&stored.Evaluation{
+					ID: 1,
+				},
+				&stored.Evaluation{
+					ID: 2,
+				},
+			},
 		},
 		{
 			"Fail invalid method",
 			0,
 			errors.New("Unknown HoltWinters method 'invalid'"),
+			&holtwinters.Predict{},
 			&config.Model{
 				HoltWinters: &config.HoltWinters{
-					Alpha:        0.9,
-					Beta:         0.9,
-					Gamma:        0.9,
+					Alpha:        float64Ptr(0.9),
+					Beta:         float64Ptr(0.9),
+					Gamma:        float64Ptr(0.9),
 					SeasonLength: 2,
 					Method:       "invalid",
 				},
@@ -76,10 +215,113 @@ func TestPredict_GetPrediction(t *testing.T) {
 			"Fail, additive, invalid parameters",
 			0,
 			errors.New("Invalid parameter for prediction; alpha must be between 0 and 1, is -1.000000"),
+			&holtwinters.Predict{},
 			&config.Model{
 				HoltWinters: &config.HoltWinters{
 					SeasonLength: 2,
-					Alpha:        -1.0,
+					Alpha:        float64Ptr(-1.0),
+					Beta:         float64Ptr(0.9),
+					Gamma:        float64Ptr(0.9),
+					Method:       "additive",
+				},
+			},
+			[]*stored.Evaluation{
+				&stored.Evaluation{
+					ID: 1,
+				},
+				&stored.Evaluation{
+					ID: 2,
+				},
+			},
+		},
+		{
+			"Success, use fetch but no values returned, so use hardcoded fallback",
+			0,
+			nil,
+			&holtwinters.Predict{
+				Execute: func() *fake.Execute {
+					execute := fake.Execute{}
+					execute.ExecuteWithValueReactor = func(method *cpaconfig.Method, value string) (string, error) {
+						return `{}`, nil
+					}
+					return &execute
+				}(),
+			},
+			&config.Model{
+				HoltWinters: &config.HoltWinters{
+					RuntimeTuningFetch: &cpaconfig.Method{
+						Type:    "test",
+						Timeout: 2500,
+					},
+					Alpha:        float64Ptr(0.9),
+					Beta:         float64Ptr(0.9),
+					Gamma:        float64Ptr(0.9),
+					SeasonLength: 2,
+					Method:       "additive",
+				},
+			},
+			[]*stored.Evaluation{
+				&stored.Evaluation{
+					ID: 1,
+				},
+				&stored.Evaluation{
+					ID: 2,
+				},
+			},
+		},
+		{
+			"Success, provide all values from fetch",
+			0,
+			nil,
+			&holtwinters.Predict{
+				Execute: func() *fake.Execute {
+					execute := fake.Execute{}
+					execute.ExecuteWithValueReactor = func(method *cpaconfig.Method, value string) (string, error) {
+						return `{"alpha":0.2, "beta":0.2, "gamma": 0.2}`, nil
+					}
+					return &execute
+				}(),
+			},
+			&config.Model{
+				HoltWinters: &config.HoltWinters{
+					RuntimeTuningFetch: &cpaconfig.Method{
+						Type:    "test",
+						Timeout: 2500,
+					},
+					SeasonLength: 2,
+					Method:       "additive",
+				},
+			},
+			[]*stored.Evaluation{
+				&stored.Evaluation{
+					ID: 1,
+				},
+				&stored.Evaluation{
+					ID: 2,
+				},
+			},
+		},
+		{
+			"Success, provide alpha and beta values from fetch",
+			0,
+			nil,
+			&holtwinters.Predict{
+				Execute: func() *fake.Execute {
+					execute := fake.Execute{}
+					execute.ExecuteWithValueReactor = func(method *cpaconfig.Method, value string) (string, error) {
+						return `{"alpha":0.2, "beta":0.2}`, nil
+					}
+					return &execute
+				}(),
+			},
+			&config.Model{
+				HoltWinters: &config.HoltWinters{
+					RuntimeTuningFetch: &cpaconfig.Method{
+						Type:    "test",
+						Timeout: 2500,
+					},
+					Gamma:        float64Ptr(0.9),
+					SeasonLength: 2,
 					Method:       "additive",
 				},
 			},
@@ -96,11 +338,12 @@ func TestPredict_GetPrediction(t *testing.T) {
 			"Success, additive, less than a full season",
 			0,
 			nil,
+			&holtwinters.Predict{},
 			&config.Model{
 				HoltWinters: &config.HoltWinters{
-					Alpha:        0.9,
-					Beta:         0.9,
-					Gamma:        0.9,
+					Alpha:        float64Ptr(0.9),
+					Beta:         float64Ptr(0.9),
+					Gamma:        float64Ptr(0.9),
 					SeasonLength: 5,
 					Method:       "additive",
 				},
@@ -111,12 +354,13 @@ func TestPredict_GetPrediction(t *testing.T) {
 			"Successful, additive",
 			4,
 			nil,
+			&holtwinters.Predict{},
 			&config.Model{
 				Type: linear.Type,
 				HoltWinters: &config.HoltWinters{
-					Alpha:         0.9,
-					Beta:          0.9,
-					Gamma:         0.9,
+					Alpha:         float64Ptr(0.9),
+					Beta:          float64Ptr(0.9),
+					Gamma:         float64Ptr(0.9),
 					SeasonLength:  3,
 					StoredSeasons: 3,
 					Method:        "additive",
@@ -171,10 +415,13 @@ func TestPredict_GetPrediction(t *testing.T) {
 			"Fail, multiplicative, invalid parameters",
 			0,
 			errors.New("Invalid parameter for prediction; alpha must be between 0 and 1, is -1.000000"),
+			&holtwinters.Predict{},
 			&config.Model{
 				HoltWinters: &config.HoltWinters{
 					SeasonLength: 2,
-					Alpha:        -1.0,
+					Alpha:        float64Ptr(-1.0),
+					Beta:         float64Ptr(0.9),
+					Gamma:        float64Ptr(0.9),
 					Method:       "multiplicative",
 				},
 			},
@@ -191,11 +438,12 @@ func TestPredict_GetPrediction(t *testing.T) {
 			"Success, multiplicative, less than a full season",
 			0,
 			nil,
+			&holtwinters.Predict{},
 			&config.Model{
 				HoltWinters: &config.HoltWinters{
-					Alpha:        0.9,
-					Beta:         0.9,
-					Gamma:        0.9,
+					Alpha:        float64Ptr(0.9),
+					Beta:         float64Ptr(0.9),
+					Gamma:        float64Ptr(0.9),
 					SeasonLength: 5,
 					Method:       "multiplicative",
 				},
@@ -206,12 +454,13 @@ func TestPredict_GetPrediction(t *testing.T) {
 			"Successful, multiplicative",
 			4,
 			nil,
+			&holtwinters.Predict{},
 			&config.Model{
 				Type: linear.Type,
 				HoltWinters: &config.HoltWinters{
-					Alpha:         0.9,
-					Beta:          0.9,
-					Gamma:         0.9,
+					Alpha:         float64Ptr(0.9),
+					Beta:          float64Ptr(0.9),
+					Gamma:         float64Ptr(0.9),
 					SeasonLength:  3,
 					StoredSeasons: 3,
 					Method:        "multiplicative",
@@ -265,8 +514,7 @@ func TestPredict_GetPrediction(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.description, func(t *testing.T) {
-			predicter := &holtwinters.Predict{}
-			result, err := predicter.GetPrediction(test.model, test.evaluations)
+			result, err := test.predicter.GetPrediction(test.model, test.evaluations)
 			if !cmp.Equal(&err, &test.expectedErr, equateErrorMessage) {
 				t.Errorf("error mismatch (-want +got):\n%s", cmp.Diff(test.expectedErr, err, equateErrorMessage))
 				return
@@ -416,7 +664,7 @@ func TestPredict_GetType(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.description, func(t *testing.T) {
-			predicter := &holtwinters.Predict{}
+			predicter := holtwinters.Predict{}
 			result := predicter.GetType()
 			if !cmp.Equal(test.expected, result) {
 				t.Errorf("type mismatch (-want +got):\n%s", cmp.Diff(test.expected, result))

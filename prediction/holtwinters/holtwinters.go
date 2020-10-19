@@ -17,11 +17,13 @@ limitations under the License.
 package holtwinters
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math"
 	"sort"
 
+	"github.com/jthomperoo/custom-pod-autoscaler/execute"
 	"github.com/jthomperoo/holtwinters"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/config"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/stored"
@@ -38,7 +40,23 @@ const (
 )
 
 // Predict provides logic for using Linear Regression to make a prediction
-type Predict struct{}
+type Predict struct {
+	Execute execute.Executer
+}
+
+// RunTimeTuningFetchRequest defines the request value sent as part of the method to determine the runtime Holt-Winters
+// values
+type RunTimeTuningFetchRequest struct {
+	Model       *config.Model        `json:"model"`
+	Evaluations []*stored.Evaluation `json:"evaluations"`
+}
+
+// RunTimeTuningFetchResult defines the expected response from the method that specifies the runtime Holt-Winters values
+type RunTimeTuningFetchResult struct {
+	Alpha *float64 `json:"alpha"`
+	Beta  *float64 `json:"beta"`
+	Gamma *float64 `json:"gamma"`
+}
 
 // GetPrediction uses a linear regression to predict what the replica count should be based on historical evaluations
 func (p *Predict) GetPrediction(model *config.Model, evaluations []*stored.Evaluation) (int32, error) {
@@ -49,6 +67,56 @@ func (p *Predict) GetPrediction(model *config.Model, evaluations []*stored.Evalu
 	// If less than a full season of data, return zero without error
 	if len(evaluations) < model.HoltWinters.SeasonLength {
 		return 0, nil
+	}
+
+	alpha := model.HoltWinters.Alpha
+	beta := model.HoltWinters.Beta
+	gamma := model.HoltWinters.Gamma
+
+	if model.HoltWinters.RuntimeTuningFetch != nil {
+
+		// Convert request into JSON string
+		request, err := json.Marshal(&RunTimeTuningFetchRequest{
+			Model:       model,
+			Evaluations: evaluations,
+		})
+		if err != nil {
+			// Should not occur
+			panic(err)
+		}
+
+		// Request runtime tuning values
+		hookResult, err := p.Execute.ExecuteWithValue(model.HoltWinters.RuntimeTuningFetch, string(request))
+		if err != nil {
+			return 0, err
+		}
+
+		// Parse result
+		var result RunTimeTuningFetchResult
+		err = json.Unmarshal([]byte(hookResult), &result)
+		if err != nil {
+			return 0, err
+		}
+
+		if result.Alpha != nil {
+			alpha = result.Alpha
+		}
+		if result.Beta != nil {
+			beta = result.Beta
+		}
+		if result.Gamma != nil {
+			gamma = result.Gamma
+		}
+	}
+
+	if alpha == nil {
+		return 0, errors.New("No alpha tuning value provided for Holt-Winters prediction")
+	}
+	if beta == nil {
+		return 0, errors.New("No beta tuning value provided for Holt-Winters prediction")
+	}
+	if gamma == nil {
+		return 0, errors.New("No gamma tuning value provided for Holt-Winters prediction")
 	}
 
 	// Collect data for historical series
@@ -63,14 +131,14 @@ func (p *Predict) GetPrediction(model *config.Model, evaluations []*stored.Evalu
 	switch model.HoltWinters.Method {
 	case MethodAdditive:
 		// Build prediction 1 ahead
-		prediction, err = holtwinters.PredictAdditive(series, model.HoltWinters.SeasonLength, model.HoltWinters.Alpha, model.HoltWinters.Beta, model.HoltWinters.Gamma, 1)
+		prediction, err = holtwinters.PredictAdditive(series, model.HoltWinters.SeasonLength, *alpha, *beta, *gamma, 1)
 		if err != nil {
 			return 0, err
 		}
 		break
 	case MethodMultiplicative:
 		// Build prediction 1 ahead
-		prediction, err = holtwinters.PredictMultiplicative(series, model.HoltWinters.SeasonLength, model.HoltWinters.Alpha, model.HoltWinters.Beta, model.HoltWinters.Gamma, 1)
+		prediction, err = holtwinters.PredictMultiplicative(series, model.HoltWinters.SeasonLength, *alpha, *beta, *gamma, 1)
 		if err != nil {
 			return 0, err
 		}

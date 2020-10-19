@@ -44,16 +44,16 @@ func (d *DBEvaluation) Scan(src interface{}) error {
 
 // Evaluation is an evaluation stored in the database, with an ID and a timestamp
 type Evaluation struct {
-	ID         int          `db:"id"`
-	Created    time.Time    `db:"created"`
-	Evaluation DBEvaluation `db:"val"`
+	ID         int          `db:"id" json:"id"`
+	Created    time.Time    `db:"created" json:"created"`
+	Evaluation DBEvaluation `db:"val" json:"val"`
 }
 
 // Model is a model stored in the database, with an ID and the number of intervals since it was last used
 type Model struct {
-	ID              int    `db:"id"`
-	Name            string `db:"model_name"`
-	IntervalsPassed int    `db:"intervals_passed"`
+	ID              int    `db:"id" json:"id"`
+	Name            string `db:"model_name" json:"model_name"`
+	IntervalsPassed int    `db:"intervals_passed" json:"intervals_passed"`
 }
 
 // Storer allows updating/retrieving evaluations from a data source

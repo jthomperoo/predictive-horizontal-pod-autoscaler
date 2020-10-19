@@ -59,9 +59,9 @@ To view docs locally, requires:
 
 ### Commands
 
+* `go mod vendor` - generates a vendor folder.
 * `make` - builds the Predictive HPA binary.
 * `make docker` - builds the Predictive HPA image.
 * `make lint` - lints the code.
 * `make unittest` - runs the unit tests
-* `make vendor` - generates a vendor folder.
 * `make doc` - hosts the documentation locally, at `127.0.0.1:8000`.
