@@ -49,44 +49,6 @@ func TestPredict_GetPrediction(t *testing.T) {
 			&config.Model{},
 			[]*stored.Evaluation{},
 		},
-		{
-			"Successful prediction",
-			5,
-			nil,
-			&config.Model{
-				Type: linear.Type,
-				Linear: &config.Linear{
-					StoredValues: 5,
-					LookAhead:    0,
-				},
-			},
-			[]*stored.Evaluation{
-				&stored.Evaluation{
-					Created: time.Now().UTC().Add(time.Duration(-40) * time.Second),
-					Evaluation: stored.DBEvaluation{
-						TargetReplicas: 1,
-					},
-				},
-				&stored.Evaluation{
-					Created: time.Now().UTC().Add(time.Duration(-30) * time.Second),
-					Evaluation: stored.DBEvaluation{
-						TargetReplicas: 2,
-					},
-				},
-				&stored.Evaluation{
-					Created: time.Now().UTC().Add(time.Duration(-20) * time.Second),
-					Evaluation: stored.DBEvaluation{
-						TargetReplicas: 3,
-					},
-				},
-				&stored.Evaluation{
-					Created: time.Now().UTC().Add(time.Duration(-10) * time.Second),
-					Evaluation: stored.DBEvaluation{
-						TargetReplicas: 4,
-					},
-				},
-			},
-		},
 	}
 	for _, test := range tests {
 		t.Run(test.description, func(t *testing.T) {

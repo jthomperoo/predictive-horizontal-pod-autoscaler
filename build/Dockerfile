@@ -13,19 +13,19 @@
 # limitations under the License.
 
 # CPA base image
-FROM registry.access.redhat.com/ubi8/ubi
-
+FROM custompodautoscaler/python-3-8:v1.0.1
 
 ENV USER_UID=1001 \
-    USER_NAME=predictive-horizontal-pod-autoscaler
+    USER_NAME=phpa
 
 # Install sqlite and container deps
-RUN dnf install sqlite wget -y
-
-# Install CPA
-RUN wget -qO- https://github.com/jthomperoo/custom-pod-autoscaler/releases/download/v1.0.0/custom-pod-autoscaler.tar.gz | tar xvz && mv dist cpa
+RUN apt-get -y update && apt-get install -y sqlite3 libsqlite3-dev
 
 WORKDIR /app
+
+# Install any python requirements
+COPY algorithms/requirements.txt ./algorithms/requirements.txt
+RUN pip install -r ./algorithms/requirements.txt
 
 ENV configPath /app/config.yaml
 # Add in entry point script
@@ -34,6 +34,8 @@ COPY build/entrypoint.sh /
 COPY config.yaml dist/* ./
 # Add in db migrations
 COPY sql ./sql
+# Add in Python aglorithms
+COPY algorithms ./algorithms
 
 RUN mkdir -p ${HOME} && \
     chown ${USER_UID}:0 ${HOME} && \
@@ -42,6 +44,8 @@ RUN mkdir -p ${HOME} && \
 
 RUN mkdir /store && \
     chown ${USER_UID}:0 /store
+
+RUN useradd -u ${USER_UID} ${USER_NAME}
 
 USER ${USER_UID}
 

@@ -218,7 +218,9 @@ func getEvaluation(stdin io.Reader, predictiveConfig *config.Config) {
 			DB: db,
 		},
 		Predicters: []prediction.Predicter{
-			&linear.Predict{},
+			&linear.Predict{
+				Execute: combinedExecute,
+			},
 			&holtwinters.Predict{
 				Execute: combinedExecute,
 			},

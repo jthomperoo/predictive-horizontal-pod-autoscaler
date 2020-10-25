@@ -71,7 +71,7 @@ spec:
       containers:
       - name: predictive-horizontal-pod-autoscaler-example
         image: jthomperoo/predictive-horizontal-pod-autoscaler:latest
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         volumeMounts:
           - mountPath: "/store/"
             name: predictive-horizontal-pod-autoscaler-example
@@ -80,11 +80,11 @@ spec:
     kind: Deployment
     name: php-apache
   provisionRole: false
-  config: 
+  config:
     - name: minReplicas
       value: "1"
     - name: maxReplicas
-      value: "5"
+      value: "10"
     - name: predictiveConfig
       value: |
         models:
@@ -105,4 +105,4 @@ spec:
     - name: interval
       value: "10000"
     - name: downscaleStabilization
-      value: "30"
+      value: "0"

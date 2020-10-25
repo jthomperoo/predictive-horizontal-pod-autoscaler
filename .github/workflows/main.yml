@@ -23,8 +23,10 @@ jobs:
         GO111MODULE=off go get -u golang.org/x/lint/golint
         # Lint and test
         go mod vendor
+        pip install -r requirements-dev.txt
+        pip install -r algorithms/requirements.txt
         make lint
-        make unittest
+        make test
         # Build
         if [ ${{ github.event_name }} == "release" ]; then
           # github.ref is in the form refs/tags/VERSION, so apply regex to just get version

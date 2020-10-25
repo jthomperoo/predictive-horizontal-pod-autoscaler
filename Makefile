@@ -5,10 +5,10 @@ VERSION = latest
 default:
 	@echo "=============Building============="
 	go mod vendor
-	go build -mod vendor -o dist/$(NAME) ./cmd/predictive-horizontal-pod-autoscaler
+	go build -mod vendor -o dist/$(NAME) main.go
 	cp LICENSE dist/LICENSE
 
-unittest:
+test:
 	@echo "=============Running unit tests============="
 	go mod vendor
 	go test ./... -cover -mod=vendor -coverprofile unit_cover.out --tags=unit
@@ -17,6 +17,7 @@ lint:
 	@echo "=============Linting============="
 	go mod vendor
 	go list -mod=vendor ./... | grep -v /vendor/ | xargs -L1 golint -set_exit_status
+	pylint algorithms --rcfile=.pylintrc
 
 docker: default
 	@echo "=============Building docker images============="
