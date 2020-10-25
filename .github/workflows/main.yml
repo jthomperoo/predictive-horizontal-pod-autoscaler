@@ -14,6 +14,9 @@ jobs:
       with:
         go-version: 1.13
       id: go
+    - uses: actions/setup-python@v2
+      with:
+        python-version: '3.8.5'
     - name: Check out code into the Go module directory
       uses: actions/checkout@v1
     - name: Lint, test and build
