@@ -3,7 +3,6 @@ Tests the linear regression algorithm by calling it from the shell, giving diffe
 code and stderr and stdout.
 """
 import subprocess
-from datetime import datetime, timedelta
 
 def test_linear_regression(subtests):
     """
