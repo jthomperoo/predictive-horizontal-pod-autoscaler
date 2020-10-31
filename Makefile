@@ -12,6 +12,7 @@ test:
 	@echo "=============Running unit tests============="
 	go mod vendor
 	go test ./... -cover -mod=vendor -coverprofile unit_cover.out --tags=unit
+	pytest algorithms/
 
 lint:
 	@echo "=============Linting============="

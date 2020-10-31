@@ -12,16 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pylint: disable=no-member, invalid-name
+
 """
 This linear regression script performs a linear regression using the provided values and configuration using the
 statsmodel library.
 """
 
 import sys
-import json
 import math
+from json import JSONDecodeError
 from datetime import datetime, timedelta
+from dataclasses import dataclass
+from typing import List, Optional
 import statsmodels.api as sm
+from dataclasses_json import dataclass_json, LetterCase
 
 # Takes in list of stored evaluations and the look ahead value:
 # {
@@ -44,31 +49,79 @@ import statsmodels.api as sm
 #   ]
 # }
 
-print("Parsing stdin for linear regression parameters", file=sys.stderr)
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass
+class EvaluationValue:
+    """
+    JSON data representation of an evaluation value, contains the scaling target replicas
+    """
+    target_replicas: int
 
-parameters = json.loads(sys.stdin.read())
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass
+class Evaluation:
+    """
+    JSON data representation of a timestamped evaluation
+    """
+    id: int
+    created: str
+    val: EvaluationValue
 
-evaluations = parameters["evaluations"]
-search_time = datetime.timestamp(datetime.now() + timedelta(milliseconds=int(parameters["lookAhead"])))
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass
+class AlgorithmInput:
+    """
+    JSON data representation of the data this algorithm requires to be provided to it.
+    """
+    look_ahead: int
+    evaluations: List[Evaluation]
+    current_time: Optional[str] = None
 
-print("Calculating relative data for regression", file=sys.stderr)
+stdin = sys.stdin.read()
+
+if stdin is None or stdin == "":
+    print("No standard input provided to Linear Regression algorithm, exiting", file=sys.stderr)
+    sys.exit(1)
+
+try:
+    algorithm_input = AlgorithmInput.from_json(stdin)
+except JSONDecodeError as ex:
+    print("Invalid JSON provided: {0}, exiting".format(str(ex)), file=sys.stderr)
+    sys.exit(1)
+except KeyError as ex:
+    print("Invalid JSON provided: missing {0}, exiting".format(str(ex)), file=sys.stderr)
+    sys.exit(1)
+
+current_time = datetime.utcnow()
+
+if algorithm_input.current_time is not None:
+    try:
+        current_time = datetime.strptime(algorithm_input.current_time, "%Y-%m-%dT%H:%M:%SZ")
+    except ValueError as ex:
+        print("Invalid datetime format: {0}".format(str(ex)), file=sys.stderr)
+        sys.exit(1)
+
+search_time = datetime.timestamp(current_time + timedelta(milliseconds=int(algorithm_input.look_ahead)))
+
 x = []
 y = []
 
 # Build up data for linear model, in order to not deal with huge values and get rounding errors, use the difference
 # between the time being searched for and the metric recorded time in seconds
-for i, evaluation in enumerate(evaluations):
-    x.append(search_time - datetime.timestamp(datetime.strptime(evaluation["created"], "%Y-%m-%dT%H:%M:%SZ")))
-    y.append(int(evaluation["val"]["targetReplicas"]))
+for i, evaluation in enumerate(algorithm_input.evaluations):
+    try:
+        created = datetime.strptime(evaluation.created, "%Y-%m-%dT%H:%M:%SZ")
+    except ValueError as ex:
+        print("Invalid datetime format: {0}".format(str(ex)), file=sys.stderr)
+        sys.exit(1)
 
-print("Building linear regression model", file=sys.stderr)
+    x.append(search_time - datetime.timestamp(created))
+    y.append(evaluation.val.target_replicas)
 
 # Add constant for OLS, constant is 1.0
 x = sm.add_constant(x)
 
 model = sm.OLS(y, x).fit()
-
-print("Making prediction using linear regression", file=sys.stderr)
 
 # Predict the value at the search time (0), include the constant (1).
 # The search time is 0 as the values used in training are search time - evaluation time, so the search time will be 0

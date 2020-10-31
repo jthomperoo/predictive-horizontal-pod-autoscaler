@@ -1,1 +1,2 @@
 statsmodels==0.12.0
+dataclasses-json==0.5.2

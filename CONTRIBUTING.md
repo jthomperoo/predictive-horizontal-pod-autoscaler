@@ -138,7 +138,8 @@ Commit messages should follow the ['How to Write a Git Commit Message'](https://
 
 ### Documentation
 
-Documentation should be in plain english, with 120 character max line width.
+Documentation should be in plain english, with 120 character max line width. If your changes affect
+functionality the changes should be documented, both in the `CHANGELOG.md` and the `docs/`.
 
 ### Code
 
@@ -146,8 +147,7 @@ Project code should pass the linter and all tests should pass.
 
 ### Pull Requests
 
-All pull requests must pass the CI (linting, tests), and be approved by a maintainer. If your pull request changes
-functionality the changes should be documented, both in the `CHANGELOG.md` and the `docs/`.
+All pull requests must pass the CI (linting, tests), and be approved by a maintainer.
 
 All pull requests are squashed on merge.
 
