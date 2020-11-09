@@ -8,7 +8,7 @@ import json
 
 from flask import Flask, request, jsonify
 app = Flask(__name__)
-MODEL_LOCATION='/tmp/arima.pkl'
+MODEL_LOCATION = '/tmp/arima.pkl'
 
 
 class NumpyArrayEncoder(JSONEncoder):
@@ -22,15 +22,9 @@ class NumpyArrayEncoder(JSONEncoder):
 @app.route('/api/train', methods=['POST'])
 def train():
     content = request.json
-    data = pd.DataFrame.from_dict(content,orient='index').T.set_index('index')   
+    data = pd.DataFrame.from_dict(content, orient='index').T.set_index('index')   
     print(data)
-    stepwise_model = auto_arima(data, start_p=1, start_q=1,
-                           max_p=3, max_q=3, m=12,
-                           start_P=0, seasonal=True,
-                           d=1, D=1, trace=True,
-                           error_action='ignore',  
-                           suppress_warnings=True, 
-                           stepwise=True)
+    stepwise_model = auto_arima(data, start_p=1, start_q=1, max_p=3, max_q=3, m=12, start_P=0, seasonal=True, d=1, D=1, trace=True, error_action='ignore', suppress_warnings=True, stepwise=True)
     print(stepwise_model.aic())
     print(stepwise_model.summary())
 
@@ -41,7 +35,7 @@ def train():
     return jsonify('{}')
 
 def load_pred(location):
-    f  = open(location, 'rb') 
+    f = open(location, 'rb') 
     return pickle.load(f)
 
 def update_model(location, data):
@@ -55,12 +49,12 @@ def update_model(location, data):
 @app.route('/api/predict', methods=['POST'])
 def predict():
     content = request.json
-    data = pd.DataFrame.from_dict(content,orient='index').T.set_index('index') 
+    data = pd.DataFrame.from_dict(content, orient='index').T.set_index('index') 
     model = update_model(MODEL_LOCATION, data)
     prediction, new_conf_int = model.predict(n_periods=10, return_conf_int=True)
-    return json.dumps(prediction,cls=NumpyArrayEncoder), 
+    return json.dumps(prediction, cls=NumpyArrayEncoder), 
 
 
 
 if __name__ == '__main__':
-    app.run(host= '0.0.0.0',debug=True)
+    app.run(host= '0.0.0.0', debug=True)
