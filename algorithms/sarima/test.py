@@ -1,4 +1,6 @@
-
+"""
+Default way to produce the test json.
+"""
 
 import random
 import json
