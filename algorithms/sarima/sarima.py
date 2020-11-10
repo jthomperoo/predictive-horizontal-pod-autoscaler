@@ -79,10 +79,9 @@ def predict():
     data = pd.DataFrame.from_dict(content, orient='index'
                                   ).T.set_index('index')
     model = update_model(MODEL_LOCATION, data)
-    (prediction, new_conf_int) = model.predict(n_periods=10,
-            return_conf_int=True)
+    (prediction, new_conf_int) = model.predict(n_periods=10, return_conf_int=True)
     print(new_conf)
-    return (json.dumps(prediction, cls=NumpyArrayEncoder), )
+    return (json.dumps(prediction, cls=NumpyArrayEncoder))
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True)
