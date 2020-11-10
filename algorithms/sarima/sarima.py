@@ -14,8 +14,9 @@ import pickle
 import numpy
 import pandas as pd
 
-from pmdarima.arima import auto_arima
 from flask import Flask, request, jsonify
+from pmdarima.arima import auto_arima
+
 
 app = Flask(__name__)
 MODEL_LOCATION = '/tmp/arima.pkl'

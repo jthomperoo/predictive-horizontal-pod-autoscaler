@@ -3,3 +3,4 @@ dataclasses-json==0.5.2
 Flask==1.1.1
 pickle-mixin==1.0.2
 dataclasses-json==0.5.2
+pmdarima==1.7.1
