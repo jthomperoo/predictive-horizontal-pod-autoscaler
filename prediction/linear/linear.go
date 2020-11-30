@@ -1,5 +1,5 @@
 /*
-Copyright 2019 The Predictive Horizontal Pod Autoscaler Authors.
+Copyright 2020 The Predictive Horizontal Pod Autoscaler Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -22,9 +22,7 @@ import (
 	"sort"
 	"strconv"
 
-	cpaconfig "github.com/jthomperoo/custom-pod-autoscaler/config"
-
-	"github.com/jthomperoo/custom-pod-autoscaler/execute"
+	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/algorithm"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/config"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/stored"
 )
@@ -32,10 +30,7 @@ import (
 // Type linear is the type of the linear predicter
 const Type = "Linear"
 
-const (
-	entrypoint   = "python"
-	shellTimeout = 10000
-)
+const algorithmPath = "/app/algorithms/linear_regression/linear_regression.py"
 
 type linearRegressionParameters struct {
 	LookAhead   int                  `json:"lookAhead"`
@@ -50,7 +45,7 @@ type Config struct {
 
 // Predict provides logic for using Linear Regression to make a prediction
 type Predict struct {
-	Execute execute.Executer
+	Runner algorithm.Runner
 }
 
 // GetPrediction uses a linear regression to predict what the replica count should be based on historical evaluations
@@ -68,14 +63,7 @@ func (p *Predict) GetPrediction(model *config.Model, evaluations []*stored.Evalu
 		panic(err)
 	}
 
-	value, err := p.Execute.ExecuteWithValue(&cpaconfig.Method{
-		Type:    "shell",
-		Timeout: shellTimeout,
-		Shell: &cpaconfig.Shell{
-			Entrypoint: entrypoint,
-			Command:    []string{"/app/algorithms/linear_regression/linear_regression.py"},
-		},
-	}, string(parameters))
+	value, err := p.Runner.RunAlgorithmWithValue(algorithmPath, string(parameters))
 	if err != nil {
 		return 0, err
 	}

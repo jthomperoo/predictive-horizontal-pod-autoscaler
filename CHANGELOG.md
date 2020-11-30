@@ -11,6 +11,17 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 - Fixed slow shutdown of PHPA due to ignoring SIGTERM from K8s.
 ### Changed
 - Switched from Golang to Python for calculating statistical predictions for Linear Regression and Holt-Winters.
+- Holt-Winters now calculated using statsmodels, opening up statsmodels configuration options for tuning.
+  - `trend` - Either `add`/`additive` or `mul`/`multiplicative`, defines the method for the trend element.
+  - `seasonal` - Either `add`/`additive` or `mul`/`multiplicative`, defines the method for the seasonal element.
+  - `dampedTrend` - Boolean value to determine if the trend should be damped.
+  - `initializationMethod` - Which initialization method to use, see statsmodels for details, either `estimated`,
+  `heuristic`, `known`, or `legacy-heuristic`
+  - `initialLevel` - The initial level value, required if `initializationMethod` is `known`.
+  - `initialTrend` - The initial trend value, required if `initializationMethod` is `known`.
+  - `initialSeasonal` - The initial seasonal value, required if `initializationMethod` is `known`.
+- Holt-Winters `seasonLength` variable renamed to `seasonalPeriods`.
+- Holt-Winters `method` split into `trend` and `seasonal` variables.
 
 ## [v0.6.0] - 2020-08-31
 ### Changed

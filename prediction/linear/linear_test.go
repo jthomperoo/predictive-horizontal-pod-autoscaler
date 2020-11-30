@@ -1,5 +1,5 @@
 /*
-Copyright 2019 The Predictive Horizontal Pod Autoscaler Authors.
+Copyright 2020 The Predictive Horizontal Pod Autoscaler Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	cpaconfig "github.com/jthomperoo/custom-pod-autoscaler/config"
 	"github.com/jthomperoo/custom-pod-autoscaler/fake"
+	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/algorithm"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/config"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/prediction/linear"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/stored"
@@ -58,13 +59,15 @@ func TestPredict_GetPrediction(t *testing.T) {
 			0,
 			errors.New("algorithm fail"),
 			&linear.Predict{
-				Execute: func() *fake.Execute {
-					execute := fake.Execute{}
-					execute.ExecuteWithValueReactor = func(method *cpaconfig.Method, value string) (string, error) {
-						return "", errors.New("algorithm fail")
-					}
-					return &execute
-				}(),
+				Runner: &algorithm.Run{
+					Executer: func() *fake.Execute {
+						execute := fake.Execute{}
+						execute.ExecuteWithValueReactor = func(method *cpaconfig.Method, value string) (string, error) {
+							return "", errors.New("algorithm fail")
+						}
+						return &execute
+					}(),
+				},
 			},
 			&config.Model{
 				Type: linear.Type,
@@ -80,13 +83,15 @@ func TestPredict_GetPrediction(t *testing.T) {
 			0,
 			errors.New(`strconv.Atoi: parsing "invalid": invalid syntax`),
 			&linear.Predict{
-				Execute: func() *fake.Execute {
-					execute := fake.Execute{}
-					execute.ExecuteWithValueReactor = func(method *cpaconfig.Method, value string) (string, error) {
-						return "invalid", nil
-					}
-					return &execute
-				}(),
+				Runner: &algorithm.Run{
+					Executer: func() *fake.Execute {
+						execute := fake.Execute{}
+						execute.ExecuteWithValueReactor = func(method *cpaconfig.Method, value string) (string, error) {
+							return "invalid", nil
+						}
+						return &execute
+					}(),
+				},
 			},
 			&config.Model{
 				Type: linear.Type,
@@ -102,13 +107,15 @@ func TestPredict_GetPrediction(t *testing.T) {
 			3,
 			nil,
 			&linear.Predict{
-				Execute: func() *fake.Execute {
-					execute := fake.Execute{}
-					execute.ExecuteWithValueReactor = func(method *cpaconfig.Method, value string) (string, error) {
-						return "3", nil
-					}
-					return &execute
-				}(),
+				Runner: &algorithm.Run{
+					Executer: func() *fake.Execute {
+						execute := fake.Execute{}
+						execute.ExecuteWithValueReactor = func(method *cpaconfig.Method, value string) (string, error) {
+							return "3", nil
+						}
+						return &execute
+					}(),
+				},
 			},
 			&config.Model{
 				Type: linear.Type,

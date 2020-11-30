@@ -49,6 +49,7 @@ import (
 	hpaevaluate "github.com/jthomperoo/horizontal-pod-autoscaler/evaluate"
 	"github.com/jthomperoo/horizontal-pod-autoscaler/metric"
 	"github.com/jthomperoo/horizontal-pod-autoscaler/podclient"
+	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/algorithm"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/config"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/evaluate"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/prediction"
@@ -211,6 +212,10 @@ func getEvaluation(stdin io.Reader, predictiveConfig *config.Config) {
 		},
 	}
 
+	algorithmRunner := &algorithm.Run{
+		Executer: combinedExecute,
+	}
+
 	// Set up evaluator
 	evaluator := &evaluate.PredictiveEvaluate{
 		HPAEvaluator: hpaevaluate.NewEvaluate(predictiveConfig.Tolerance),
@@ -219,10 +224,11 @@ func getEvaluation(stdin io.Reader, predictiveConfig *config.Config) {
 		},
 		Predicters: []prediction.Predicter{
 			&linear.Predict{
-				Execute: combinedExecute,
+				Runner: algorithmRunner,
 			},
 			&holtwinters.Predict{
 				Execute: combinedExecute,
+				Runner:  algorithmRunner,
 			},
 		},
 	}

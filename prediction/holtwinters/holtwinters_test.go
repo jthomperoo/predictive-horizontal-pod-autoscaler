@@ -1,5 +1,5 @@
 /*
-Copyright 2019 The Predictive Horizontal Pod Autoscaler Authors.
+Copyright 2020 The Predictive Horizontal Pod Autoscaler Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	cpaconfig "github.com/jthomperoo/custom-pod-autoscaler/config"
 	"github.com/jthomperoo/custom-pod-autoscaler/fake"
+	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/algorithm"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/config"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/prediction/holtwinters"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/prediction/linear"
@@ -59,6 +60,67 @@ func TestPredict_GetPrediction(t *testing.T) {
 			[]*stored.Evaluation{},
 		},
 		{
+			"Success, less than 10 + 2 * (seasonal_periods // 2) observations",
+			0,
+			nil,
+			&holtwinters.Predict{},
+			&config.Model{
+				Type: linear.Type,
+				HoltWinters: &config.HoltWinters{
+					Alpha:           float64Ptr(0.9),
+					Beta:            float64Ptr(0.9),
+					Gamma:           float64Ptr(0.9),
+					SeasonalPeriods: 3,
+					StoredSeasons:   3,
+					Trend:           "add",
+				},
+			},
+			[]*stored.Evaluation{
+				&stored.Evaluation{
+					Created: time.Now().UTC().Add(time.Duration(-80) * time.Second),
+					Evaluation: stored.DBEvaluation{
+						TargetReplicas: 1,
+					},
+				},
+				&stored.Evaluation{
+					Created: time.Now().UTC().Add(time.Duration(-70) * time.Second),
+					Evaluation: stored.DBEvaluation{
+						TargetReplicas: 3,
+					},
+				},
+				&stored.Evaluation{
+					Created: time.Now().UTC().Add(time.Duration(-60) * time.Second),
+					Evaluation: stored.DBEvaluation{
+						TargetReplicas: 1,
+					},
+				},
+				&stored.Evaluation{
+					Created: time.Now().UTC().Add(time.Duration(-50) * time.Second),
+					Evaluation: stored.DBEvaluation{
+						TargetReplicas: 1,
+					},
+				},
+				&stored.Evaluation{
+					Created: time.Now().UTC().Add(time.Duration(-40) * time.Second),
+					Evaluation: stored.DBEvaluation{
+						TargetReplicas: 3,
+					},
+				},
+				&stored.Evaluation{
+					Created: time.Now().UTC().Add(time.Duration(-30) * time.Second),
+					Evaluation: stored.DBEvaluation{
+						TargetReplicas: 1,
+					},
+				},
+				&stored.Evaluation{
+					Created: time.Now().UTC().Add(time.Duration(-20) * time.Second),
+					Evaluation: stored.DBEvaluation{
+						TargetReplicas: 1,
+					},
+				},
+			},
+		},
+		{
 			"Fail, fail to runtime fetch",
 			0,
 			errors.New("fail runtime fetch"),
@@ -77,8 +139,9 @@ func TestPredict_GetPrediction(t *testing.T) {
 						Type:    "test",
 						Timeout: 2500,
 					},
-					SeasonLength: 2,
-					Method:       "additive",
+					SeasonalPeriods: 2,
+					Trend:           "add",
+					Seasonal:        "add",
 				},
 			},
 			[]*stored.Evaluation{
@@ -87,6 +150,42 @@ func TestPredict_GetPrediction(t *testing.T) {
 				},
 				&stored.Evaluation{
 					ID: 2,
+				},
+				&stored.Evaluation{
+					ID: 3,
+				},
+				&stored.Evaluation{
+					ID: 4,
+				},
+				&stored.Evaluation{
+					ID: 5,
+				},
+				&stored.Evaluation{
+					ID: 6,
+				},
+				&stored.Evaluation{
+					ID: 7,
+				},
+				&stored.Evaluation{
+					ID: 8,
+				},
+				&stored.Evaluation{
+					ID: 9,
+				},
+				&stored.Evaluation{
+					ID: 10,
+				},
+				&stored.Evaluation{
+					ID: 11,
+				},
+				&stored.Evaluation{
+					ID: 12,
+				},
+				&stored.Evaluation{
+					ID: 13,
+				},
+				&stored.Evaluation{
+					ID: 14,
 				},
 			},
 		},
@@ -109,8 +208,9 @@ func TestPredict_GetPrediction(t *testing.T) {
 						Type:    "test",
 						Timeout: 2500,
 					},
-					SeasonLength: 2,
-					Method:       "additive",
+					SeasonalPeriods: 2,
+					Trend:           "add",
+					Seasonal:        "add",
 				},
 			},
 			[]*stored.Evaluation{
@@ -119,6 +219,42 @@ func TestPredict_GetPrediction(t *testing.T) {
 				},
 				&stored.Evaluation{
 					ID: 2,
+				},
+				&stored.Evaluation{
+					ID: 3,
+				},
+				&stored.Evaluation{
+					ID: 4,
+				},
+				&stored.Evaluation{
+					ID: 5,
+				},
+				&stored.Evaluation{
+					ID: 6,
+				},
+				&stored.Evaluation{
+					ID: 7,
+				},
+				&stored.Evaluation{
+					ID: 8,
+				},
+				&stored.Evaluation{
+					ID: 9,
+				},
+				&stored.Evaluation{
+					ID: 10,
+				},
+				&stored.Evaluation{
+					ID: 11,
+				},
+				&stored.Evaluation{
+					ID: 12,
+				},
+				&stored.Evaluation{
+					ID: 13,
+				},
+				&stored.Evaluation{
+					ID: 14,
 				},
 			},
 		},
@@ -129,10 +265,11 @@ func TestPredict_GetPrediction(t *testing.T) {
 			&holtwinters.Predict{},
 			&config.Model{
 				HoltWinters: &config.HoltWinters{
-					Beta:         float64Ptr(0.9),
-					Gamma:        float64Ptr(0.9),
-					SeasonLength: 2,
-					Method:       "invalid",
+					Beta:            float64Ptr(0.9),
+					Gamma:           float64Ptr(0.9),
+					SeasonalPeriods: 2,
+					Trend:           "add",
+					Seasonal:        "add",
 				},
 			},
 			[]*stored.Evaluation{
@@ -141,6 +278,42 @@ func TestPredict_GetPrediction(t *testing.T) {
 				},
 				&stored.Evaluation{
 					ID: 2,
+				},
+				&stored.Evaluation{
+					ID: 3,
+				},
+				&stored.Evaluation{
+					ID: 4,
+				},
+				&stored.Evaluation{
+					ID: 5,
+				},
+				&stored.Evaluation{
+					ID: 6,
+				},
+				&stored.Evaluation{
+					ID: 7,
+				},
+				&stored.Evaluation{
+					ID: 8,
+				},
+				&stored.Evaluation{
+					ID: 9,
+				},
+				&stored.Evaluation{
+					ID: 10,
+				},
+				&stored.Evaluation{
+					ID: 11,
+				},
+				&stored.Evaluation{
+					ID: 12,
+				},
+				&stored.Evaluation{
+					ID: 13,
+				},
+				&stored.Evaluation{
+					ID: 14,
 				},
 			},
 		},
@@ -151,10 +324,11 @@ func TestPredict_GetPrediction(t *testing.T) {
 			&holtwinters.Predict{},
 			&config.Model{
 				HoltWinters: &config.HoltWinters{
-					Alpha:        float64Ptr(0.9),
-					Gamma:        float64Ptr(0.9),
-					SeasonLength: 2,
-					Method:       "invalid",
+					Alpha:           float64Ptr(0.9),
+					Gamma:           float64Ptr(0.9),
+					SeasonalPeriods: 2,
+					Trend:           "add",
+					Seasonal:        "add",
 				},
 			},
 			[]*stored.Evaluation{
@@ -163,6 +337,42 @@ func TestPredict_GetPrediction(t *testing.T) {
 				},
 				&stored.Evaluation{
 					ID: 2,
+				},
+				&stored.Evaluation{
+					ID: 3,
+				},
+				&stored.Evaluation{
+					ID: 4,
+				},
+				&stored.Evaluation{
+					ID: 5,
+				},
+				&stored.Evaluation{
+					ID: 6,
+				},
+				&stored.Evaluation{
+					ID: 7,
+				},
+				&stored.Evaluation{
+					ID: 8,
+				},
+				&stored.Evaluation{
+					ID: 9,
+				},
+				&stored.Evaluation{
+					ID: 10,
+				},
+				&stored.Evaluation{
+					ID: 11,
+				},
+				&stored.Evaluation{
+					ID: 12,
+				},
+				&stored.Evaluation{
+					ID: 13,
+				},
+				&stored.Evaluation{
+					ID: 14,
 				},
 			},
 		},
@@ -173,10 +383,11 @@ func TestPredict_GetPrediction(t *testing.T) {
 			&holtwinters.Predict{},
 			&config.Model{
 				HoltWinters: &config.HoltWinters{
-					Alpha:        float64Ptr(0.9),
-					Beta:         float64Ptr(0.9),
-					SeasonLength: 2,
-					Method:       "invalid",
+					Alpha:           float64Ptr(0.9),
+					Beta:            float64Ptr(0.9),
+					SeasonalPeriods: 2,
+					Trend:           "add",
+					Seasonal:        "add",
 				},
 			},
 			[]*stored.Evaluation{
@@ -185,21 +396,67 @@ func TestPredict_GetPrediction(t *testing.T) {
 				},
 				&stored.Evaluation{
 					ID: 2,
+				},
+				&stored.Evaluation{
+					ID: 3,
+				},
+				&stored.Evaluation{
+					ID: 4,
+				},
+				&stored.Evaluation{
+					ID: 5,
+				},
+				&stored.Evaluation{
+					ID: 6,
+				},
+				&stored.Evaluation{
+					ID: 7,
+				},
+				&stored.Evaluation{
+					ID: 8,
+				},
+				&stored.Evaluation{
+					ID: 9,
+				},
+				&stored.Evaluation{
+					ID: 10,
+				},
+				&stored.Evaluation{
+					ID: 11,
+				},
+				&stored.Evaluation{
+					ID: 12,
+				},
+				&stored.Evaluation{
+					ID: 13,
+				},
+				&stored.Evaluation{
+					ID: 14,
 				},
 			},
 		},
 		{
-			"Fail invalid method",
+			"Fail, additive, fail to run holt winters algorithm",
 			0,
-			errors.New("Unknown HoltWinters method 'invalid'"),
-			&holtwinters.Predict{},
+			errors.New("holt winters algorithm error"),
+			&holtwinters.Predict{
+				Runner: &algorithm.Run{
+					Executer: func() *fake.Execute {
+						execute := fake.Execute{}
+						execute.ExecuteWithValueReactor = func(method *cpaconfig.Method, value string) (string, error) {
+							return "", errors.New("holt winters algorithm error")
+						}
+						return &execute
+					}(),
+				},
+			},
 			&config.Model{
 				HoltWinters: &config.HoltWinters{
-					Alpha:        float64Ptr(0.9),
-					Beta:         float64Ptr(0.9),
-					Gamma:        float64Ptr(0.9),
-					SeasonLength: 2,
-					Method:       "invalid",
+					Alpha:           float64Ptr(0.9),
+					Beta:            float64Ptr(0.9),
+					Gamma:           float64Ptr(0.9),
+					SeasonalPeriods: 2,
+					Trend:           "additive",
 				},
 			},
 			[]*stored.Evaluation{
@@ -208,21 +465,67 @@ func TestPredict_GetPrediction(t *testing.T) {
 				},
 				&stored.Evaluation{
 					ID: 2,
+				},
+				&stored.Evaluation{
+					ID: 3,
+				},
+				&stored.Evaluation{
+					ID: 4,
+				},
+				&stored.Evaluation{
+					ID: 5,
+				},
+				&stored.Evaluation{
+					ID: 6,
+				},
+				&stored.Evaluation{
+					ID: 7,
+				},
+				&stored.Evaluation{
+					ID: 8,
+				},
+				&stored.Evaluation{
+					ID: 9,
+				},
+				&stored.Evaluation{
+					ID: 10,
+				},
+				&stored.Evaluation{
+					ID: 11,
+				},
+				&stored.Evaluation{
+					ID: 12,
+				},
+				&stored.Evaluation{
+					ID: 13,
+				},
+				&stored.Evaluation{
+					ID: 14,
 				},
 			},
 		},
 		{
-			"Fail, additive, invalid parameters",
+			"Fail, additive, holt winters algorithm invalid response",
 			0,
-			errors.New("Invalid parameter for prediction; alpha must be between 0 and 1, is -1.000000"),
-			&holtwinters.Predict{},
+			errors.New(`strconv.Atoi: parsing "invalid": invalid syntax`),
+			&holtwinters.Predict{
+				Runner: &algorithm.Run{
+					Executer: func() *fake.Execute {
+						execute := fake.Execute{}
+						execute.ExecuteWithValueReactor = func(method *cpaconfig.Method, value string) (string, error) {
+							return "invalid", nil
+						}
+						return &execute
+					}(),
+				},
+			},
 			&config.Model{
 				HoltWinters: &config.HoltWinters{
-					SeasonLength: 2,
-					Alpha:        float64Ptr(-1.0),
-					Beta:         float64Ptr(0.9),
-					Gamma:        float64Ptr(0.9),
-					Method:       "additive",
+					Alpha:           float64Ptr(0.9),
+					Beta:            float64Ptr(0.9),
+					Gamma:           float64Ptr(0.9),
+					SeasonalPeriods: 2,
+					Trend:           "additive",
 				},
 			},
 			[]*stored.Evaluation{
@@ -231,6 +534,42 @@ func TestPredict_GetPrediction(t *testing.T) {
 				},
 				&stored.Evaluation{
 					ID: 2,
+				},
+				&stored.Evaluation{
+					ID: 3,
+				},
+				&stored.Evaluation{
+					ID: 4,
+				},
+				&stored.Evaluation{
+					ID: 5,
+				},
+				&stored.Evaluation{
+					ID: 6,
+				},
+				&stored.Evaluation{
+					ID: 7,
+				},
+				&stored.Evaluation{
+					ID: 8,
+				},
+				&stored.Evaluation{
+					ID: 9,
+				},
+				&stored.Evaluation{
+					ID: 10,
+				},
+				&stored.Evaluation{
+					ID: 11,
+				},
+				&stored.Evaluation{
+					ID: 12,
+				},
+				&stored.Evaluation{
+					ID: 13,
+				},
+				&stored.Evaluation{
+					ID: 14,
 				},
 			},
 		},
@@ -239,6 +578,15 @@ func TestPredict_GetPrediction(t *testing.T) {
 			0,
 			nil,
 			&holtwinters.Predict{
+				Runner: &algorithm.Run{
+					Executer: func() *fake.Execute {
+						execute := fake.Execute{}
+						execute.ExecuteWithValueReactor = func(method *cpaconfig.Method, value string) (string, error) {
+							return `0`, nil
+						}
+						return &execute
+					}(),
+				},
 				Execute: func() *fake.Execute {
 					execute := fake.Execute{}
 					execute.ExecuteWithValueReactor = func(method *cpaconfig.Method, value string) (string, error) {
@@ -253,11 +601,12 @@ func TestPredict_GetPrediction(t *testing.T) {
 						Type:    "test",
 						Timeout: 2500,
 					},
-					Alpha:        float64Ptr(0.9),
-					Beta:         float64Ptr(0.9),
-					Gamma:        float64Ptr(0.9),
-					SeasonLength: 2,
-					Method:       "additive",
+					Alpha:           float64Ptr(0.9),
+					Beta:            float64Ptr(0.9),
+					Gamma:           float64Ptr(0.9),
+					SeasonalPeriods: 2,
+					Trend:           "add",
+					Seasonal:        "add",
 				},
 			},
 			[]*stored.Evaluation{
@@ -267,13 +616,58 @@ func TestPredict_GetPrediction(t *testing.T) {
 				&stored.Evaluation{
 					ID: 2,
 				},
+				&stored.Evaluation{
+					ID: 3,
+				},
+				&stored.Evaluation{
+					ID: 4,
+				},
+				&stored.Evaluation{
+					ID: 5,
+				},
+				&stored.Evaluation{
+					ID: 6,
+				},
+				&stored.Evaluation{
+					ID: 7,
+				},
+				&stored.Evaluation{
+					ID: 8,
+				},
+				&stored.Evaluation{
+					ID: 9,
+				},
+				&stored.Evaluation{
+					ID: 10,
+				},
+				&stored.Evaluation{
+					ID: 11,
+				},
+				&stored.Evaluation{
+					ID: 12,
+				},
+				&stored.Evaluation{
+					ID: 13,
+				},
+				&stored.Evaluation{
+					ID: 14,
+				},
 			},
 		},
 		{
 			"Success, provide all values from fetch",
-			0,
+			2,
 			nil,
 			&holtwinters.Predict{
+				Runner: &algorithm.Run{
+					Executer: func() *fake.Execute {
+						execute := fake.Execute{}
+						execute.ExecuteWithValueReactor = func(method *cpaconfig.Method, value string) (string, error) {
+							return `2`, nil
+						}
+						return &execute
+					}(),
+				},
 				Execute: func() *fake.Execute {
 					execute := fake.Execute{}
 					execute.ExecuteWithValueReactor = func(method *cpaconfig.Method, value string) (string, error) {
@@ -288,8 +682,9 @@ func TestPredict_GetPrediction(t *testing.T) {
 						Type:    "test",
 						Timeout: 2500,
 					},
-					SeasonLength: 2,
-					Method:       "additive",
+					SeasonalPeriods: 2,
+					Trend:           "add",
+					Seasonal:        "add",
 				},
 			},
 			[]*stored.Evaluation{
@@ -299,13 +694,58 @@ func TestPredict_GetPrediction(t *testing.T) {
 				&stored.Evaluation{
 					ID: 2,
 				},
+				&stored.Evaluation{
+					ID: 3,
+				},
+				&stored.Evaluation{
+					ID: 4,
+				},
+				&stored.Evaluation{
+					ID: 5,
+				},
+				&stored.Evaluation{
+					ID: 6,
+				},
+				&stored.Evaluation{
+					ID: 7,
+				},
+				&stored.Evaluation{
+					ID: 8,
+				},
+				&stored.Evaluation{
+					ID: 9,
+				},
+				&stored.Evaluation{
+					ID: 10,
+				},
+				&stored.Evaluation{
+					ID: 11,
+				},
+				&stored.Evaluation{
+					ID: 12,
+				},
+				&stored.Evaluation{
+					ID: 13,
+				},
+				&stored.Evaluation{
+					ID: 14,
+				},
 			},
 		},
 		{
 			"Success, provide alpha and beta values from fetch",
-			0,
+			3,
 			nil,
 			&holtwinters.Predict{
+				Runner: &algorithm.Run{
+					Executer: func() *fake.Execute {
+						execute := fake.Execute{}
+						execute.ExecuteWithValueReactor = func(method *cpaconfig.Method, value string) (string, error) {
+							return `3`, nil
+						}
+						return &execute
+					}(),
+				},
 				Execute: func() *fake.Execute {
 					execute := fake.Execute{}
 					execute.ExecuteWithValueReactor = func(method *cpaconfig.Method, value string) (string, error) {
@@ -320,9 +760,10 @@ func TestPredict_GetPrediction(t *testing.T) {
 						Type:    "test",
 						Timeout: 2500,
 					},
-					Gamma:        float64Ptr(0.9),
-					SeasonLength: 2,
-					Method:       "additive",
+					Gamma:           float64Ptr(0.9),
+					SeasonalPeriods: 2,
+					Trend:           "add",
+					Seasonal:        "add",
 				},
 			},
 			[]*stored.Evaluation{
@@ -332,182 +773,41 @@ func TestPredict_GetPrediction(t *testing.T) {
 				&stored.Evaluation{
 					ID: 2,
 				},
-			},
-		},
-		{
-			"Success, additive, less than a full season",
-			0,
-			nil,
-			&holtwinters.Predict{},
-			&config.Model{
-				HoltWinters: &config.HoltWinters{
-					Alpha:        float64Ptr(0.9),
-					Beta:         float64Ptr(0.9),
-					Gamma:        float64Ptr(0.9),
-					SeasonLength: 5,
-					Method:       "additive",
-				},
-			},
-			[]*stored.Evaluation{},
-		},
-		{
-			"Successful, additive",
-			4,
-			nil,
-			&holtwinters.Predict{},
-			&config.Model{
-				Type: linear.Type,
-				HoltWinters: &config.HoltWinters{
-					Alpha:         float64Ptr(0.9),
-					Beta:          float64Ptr(0.9),
-					Gamma:         float64Ptr(0.9),
-					SeasonLength:  3,
-					StoredSeasons: 3,
-					Method:        "additive",
-				},
-			},
-			[]*stored.Evaluation{
 				&stored.Evaluation{
-					Created: time.Now().UTC().Add(time.Duration(-80) * time.Second),
-					Evaluation: stored.DBEvaluation{
-						TargetReplicas: 1,
-					},
+					ID: 3,
 				},
 				&stored.Evaluation{
-					Created: time.Now().UTC().Add(time.Duration(-70) * time.Second),
-					Evaluation: stored.DBEvaluation{
-						TargetReplicas: 3,
-					},
+					ID: 4,
 				},
 				&stored.Evaluation{
-					Created: time.Now().UTC().Add(time.Duration(-60) * time.Second),
-					Evaluation: stored.DBEvaluation{
-						TargetReplicas: 1,
-					},
+					ID: 5,
 				},
 				&stored.Evaluation{
-					Created: time.Now().UTC().Add(time.Duration(-50) * time.Second),
-					Evaluation: stored.DBEvaluation{
-						TargetReplicas: 1,
-					},
+					ID: 6,
 				},
 				&stored.Evaluation{
-					Created: time.Now().UTC().Add(time.Duration(-40) * time.Second),
-					Evaluation: stored.DBEvaluation{
-						TargetReplicas: 3,
-					},
+					ID: 7,
 				},
 				&stored.Evaluation{
-					Created: time.Now().UTC().Add(time.Duration(-30) * time.Second),
-					Evaluation: stored.DBEvaluation{
-						TargetReplicas: 1,
-					},
+					ID: 8,
 				},
 				&stored.Evaluation{
-					Created: time.Now().UTC().Add(time.Duration(-20) * time.Second),
-					Evaluation: stored.DBEvaluation{
-						TargetReplicas: 1,
-					},
-				},
-			},
-		},
-		{
-			"Fail, multiplicative, invalid parameters",
-			0,
-			errors.New("Invalid parameter for prediction; alpha must be between 0 and 1, is -1.000000"),
-			&holtwinters.Predict{},
-			&config.Model{
-				HoltWinters: &config.HoltWinters{
-					SeasonLength: 2,
-					Alpha:        float64Ptr(-1.0),
-					Beta:         float64Ptr(0.9),
-					Gamma:        float64Ptr(0.9),
-					Method:       "multiplicative",
-				},
-			},
-			[]*stored.Evaluation{
-				&stored.Evaluation{
-					ID: 1,
+					ID: 9,
 				},
 				&stored.Evaluation{
-					ID: 2,
-				},
-			},
-		},
-		{
-			"Success, multiplicative, less than a full season",
-			0,
-			nil,
-			&holtwinters.Predict{},
-			&config.Model{
-				HoltWinters: &config.HoltWinters{
-					Alpha:        float64Ptr(0.9),
-					Beta:         float64Ptr(0.9),
-					Gamma:        float64Ptr(0.9),
-					SeasonLength: 5,
-					Method:       "multiplicative",
-				},
-			},
-			[]*stored.Evaluation{},
-		},
-		{
-			"Successful, multiplicative",
-			4,
-			nil,
-			&holtwinters.Predict{},
-			&config.Model{
-				Type: linear.Type,
-				HoltWinters: &config.HoltWinters{
-					Alpha:         float64Ptr(0.9),
-					Beta:          float64Ptr(0.9),
-					Gamma:         float64Ptr(0.9),
-					SeasonLength:  3,
-					StoredSeasons: 3,
-					Method:        "multiplicative",
-				},
-			},
-			[]*stored.Evaluation{
-				&stored.Evaluation{
-					Created: time.Now().UTC().Add(time.Duration(-80) * time.Second),
-					Evaluation: stored.DBEvaluation{
-						TargetReplicas: 1,
-					},
+					ID: 10,
 				},
 				&stored.Evaluation{
-					Created: time.Now().UTC().Add(time.Duration(-70) * time.Second),
-					Evaluation: stored.DBEvaluation{
-						TargetReplicas: 3,
-					},
+					ID: 11,
 				},
 				&stored.Evaluation{
-					Created: time.Now().UTC().Add(time.Duration(-60) * time.Second),
-					Evaluation: stored.DBEvaluation{
-						TargetReplicas: 1,
-					},
+					ID: 12,
 				},
 				&stored.Evaluation{
-					Created: time.Now().UTC().Add(time.Duration(-50) * time.Second),
-					Evaluation: stored.DBEvaluation{
-						TargetReplicas: 1,
-					},
+					ID: 13,
 				},
 				&stored.Evaluation{
-					Created: time.Now().UTC().Add(time.Duration(-40) * time.Second),
-					Evaluation: stored.DBEvaluation{
-						TargetReplicas: 3,
-					},
-				},
-				&stored.Evaluation{
-					Created: time.Now().UTC().Add(time.Duration(-30) * time.Second),
-					Evaluation: stored.DBEvaluation{
-						TargetReplicas: 1,
-					},
-				},
-				&stored.Evaluation{
-					Created: time.Now().UTC().Add(time.Duration(-20) * time.Second),
-					Evaluation: stored.DBEvaluation{
-						TargetReplicas: 1,
-					},
+					ID: 14,
 				},
 			},
 		},
@@ -555,8 +855,8 @@ func TestModelPredict_GetIDsToRemove(t *testing.T) {
 			&config.Model{
 				Type: holtwinters.Type,
 				HoltWinters: &config.HoltWinters{
-					SeasonLength:  3,
-					StoredSeasons: 2,
+					SeasonalPeriods: 3,
+					StoredSeasons:   2,
 				},
 			},
 			[]*stored.Evaluation{
@@ -605,8 +905,8 @@ func TestModelPredict_GetIDsToRemove(t *testing.T) {
 			&config.Model{
 				Type: holtwinters.Type,
 				HoltWinters: &config.HoltWinters{
-					SeasonLength:  2,
-					StoredSeasons: 2,
+					SeasonalPeriods: 2,
+					StoredSeasons:   2,
 				},
 			},
 			[]*stored.Evaluation{

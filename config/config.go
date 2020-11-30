@@ -67,13 +67,19 @@ type Model struct {
 
 // HoltWinters represents a holt-winters exponential smoothing prediction model configuration
 type HoltWinters struct {
-	Alpha              *float64       `json:"alpha"`
-	Beta               *float64       `json:"beta"`
-	Gamma              *float64       `json:"gamma"`
-	RuntimeTuningFetch *config.Method `json:"runtimeTuningFetch"`
-	SeasonLength       int            `json:"seasonLength"`
-	StoredSeasons      int            `json:"storedSeasons"`
-	Method             string         `json:"method"`
+	Alpha                *float64       `json:"alpha"`
+	Beta                 *float64       `json:"beta"`
+	Gamma                *float64       `json:"gamma"`
+	Trend                string         `json:"trend"`
+	Seasonal             string         `json:"seasonal"`
+	SeasonalPeriods      int            `json:"seasonalPeriods"`
+	StoredSeasons        int            `json:"storedSeasons"`
+	DampedTrend          *bool          `json:"dampedTrend"`
+	InitializationMethod *string        `json:"initializationMethod"`
+	InitialLevel         *float64       `json:"initialLevel"`
+	InitialTrend         *float64       `json:"initialTrend"`
+	InitialSeasonal      *float64       `json:"initialSeasonal"`
+	RuntimeTuningFetch   *config.Method `json:"runtimeTuningFetch"`
 }
 
 // Linear represents a linear regression prediction model configuration

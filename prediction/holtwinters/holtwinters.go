@@ -1,5 +1,5 @@
 /*
-Copyright 2019 The Predictive Horizontal Pod Autoscaler Authors.
+Copyright 2020 The Predictive Horizontal Pod Autoscaler Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,18 +19,19 @@ package holtwinters
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
-	"math"
 	"sort"
+	"strconv"
 
 	"github.com/jthomperoo/custom-pod-autoscaler/execute"
-	"github.com/jthomperoo/holtwinters"
+	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/algorithm"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/config"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/stored"
 )
 
 // Type HoltWinters is the type of the HoltWinters predicter
 const Type = "HoltWinters"
+
+const algorithmPath = "/app/algorithms/holt_winters/holt_winters.py"
 
 const (
 	// MethodAdditive specifies a HoltWinters time series prediction using the additive method
@@ -42,17 +43,30 @@ const (
 // Predict provides logic for using Linear Regression to make a prediction
 type Predict struct {
 	Execute execute.Executer
+	Runner  algorithm.Runner
 }
 
-// RunTimeTuningFetchRequest defines the request value sent as part of the method to determine the runtime Holt-Winters
-// values
-type RunTimeTuningFetchRequest struct {
+type holtWintersParametersParameters struct {
+	Series               []float64 `json:"series"`
+	Alpha                float64   `json:"alpha"`
+	Beta                 float64   `json:"beta"`
+	Gamma                float64   `json:"gamma"`
+	Trend                string    `json:"trend"`
+	Seasonal             string    `json:"seasonal"`
+	SeasonalPeriods      int       `json:"seasonalPeriods"`
+	DampedTrend          *bool     `json:"dampedTrend,omitempty"`
+	InitializationMethod *string   `json:"initializationMethod,omitempty"`
+	InitialLevel         *float64  `json:"initialLevel,omitempty"`
+	InitialTrend         *float64  `json:"initialTrend,omitempty"`
+	InitialSeasonal      *float64  `json:"initialSeasonal,omitempty"`
+}
+
+type runTimeTuningFetchRequest struct {
 	Model       *config.Model        `json:"model"`
 	Evaluations []*stored.Evaluation `json:"evaluations"`
 }
 
-// RunTimeTuningFetchResult defines the expected response from the method that specifies the runtime Holt-Winters values
-type RunTimeTuningFetchResult struct {
+type runTimeTuningFetchResult struct {
 	Alpha *float64 `json:"alpha"`
 	Beta  *float64 `json:"beta"`
 	Gamma *float64 `json:"gamma"`
@@ -64,8 +78,8 @@ func (p *Predict) GetPrediction(model *config.Model, evaluations []*stored.Evalu
 		return 0, errors.New("No HoltWinters configuration provided for model")
 	}
 
-	// If less than a full season of data, return zero without error
-	if len(evaluations) < model.HoltWinters.SeasonLength {
+	// Statsmodels requires at least 10 + 2 * (seasonal_periods // 2) to make a prediction with Holt Winters
+	if len(evaluations) < 10+2*model.HoltWinters.SeasonalPeriods/2 {
 		return 0, nil
 	}
 
@@ -76,7 +90,7 @@ func (p *Predict) GetPrediction(model *config.Model, evaluations []*stored.Evalu
 	if model.HoltWinters.RuntimeTuningFetch != nil {
 
 		// Convert request into JSON string
-		request, err := json.Marshal(&RunTimeTuningFetchRequest{
+		request, err := json.Marshal(&runTimeTuningFetchRequest{
 			Model:       model,
 			Evaluations: evaluations,
 		})
@@ -92,7 +106,7 @@ func (p *Predict) GetPrediction(model *config.Model, evaluations []*stored.Evalu
 		}
 
 		// Parse result
-		var result RunTimeTuningFetchResult
+		var result runTimeTuningFetchResult
 		err = json.Unmarshal([]byte(hookResult), &result)
 		if err != nil {
 			return 0, err
@@ -125,30 +139,36 @@ func (p *Predict) GetPrediction(model *config.Model, evaluations []*stored.Evalu
 		series[i] = float64(evaluation.Evaluation.TargetReplicas)
 	}
 
-	var prediction []float64
-	var err error
-
-	switch model.HoltWinters.Method {
-	case MethodAdditive:
-		// Build prediction 1 ahead
-		prediction, err = holtwinters.PredictAdditive(series, model.HoltWinters.SeasonLength, *alpha, *beta, *gamma, 1)
-		if err != nil {
-			return 0, err
-		}
-		break
-	case MethodMultiplicative:
-		// Build prediction 1 ahead
-		prediction, err = holtwinters.PredictMultiplicative(series, model.HoltWinters.SeasonLength, *alpha, *beta, *gamma, 1)
-		if err != nil {
-			return 0, err
-		}
-		break
-	default:
-		return 0, fmt.Errorf("Unknown HoltWinters method '%s'", model.HoltWinters.Method)
+	parameters, err := json.Marshal(holtWintersParametersParameters{
+		Series:               series,
+		Alpha:                *alpha,
+		Beta:                 *beta,
+		Gamma:                *gamma,
+		Trend:                model.HoltWinters.Trend,
+		Seasonal:             model.HoltWinters.Seasonal,
+		SeasonalPeriods:      model.HoltWinters.SeasonalPeriods,
+		DampedTrend:          model.HoltWinters.DampedTrend,
+		InitializationMethod: model.HoltWinters.InitializationMethod,
+		InitialLevel:         model.HoltWinters.InitialLevel,
+		InitialTrend:         model.HoltWinters.InitialTrend,
+		InitialSeasonal:      model.HoltWinters.InitialSeasonal,
+	})
+	if err != nil {
+		// Should not occur, panic
+		panic(err)
 	}
 
-	// Return last value in prediction
-	return int32(math.Ceil(prediction[len(prediction)-1])), nil
+	value, err := p.Runner.RunAlgorithmWithValue(algorithmPath, string(parameters))
+	if err != nil {
+		return 0, err
+	}
+
+	prediction, err := strconv.Atoi(value)
+	if err != nil {
+		return 0, err
+	}
+
+	return int32(prediction), nil
 }
 
 // GetIDsToRemove provides the list of stored evaluation IDs to remove, if there are too many stored seasons
@@ -166,9 +186,9 @@ func (p *Predict) GetIDsToRemove(model *config.Model, evaluations []*stored.Eval
 	var markedForRemove []int
 
 	// If there are too many stored seasons, remove the oldest ones
-	seasonsToRemove := len(evaluations)/model.HoltWinters.SeasonLength - model.HoltWinters.StoredSeasons
+	seasonsToRemove := len(evaluations)/model.HoltWinters.SeasonalPeriods - model.HoltWinters.StoredSeasons
 	for i := 0; i < seasonsToRemove; i++ {
-		for j := 0; j < model.HoltWinters.SeasonLength; j++ {
+		for j := 0; j < model.HoltWinters.SeasonalPeriods; j++ {
 			markedForRemove = append(markedForRemove, evaluations[i+j].ID)
 		}
 	}
