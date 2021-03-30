@@ -76,9 +76,9 @@ def test_holt_winters(subtests):
             "stdin": """{
                 "trend": "mul",
                 "seasonal": "add",
-                "alpha": 0.9,
-                "beta": 0.9,
-                "gamma": 0.3,
+                "alpha": 0.3,
+                "beta": 0.3,
+                "gamma": 0.9,
                 "seasonalPeriods": 3,
                 "series": [1,3,1,1,3,1,1,3,1,1,3,1,1,3,1]
             }"""
