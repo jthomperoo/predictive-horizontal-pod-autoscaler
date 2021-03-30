@@ -39,7 +39,7 @@ config:
         name: LinearPrediction
         perInterval: 1
         linear:
-          lookAhead: 10000
+          lookAhead: 10
           storedValues: 6
       decisionType: "maximum"
       metrics:
