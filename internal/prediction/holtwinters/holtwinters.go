@@ -22,9 +22,9 @@ import (
 	"sort"
 	"strconv"
 
-	"github.com/jthomperoo/custom-pod-autoscaler/execute"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/algorithm"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/config"
+	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/hook"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/stored"
 )
 
@@ -46,7 +46,7 @@ const (
 
 // Predict provides logic for using Linear Regression to make a prediction
 type Predict struct {
-	Execute execute.Executer
+	Execute hook.Executer
 	Runner  algorithm.Runner
 }
 
@@ -65,12 +65,12 @@ type holtWintersParametersParameters struct {
 	InitialSeasonal      *float64  `json:"initialSeasonal,omitempty"`
 }
 
-type runTimeTuningFetchRequest struct {
+type runTimeTuningFetchHookRequest struct {
 	Model       *config.Model        `json:"model"`
 	Evaluations []*stored.Evaluation `json:"evaluations"`
 }
 
-type runTimeTuningFetchResult struct {
+type runTimeTuningFetchHookResult struct {
 	Alpha *float64 `json:"alpha"`
 	Beta  *float64 `json:"beta"`
 	Gamma *float64 `json:"gamma"`
@@ -91,10 +91,10 @@ func (p *Predict) GetPrediction(model *config.Model, evaluations []*stored.Evalu
 	beta := model.HoltWinters.Beta
 	gamma := model.HoltWinters.Gamma
 
-	if model.HoltWinters.RuntimeTuningFetch != nil {
+	if model.HoltWinters.RuntimeTuningFetchHook != nil {
 
 		// Convert request into JSON string
-		request, err := json.Marshal(&runTimeTuningFetchRequest{
+		request, err := json.Marshal(&runTimeTuningFetchHookRequest{
 			Model:       model,
 			Evaluations: evaluations,
 		})
@@ -104,13 +104,13 @@ func (p *Predict) GetPrediction(model *config.Model, evaluations []*stored.Evalu
 		}
 
 		// Request runtime tuning values
-		hookResult, err := p.Execute.ExecuteWithValue(model.HoltWinters.RuntimeTuningFetch, string(request))
+		hookResult, err := p.Execute.ExecuteWithValue(model.HoltWinters.RuntimeTuningFetchHook, string(request))
 		if err != nil {
 			return 0, err
 		}
 
 		// Parse result
-		var result runTimeTuningFetchResult
+		var result runTimeTuningFetchHookResult
 		err = json.Unmarshal([]byte(hookResult), &result)
 		if err != nil {
 			return 0, err

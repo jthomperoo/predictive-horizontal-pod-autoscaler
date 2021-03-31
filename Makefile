@@ -20,6 +20,8 @@ lint: vendor_modules
 beautify: vendor_modules
 	@echo "=============Beautifying============="
 	gofmt -s -w .
+	go mod tidy
+	find algorithms -name '*.py' -print0 | xargs -0 yapf -i
 
 docker: default
 	@echo "=============Building docker images============="

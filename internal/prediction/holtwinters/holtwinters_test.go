@@ -22,10 +22,9 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
-	cpaconfig "github.com/jthomperoo/custom-pod-autoscaler/config"
-	cpafake "github.com/jthomperoo/custom-pod-autoscaler/fake"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/config"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/fake"
+	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/hook"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/prediction/holtwinters"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/prediction/linear"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/stored"
@@ -125,9 +124,9 @@ func TestPredict_GetPrediction(t *testing.T) {
 			0,
 			errors.New("fail runtime fetch"),
 			&holtwinters.Predict{
-				Execute: func() *cpafake.Execute {
-					execute := cpafake.Execute{}
-					execute.ExecuteWithValueReactor = func(method *cpaconfig.Method, value string) (string, error) {
+				Execute: func() *fake.Execute {
+					execute := fake.Execute{}
+					execute.ExecuteWithValueReactor = func(definition *hook.Definition, value string) (string, error) {
 						return "", errors.New("fail runtime fetch")
 					}
 					return &execute
@@ -135,7 +134,7 @@ func TestPredict_GetPrediction(t *testing.T) {
 			},
 			&config.Model{
 				HoltWinters: &config.HoltWinters{
-					RuntimeTuningFetch: &cpaconfig.Method{
+					RuntimeTuningFetchHook: &hook.Definition{
 						Type:    "test",
 						Timeout: 2500,
 					},
@@ -194,9 +193,9 @@ func TestPredict_GetPrediction(t *testing.T) {
 			0,
 			errors.New("invalid character 'i' looking for beginning of value"),
 			&holtwinters.Predict{
-				Execute: func() *cpafake.Execute {
-					execute := cpafake.Execute{}
-					execute.ExecuteWithValueReactor = func(method *cpaconfig.Method, value string) (string, error) {
+				Execute: func() *fake.Execute {
+					execute := fake.Execute{}
+					execute.ExecuteWithValueReactor = func(definition *hook.Definition, value string) (string, error) {
 						return "invalid json", nil
 					}
 					return &execute
@@ -204,7 +203,7 @@ func TestPredict_GetPrediction(t *testing.T) {
 			},
 			&config.Model{
 				HoltWinters: &config.HoltWinters{
-					RuntimeTuningFetch: &cpaconfig.Method{
+					RuntimeTuningFetchHook: &hook.Definition{
 						Type:    "test",
 						Timeout: 2500,
 					},
@@ -575,9 +574,9 @@ func TestPredict_GetPrediction(t *testing.T) {
 						return "0", nil
 					},
 				},
-				Execute: func() *cpafake.Execute {
-					execute := cpafake.Execute{}
-					execute.ExecuteWithValueReactor = func(method *cpaconfig.Method, value string) (string, error) {
+				Execute: func() *fake.Execute {
+					execute := fake.Execute{}
+					execute.ExecuteWithValueReactor = func(definition *hook.Definition, value string) (string, error) {
 						return `{}`, nil
 					}
 					return &execute
@@ -585,7 +584,7 @@ func TestPredict_GetPrediction(t *testing.T) {
 			},
 			&config.Model{
 				HoltWinters: &config.HoltWinters{
-					RuntimeTuningFetch: &cpaconfig.Method{
+					RuntimeTuningFetchHook: &hook.Definition{
 						Type:    "test",
 						Timeout: 2500,
 					},
@@ -652,9 +651,9 @@ func TestPredict_GetPrediction(t *testing.T) {
 						return "2", nil
 					},
 				},
-				Execute: func() *cpafake.Execute {
-					execute := cpafake.Execute{}
-					execute.ExecuteWithValueReactor = func(method *cpaconfig.Method, value string) (string, error) {
+				Execute: func() *fake.Execute {
+					execute := fake.Execute{}
+					execute.ExecuteWithValueReactor = func(definition *hook.Definition, value string) (string, error) {
 						return `{"alpha":0.2, "beta":0.2, "gamma": 0.2}`, nil
 					}
 					return &execute
@@ -662,7 +661,7 @@ func TestPredict_GetPrediction(t *testing.T) {
 			},
 			&config.Model{
 				HoltWinters: &config.HoltWinters{
-					RuntimeTuningFetch: &cpaconfig.Method{
+					RuntimeTuningFetchHook: &hook.Definition{
 						Type:    "test",
 						Timeout: 2500,
 					},
@@ -726,9 +725,9 @@ func TestPredict_GetPrediction(t *testing.T) {
 						return "3", nil
 					},
 				},
-				Execute: func() *cpafake.Execute {
-					execute := cpafake.Execute{}
-					execute.ExecuteWithValueReactor = func(method *cpaconfig.Method, value string) (string, error) {
+				Execute: func() *fake.Execute {
+					execute := fake.Execute{}
+					execute.ExecuteWithValueReactor = func(definition *hook.Definition, value string) (string, error) {
 						return `{"alpha":0.2, "beta":0.2}`, nil
 					}
 					return &execute
@@ -736,7 +735,7 @@ func TestPredict_GetPrediction(t *testing.T) {
 			},
 			&config.Model{
 				HoltWinters: &config.HoltWinters{
-					RuntimeTuningFetch: &cpaconfig.Method{
+					RuntimeTuningFetchHook: &hook.Definition{
 						Type:    "test",
 						Timeout: 2500,
 					},

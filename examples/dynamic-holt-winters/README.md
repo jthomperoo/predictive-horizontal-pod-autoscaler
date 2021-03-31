@@ -65,7 +65,7 @@ the configuration defines how the autoscaler will act:
           name: HoltWintersPrediction
           perInterval: 1
           holtWinters:
-            runtimeTuningFetch:
+            runtimeTuningFetchHook:
               type: "http"
               timeout: 2500
               http:
@@ -105,8 +105,8 @@ period described, in this case it will pick the highest evaluation over the past
     - **type** - 'HoltWinters', using a Holt-Winters predictive model.
     - **name** - Unique name of the model.
     - **holtWinters** - Holt-Winters specific configuration.
-      * **runtimeTuningFetch** - This is a [method] that is used to dynamically fetch the `alpha`, `beta` and `gamma`
-      values at runtime, in this example it is using a `HTTP` request to `http://tuning/holt_winters`.
+      * **runtimeTuningFetchHook** - This is a [method] that is used to dynamically fetch the `alpha`, `beta` and
+      `gamma` values at runtime, in this example it is using a `HTTP` request to `http://tuning/holt_winters`.
       * **seasonalPeriods** - the length of a season in base unit intervals, for this example interval is `20000`
       (20 seconds), and season length is `6`, resulting in a season length of 20 * 6 = 120 seconds = 2 minutes.
       * **storedSeasons** - the number of seasons to store, for this example `4`, if there are more than 4 seasons

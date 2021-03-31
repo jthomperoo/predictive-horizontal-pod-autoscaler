@@ -46,12 +46,20 @@ See the [wiki for more information, such as guides and
 references](https://predictive-horizontal-pod-autoscaler.readthedocs.io/en/latest/).
 
 ## Developing this project
+
 ### Environment
 Developing this project requires these dependencies:
 
 * [Go](https://golang.org/doc/install) >= `1.13`
 * [Golint](https://github.com/golang/lint)
 * [Docker](https://docs.docker.com/install/)
+* [Python]() == `3.8.5`
+
+Any Python dependencies must be installed by running:
+
+```bash
+pip install -r requirements-dev.txt
+```
 
 To view docs locally, requires:
 
@@ -63,6 +71,6 @@ To view docs locally, requires:
 * `make` - builds the Predictive HPA binary.
 * `make docker` - builds the Predictive HPA image.
 * `make lint` - lints the code.
-* `make beautify` - beautifies the code, must be run to pass the CI
-* `make unittest` - runs the unit tests
+* `make beautify` - beautifies the code, must be run to pass the CI.
+* `make unittest` - runs the unit tests.
 * `make doc` - hosts the documentation locally, at `127.0.0.1:8000`.

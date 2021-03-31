@@ -20,7 +20,7 @@ package config
 import (
 	"io"
 
-	"github.com/jthomperoo/custom-pod-autoscaler/config"
+	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/hook"
 	autoscalingv2 "k8s.io/api/autoscaling/v2beta2"
 	"k8s.io/apimachinery/pkg/util/yaml"
 )
@@ -68,19 +68,19 @@ type Model struct {
 
 // HoltWinters represents a holt-winters exponential smoothing prediction model configuration
 type HoltWinters struct {
-	Alpha                *float64       `json:"alpha"`
-	Beta                 *float64       `json:"beta"`
-	Gamma                *float64       `json:"gamma"`
-	Trend                string         `json:"trend"`
-	Seasonal             string         `json:"seasonal"`
-	SeasonalPeriods      int            `json:"seasonalPeriods"`
-	StoredSeasons        int            `json:"storedSeasons"`
-	DampedTrend          *bool          `json:"dampedTrend"`
-	InitializationMethod *string        `json:"initializationMethod"`
-	InitialLevel         *float64       `json:"initialLevel"`
-	InitialTrend         *float64       `json:"initialTrend"`
-	InitialSeasonal      *float64       `json:"initialSeasonal"`
-	RuntimeTuningFetch   *config.Method `json:"runtimeTuningFetch"`
+	Alpha                  *float64         `json:"alpha"`
+	Beta                   *float64         `json:"beta"`
+	Gamma                  *float64         `json:"gamma"`
+	Trend                  string           `json:"trend"`
+	Seasonal               string           `json:"seasonal"`
+	SeasonalPeriods        int              `json:"seasonalPeriods"`
+	StoredSeasons          int              `json:"storedSeasons"`
+	DampedTrend            *bool            `json:"dampedTrend"`
+	InitializationMethod   *string          `json:"initializationMethod"`
+	InitialLevel           *float64         `json:"initialLevel"`
+	InitialTrend           *float64         `json:"initialTrend"`
+	InitialSeasonal        *float64         `json:"initialSeasonal"`
+	RuntimeTuningFetchHook *hook.Definition `json:"runtimeTuningFetchHook"`
 }
 
 // Linear represents a linear regression prediction model configuration

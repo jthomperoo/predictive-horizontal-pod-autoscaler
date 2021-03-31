@@ -38,8 +38,8 @@ spec:
     spec:
       containers:
       - name: simple-holt-winters-example
-        image: jthomperoo/predictive-horizontal-pod-autoscaler:latest
-        imagePullPolicy: Always
+        image: jthomperoo/predictive-horizontal-pod-autoscaler:dev
+        imagePullPolicy: IfNotPresent
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
@@ -72,7 +72,7 @@ spec:
               type: Utilization
               averageUtilization: 50
     - name: interval
-      value: "20000"
+      value: "5000"
     - name: startTime
       value: "60000"
     - name: downscaleStabilization

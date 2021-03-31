@@ -118,7 +118,7 @@ For example, a method using a HTTP request to fetch the values of runtime is con
       name: HoltWintersPrediction
       perInterval: 1
       holtWinters:
-        runtimeTuningFetch:
+        runtimeTuningFetchHook:
           type: "http"
           timeout: 2500
           http:
@@ -133,7 +133,7 @@ For example, a method using a HTTP request to fetch the values of runtime is con
     decisionType: "maximum"
 ```
 
-The method is defined with the name `runtimeTuningFetch`.
+The method is defined with the name `runtimeTuningFetchHook`.
 
 The supported methods for the PHPA are:
 
@@ -164,7 +164,7 @@ runtime, and the `beta` and `gamma` values could be hardcoded in configuration:
       name: HoltWintersPrediction
       perInterval: 1
       holtWinters:
-        runtimeTuningFetch:
+        runtimeTuningFetchHook:
           type: "http"
           timeout: 2500
           http:
@@ -192,7 +192,7 @@ as a backup:
       name: HoltWintersPrediction
       perInterval: 1
       holtWinters:
-        runtimeTuningFetch:
+        runtimeTuningFetchHook:
           type: "http"
           timeout: 2500
           http:
@@ -228,7 +228,7 @@ The data that the external source will recieve will be formatted as:
       "alpha": null,
       "beta": null,
       "gamma": null,
-      "runtimeTuningFetch": {
+      "runtimeTuningFetchHook": {
         "type": "http",
         "timeout": 2500,
         "shell": null,

@@ -49,6 +49,9 @@ import (
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/algorithm"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/config"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/evaluate"
+	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/hook"
+	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/hook/http"
+	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/hook/shell"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/prediction"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/prediction/holtwinters"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/prediction/linear"
@@ -198,6 +201,20 @@ func getEvaluation(stdin io.Reader, predictiveConfig *config.Config) {
 		Command: exec.Command,
 	}
 
+	shellExec := &shell.Execute{
+		Command: exec.Command,
+	}
+
+	httpExec := &http.Execute{}
+
+	// Combine executers
+	combinedExecute := &hook.CombinedExecute{
+		Executers: []hook.Executer{
+			shellExec,
+			httpExec,
+		},
+	}
+
 	// Set up evaluator
 	evaluator := &evaluate.PredictiveEvaluate{
 		HPAEvaluator: hpaevaluate.NewEvaluate(predictiveConfig.Tolerance),
@@ -209,7 +226,8 @@ func getEvaluation(stdin io.Reader, predictiveConfig *config.Config) {
 				Runner: algorithmRunner,
 			},
 			&holtwinters.Predict{
-				Runner: algorithmRunner,
+				Runner:  algorithmRunner,
+				Execute: combinedExecute,
 			},
 		},
 	}
