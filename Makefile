@@ -2,23 +2,21 @@ REGISTRY = jthomperoo
 NAME = predictive-horizontal-pod-autoscaler
 VERSION = latest
 
-default:
+default: vendor_modules
 	@echo "=============Building============="
-	go mod vendor
 	go build -mod vendor -o dist/$(NAME) main.go
 	cp LICENSE dist/LICENSE
 
-test:
+test: vendor_modules
 	@echo "=============Running unit tests============="
-	go mod vendor
 	go test ./... -cover -mod=vendor -coverprofile unit_cover.out --tags=unit
 	pytest algorithms/
 
-lint:
+lint: vendor_modules
 	@echo "=============Linting============="
-	go mod vendor
 	go list -mod=vendor ./... | grep -v /vendor/ | xargs -L1 golint -set_exit_status
 	pylint algorithms --rcfile=.pylintrc
+
 
 docker: default
 	@echo "=============Building docker images============="
@@ -27,3 +25,6 @@ docker: default
 doc:
 	@echo "=============Serving docs============="
 	mkdocs serve
+
+vendor_modules:
+	go mod vendor

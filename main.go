@@ -1,5 +1,5 @@
 /*
-Copyright 2020 The Predictive Horizontal Pod Autoscaler Authors.
+Copyright 2021 The Predictive Horizontal Pod Autoscaler Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -42,20 +42,17 @@ import (
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/sqlite3"
 	_ "github.com/golang-migrate/migrate/v4/source/file" // Driver for loading evaluations from file system
-	"github.com/jthomperoo/custom-pod-autoscaler/execute"
-	"github.com/jthomperoo/custom-pod-autoscaler/execute/http"
-	"github.com/jthomperoo/custom-pod-autoscaler/execute/shell"
 	cpametric "github.com/jthomperoo/custom-pod-autoscaler/metric"
 	hpaevaluate "github.com/jthomperoo/horizontal-pod-autoscaler/evaluate"
 	"github.com/jthomperoo/horizontal-pod-autoscaler/metric"
 	"github.com/jthomperoo/horizontal-pod-autoscaler/podclient"
-	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/algorithm"
-	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/config"
-	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/evaluate"
-	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/prediction"
-	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/prediction/holtwinters"
-	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/prediction/linear"
-	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/stored"
+	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/algorithm"
+	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/config"
+	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/evaluate"
+	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/prediction"
+	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/prediction/holtwinters"
+	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/prediction/linear"
+	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/stored"
 	_ "github.com/mattn/go-sqlite3" // Driver for sqlite3 database	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -197,23 +194,8 @@ func getEvaluation(stdin io.Reader, predictiveConfig *config.Config) {
 		os.Exit(1)
 	}
 
-	// Set up shell executer
-	shellExec := &shell.Execute{
-		Command: exec.Command,
-	}
-
-	httpExec := &http.Execute{}
-
-	// Combine executers
-	combinedExecute := &execute.CombinedExecute{
-		Executers: []execute.Executer{
-			shellExec,
-			httpExec,
-		},
-	}
-
 	algorithmRunner := &algorithm.Run{
-		Executer: combinedExecute,
+		Command: exec.Command,
 	}
 
 	// Set up evaluator
@@ -227,8 +209,7 @@ func getEvaluation(stdin io.Reader, predictiveConfig *config.Config) {
 				Runner: algorithmRunner,
 			},
 			&holtwinters.Predict{
-				Execute: combinedExecute,
-				Runner:  algorithmRunner,
+				Runner: algorithmRunner,
 			},
 		},
 	}
