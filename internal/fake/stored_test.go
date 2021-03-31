@@ -55,7 +55,7 @@ func TestStore_GetEvaluation(t *testing.T) {
 		{
 			"Return evaluation",
 			[]*stored.Evaluation{
-				&stored.Evaluation{
+				{
 					ID: 3,
 					Evaluation: stored.DBEvaluation{
 						TargetReplicas: 2,
@@ -66,7 +66,7 @@ func TestStore_GetEvaluation(t *testing.T) {
 			fake.Store{
 				GetEvaluationReactor: func(model string) ([]*stored.Evaluation, error) {
 					return []*stored.Evaluation{
-						&stored.Evaluation{
+						{
 							ID: 3,
 							Evaluation: stored.DBEvaluation{
 								TargetReplicas: 2,

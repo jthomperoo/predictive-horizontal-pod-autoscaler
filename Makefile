@@ -17,6 +17,9 @@ lint: vendor_modules
 	go list -mod=vendor ./... | grep -v /vendor/ | xargs -L1 golint -set_exit_status
 	pylint algorithms --rcfile=.pylintrc
 
+beautify: vendor_modules
+	@echo "=============Beautifying============="
+	gofmt -s -w .
 
 docker: default
 	@echo "=============Building docker images============="

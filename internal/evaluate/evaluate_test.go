@@ -92,7 +92,7 @@ func TestGetEvaluation(t *testing.T) {
 			},
 			&config.Config{
 				Models: []*config.Model{
-					&config.Model{
+					{
 						Type: "fake",
 					},
 				},
@@ -128,7 +128,7 @@ func TestGetEvaluation(t *testing.T) {
 			},
 			&config.Config{
 				Models: []*config.Model{
-					&config.Model{
+					{
 						Type: "fake",
 					},
 				},
@@ -172,7 +172,7 @@ func TestGetEvaluation(t *testing.T) {
 			},
 			&config.Config{
 				Models: []*config.Model{
-					&config.Model{
+					{
 						Type: "fake",
 					},
 				},
@@ -211,7 +211,7 @@ func TestGetEvaluation(t *testing.T) {
 			},
 			&config.Config{
 				Models: []*config.Model{
-					&config.Model{
+					{
 						Type:        "fake",
 						PerInterval: 3,
 					},
@@ -251,7 +251,7 @@ func TestGetEvaluation(t *testing.T) {
 			},
 			&config.Config{
 				Models: []*config.Model{
-					&config.Model{
+					{
 						Type:        "fake",
 						PerInterval: 3,
 					},
@@ -294,7 +294,7 @@ func TestGetEvaluation(t *testing.T) {
 			},
 			&config.Config{
 				Models: []*config.Model{
-					&config.Model{
+					{
 						Type:        "fake",
 						PerInterval: 3,
 					},
@@ -340,7 +340,7 @@ func TestGetEvaluation(t *testing.T) {
 			},
 			&config.Config{
 				Models: []*config.Model{
-					&config.Model{
+					{
 						Type:        "fake",
 						PerInterval: 3,
 					},
@@ -389,7 +389,7 @@ func TestGetEvaluation(t *testing.T) {
 			},
 			&config.Config{
 				Models: []*config.Model{
-					&config.Model{
+					{
 						Type:        "fake",
 						PerInterval: 3,
 					},
@@ -441,7 +441,7 @@ func TestGetEvaluation(t *testing.T) {
 			},
 			&config.Config{
 				Models: []*config.Model{
-					&config.Model{
+					{
 						Type:        "fake",
 						PerInterval: 3,
 					},
@@ -496,7 +496,7 @@ func TestGetEvaluation(t *testing.T) {
 			},
 			&config.Config{
 				Models: []*config.Model{
-					&config.Model{
+					{
 						Type:        "fake",
 						PerInterval: 3,
 					},
@@ -554,12 +554,12 @@ func TestGetEvaluation(t *testing.T) {
 			},
 			&config.Config{
 				Models: []*config.Model{
-					&config.Model{
+					{
 						Type:        "fake",
 						PerInterval: 3,
 						Name:        "lower",
 					},
-					&config.Model{
+					{
 						Type:        "fake",
 						PerInterval: 3,
 						Name:        "higher",
@@ -621,12 +621,12 @@ func TestGetEvaluation(t *testing.T) {
 			},
 			&config.Config{
 				Models: []*config.Model{
-					&config.Model{
+					{
 						Type:        "fake",
 						PerInterval: 3,
 						Name:        "lower",
 					},
-					&config.Model{
+					{
 						Type:        "fake",
 						PerInterval: 3,
 						Name:        "higher",
@@ -688,12 +688,12 @@ func TestGetEvaluation(t *testing.T) {
 			},
 			&config.Config{
 				Models: []*config.Model{
-					&config.Model{
+					{
 						Type:        "fake",
 						PerInterval: 3,
 						Name:        "lower",
 					},
-					&config.Model{
+					{
 						Type:        "fake",
 						PerInterval: 3,
 						Name:        "higher",
@@ -755,12 +755,12 @@ func TestGetEvaluation(t *testing.T) {
 			},
 			&config.Config{
 				Models: []*config.Model{
-					&config.Model{
+					{
 						Type:        "fake",
 						PerInterval: 3,
 						Name:        "lower",
 					},
-					&config.Model{
+					{
 						Type:        "fake",
 						PerInterval: 3,
 						Name:        "higher",
@@ -828,22 +828,22 @@ func TestGetEvaluation(t *testing.T) {
 			},
 			&config.Config{
 				Models: []*config.Model{
-					&config.Model{
+					{
 						Type:        "fake",
 						PerInterval: 3,
 						Name:        "a",
 					},
-					&config.Model{
+					{
 						Type:        "fake",
 						PerInterval: 3,
 						Name:        "b",
 					},
-					&config.Model{
+					{
 						Type:        "fake",
 						PerInterval: 3,
 						Name:        "c",
 					},
-					&config.Model{
+					{
 						Type:        "fake",
 						PerInterval: 3,
 						Name:        "d",
@@ -914,27 +914,27 @@ func TestGetEvaluation(t *testing.T) {
 			},
 			&config.Config{
 				Models: []*config.Model{
-					&config.Model{
+					{
 						Type:        "fake",
 						PerInterval: 3,
 						Name:        "a",
 					},
-					&config.Model{
+					{
 						Type:        "fake",
 						PerInterval: 3,
 						Name:        "b",
 					},
-					&config.Model{
+					{
 						Type:        "fake",
 						PerInterval: 3,
 						Name:        "c",
 					},
-					&config.Model{
+					{
 						Type:        "fake",
 						PerInterval: 3,
 						Name:        "d",
 					},
-					&config.Model{
+					{
 						Type:        "fake",
 						PerInterval: 3,
 						Name:        "e",
@@ -993,7 +993,7 @@ func TestGetEvaluation(t *testing.T) {
 			},
 			&config.Config{
 				Models: []*config.Model{
-					&config.Model{
+					{
 						Type:        "fake",
 						PerInterval: 3,
 						Name:        "test",

@@ -38,12 +38,12 @@ solutions such as EKS or GCP.
     * Downscale Stabilization.
     * Sync Period.
     * Initial Readiness Delay.
-* Runs in Kubernetes as a standard Deployment.
+* Runs in Kubernetes as a standard Pod.
 
 ## More information
 
-See the
-[wiki for more information, such as guides and references](https://predictive-horizontal-pod-autoscaler.readthedocs.io/en/latest/).
+See the [wiki for more information, such as guides and
+references](https://predictive-horizontal-pod-autoscaler.readthedocs.io/en/latest/).
 
 ## Developing this project
 ### Environment
@@ -63,5 +63,6 @@ To view docs locally, requires:
 * `make` - builds the Predictive HPA binary.
 * `make docker` - builds the Predictive HPA image.
 * `make lint` - lints the code.
+* `make beautify` - beautifies the code, must be run to pass the CI
 * `make unittest` - runs the unit tests
 * `make doc` - hosts the documentation locally, at `127.0.0.1:8000`.

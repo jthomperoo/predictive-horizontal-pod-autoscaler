@@ -77,7 +77,7 @@ func TestLoadConfig(t *testing.T) {
 				CPUInitializationPeriod: 25,
 				InitialReadinessDelay:   321,
 				Models: []*config.Model{
-					&config.Model{
+					{
 						Type:        "test",
 						Name:        "testPrediction",
 						PerInterval: 1,
@@ -88,7 +88,7 @@ func TestLoadConfig(t *testing.T) {
 					},
 				},
 				Metrics: []autoscalingv2.MetricSpec{
-					autoscalingv2.MetricSpec{
+					{
 						Type: autoscalingv2.ResourceMetricSourceType,
 						Resource: &autoscalingv2.ResourceMetricSource{
 							Name: v1.ResourceCPU,
@@ -134,7 +134,7 @@ func TestLoadConfig(t *testing.T) {
 				CPUInitializationPeriod: defaultCPUInitializationPeriod,
 				InitialReadinessDelay:   defaultInitialReadinessDelay,
 				Models: []*config.Model{
-					&config.Model{
+					{
 						Type:        "test",
 						Name:        "testPrediction",
 						PerInterval: 1,
@@ -145,7 +145,7 @@ func TestLoadConfig(t *testing.T) {
 					},
 				},
 				Metrics: []autoscalingv2.MetricSpec{
-					autoscalingv2.MetricSpec{
+					{
 						Type: autoscalingv2.ResourceMetricSourceType,
 						Resource: &autoscalingv2.ResourceMetricSource{
 							Name: v1.ResourceCPU,

@@ -29,6 +29,9 @@ jobs:
         pip install -r requirements-dev.txt
         pip install -r algorithms/requirements.txt
         make lint
+        make beautify
+        # Exit if after beautification there are any code differences
+        git diff --exit-code
         make test
         # Build
         if [ ${{ github.event_name }} == "release" ]; then

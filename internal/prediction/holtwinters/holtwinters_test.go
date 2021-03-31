@@ -76,43 +76,43 @@ func TestPredict_GetPrediction(t *testing.T) {
 				},
 			},
 			[]*stored.Evaluation{
-				&stored.Evaluation{
+				{
 					Created: time.Now().UTC().Add(time.Duration(-80) * time.Second),
 					Evaluation: stored.DBEvaluation{
 						TargetReplicas: 1,
 					},
 				},
-				&stored.Evaluation{
+				{
 					Created: time.Now().UTC().Add(time.Duration(-70) * time.Second),
 					Evaluation: stored.DBEvaluation{
 						TargetReplicas: 3,
 					},
 				},
-				&stored.Evaluation{
+				{
 					Created: time.Now().UTC().Add(time.Duration(-60) * time.Second),
 					Evaluation: stored.DBEvaluation{
 						TargetReplicas: 1,
 					},
 				},
-				&stored.Evaluation{
+				{
 					Created: time.Now().UTC().Add(time.Duration(-50) * time.Second),
 					Evaluation: stored.DBEvaluation{
 						TargetReplicas: 1,
 					},
 				},
-				&stored.Evaluation{
+				{
 					Created: time.Now().UTC().Add(time.Duration(-40) * time.Second),
 					Evaluation: stored.DBEvaluation{
 						TargetReplicas: 3,
 					},
 				},
-				&stored.Evaluation{
+				{
 					Created: time.Now().UTC().Add(time.Duration(-30) * time.Second),
 					Evaluation: stored.DBEvaluation{
 						TargetReplicas: 1,
 					},
 				},
-				&stored.Evaluation{
+				{
 					Created: time.Now().UTC().Add(time.Duration(-20) * time.Second),
 					Evaluation: stored.DBEvaluation{
 						TargetReplicas: 1,
@@ -145,46 +145,46 @@ func TestPredict_GetPrediction(t *testing.T) {
 				},
 			},
 			[]*stored.Evaluation{
-				&stored.Evaluation{
+				{
 					ID: 1,
 				},
-				&stored.Evaluation{
+				{
 					ID: 2,
 				},
-				&stored.Evaluation{
+				{
 					ID: 3,
 				},
-				&stored.Evaluation{
+				{
 					ID: 4,
 				},
-				&stored.Evaluation{
+				{
 					ID: 5,
 				},
-				&stored.Evaluation{
+				{
 					ID: 6,
 				},
-				&stored.Evaluation{
+				{
 					ID: 7,
 				},
-				&stored.Evaluation{
+				{
 					ID: 8,
 				},
-				&stored.Evaluation{
+				{
 					ID: 9,
 				},
-				&stored.Evaluation{
+				{
 					ID: 10,
 				},
-				&stored.Evaluation{
+				{
 					ID: 11,
 				},
-				&stored.Evaluation{
+				{
 					ID: 12,
 				},
-				&stored.Evaluation{
+				{
 					ID: 13,
 				},
-				&stored.Evaluation{
+				{
 					ID: 14,
 				},
 			},
@@ -214,46 +214,46 @@ func TestPredict_GetPrediction(t *testing.T) {
 				},
 			},
 			[]*stored.Evaluation{
-				&stored.Evaluation{
+				{
 					ID: 1,
 				},
-				&stored.Evaluation{
+				{
 					ID: 2,
 				},
-				&stored.Evaluation{
+				{
 					ID: 3,
 				},
-				&stored.Evaluation{
+				{
 					ID: 4,
 				},
-				&stored.Evaluation{
+				{
 					ID: 5,
 				},
-				&stored.Evaluation{
+				{
 					ID: 6,
 				},
-				&stored.Evaluation{
+				{
 					ID: 7,
 				},
-				&stored.Evaluation{
+				{
 					ID: 8,
 				},
-				&stored.Evaluation{
+				{
 					ID: 9,
 				},
-				&stored.Evaluation{
+				{
 					ID: 10,
 				},
-				&stored.Evaluation{
+				{
 					ID: 11,
 				},
-				&stored.Evaluation{
+				{
 					ID: 12,
 				},
-				&stored.Evaluation{
+				{
 					ID: 13,
 				},
-				&stored.Evaluation{
+				{
 					ID: 14,
 				},
 			},
@@ -273,46 +273,46 @@ func TestPredict_GetPrediction(t *testing.T) {
 				},
 			},
 			[]*stored.Evaluation{
-				&stored.Evaluation{
+				{
 					ID: 1,
 				},
-				&stored.Evaluation{
+				{
 					ID: 2,
 				},
-				&stored.Evaluation{
+				{
 					ID: 3,
 				},
-				&stored.Evaluation{
+				{
 					ID: 4,
 				},
-				&stored.Evaluation{
+				{
 					ID: 5,
 				},
-				&stored.Evaluation{
+				{
 					ID: 6,
 				},
-				&stored.Evaluation{
+				{
 					ID: 7,
 				},
-				&stored.Evaluation{
+				{
 					ID: 8,
 				},
-				&stored.Evaluation{
+				{
 					ID: 9,
 				},
-				&stored.Evaluation{
+				{
 					ID: 10,
 				},
-				&stored.Evaluation{
+				{
 					ID: 11,
 				},
-				&stored.Evaluation{
+				{
 					ID: 12,
 				},
-				&stored.Evaluation{
+				{
 					ID: 13,
 				},
-				&stored.Evaluation{
+				{
 					ID: 14,
 				},
 			},
@@ -332,46 +332,46 @@ func TestPredict_GetPrediction(t *testing.T) {
 				},
 			},
 			[]*stored.Evaluation{
-				&stored.Evaluation{
+				{
 					ID: 1,
 				},
-				&stored.Evaluation{
+				{
 					ID: 2,
 				},
-				&stored.Evaluation{
+				{
 					ID: 3,
 				},
-				&stored.Evaluation{
+				{
 					ID: 4,
 				},
-				&stored.Evaluation{
+				{
 					ID: 5,
 				},
-				&stored.Evaluation{
+				{
 					ID: 6,
 				},
-				&stored.Evaluation{
+				{
 					ID: 7,
 				},
-				&stored.Evaluation{
+				{
 					ID: 8,
 				},
-				&stored.Evaluation{
+				{
 					ID: 9,
 				},
-				&stored.Evaluation{
+				{
 					ID: 10,
 				},
-				&stored.Evaluation{
+				{
 					ID: 11,
 				},
-				&stored.Evaluation{
+				{
 					ID: 12,
 				},
-				&stored.Evaluation{
+				{
 					ID: 13,
 				},
-				&stored.Evaluation{
+				{
 					ID: 14,
 				},
 			},
@@ -391,46 +391,46 @@ func TestPredict_GetPrediction(t *testing.T) {
 				},
 			},
 			[]*stored.Evaluation{
-				&stored.Evaluation{
+				{
 					ID: 1,
 				},
-				&stored.Evaluation{
+				{
 					ID: 2,
 				},
-				&stored.Evaluation{
+				{
 					ID: 3,
 				},
-				&stored.Evaluation{
+				{
 					ID: 4,
 				},
-				&stored.Evaluation{
+				{
 					ID: 5,
 				},
-				&stored.Evaluation{
+				{
 					ID: 6,
 				},
-				&stored.Evaluation{
+				{
 					ID: 7,
 				},
-				&stored.Evaluation{
+				{
 					ID: 8,
 				},
-				&stored.Evaluation{
+				{
 					ID: 9,
 				},
-				&stored.Evaluation{
+				{
 					ID: 10,
 				},
-				&stored.Evaluation{
+				{
 					ID: 11,
 				},
-				&stored.Evaluation{
+				{
 					ID: 12,
 				},
-				&stored.Evaluation{
+				{
 					ID: 13,
 				},
-				&stored.Evaluation{
+				{
 					ID: 14,
 				},
 			},
@@ -456,46 +456,46 @@ func TestPredict_GetPrediction(t *testing.T) {
 				},
 			},
 			[]*stored.Evaluation{
-				&stored.Evaluation{
+				{
 					ID: 1,
 				},
-				&stored.Evaluation{
+				{
 					ID: 2,
 				},
-				&stored.Evaluation{
+				{
 					ID: 3,
 				},
-				&stored.Evaluation{
+				{
 					ID: 4,
 				},
-				&stored.Evaluation{
+				{
 					ID: 5,
 				},
-				&stored.Evaluation{
+				{
 					ID: 6,
 				},
-				&stored.Evaluation{
+				{
 					ID: 7,
 				},
-				&stored.Evaluation{
+				{
 					ID: 8,
 				},
-				&stored.Evaluation{
+				{
 					ID: 9,
 				},
-				&stored.Evaluation{
+				{
 					ID: 10,
 				},
-				&stored.Evaluation{
+				{
 					ID: 11,
 				},
-				&stored.Evaluation{
+				{
 					ID: 12,
 				},
-				&stored.Evaluation{
+				{
 					ID: 13,
 				},
-				&stored.Evaluation{
+				{
 					ID: 14,
 				},
 			},
@@ -521,46 +521,46 @@ func TestPredict_GetPrediction(t *testing.T) {
 				},
 			},
 			[]*stored.Evaluation{
-				&stored.Evaluation{
+				{
 					ID: 1,
 				},
-				&stored.Evaluation{
+				{
 					ID: 2,
 				},
-				&stored.Evaluation{
+				{
 					ID: 3,
 				},
-				&stored.Evaluation{
+				{
 					ID: 4,
 				},
-				&stored.Evaluation{
+				{
 					ID: 5,
 				},
-				&stored.Evaluation{
+				{
 					ID: 6,
 				},
-				&stored.Evaluation{
+				{
 					ID: 7,
 				},
-				&stored.Evaluation{
+				{
 					ID: 8,
 				},
-				&stored.Evaluation{
+				{
 					ID: 9,
 				},
-				&stored.Evaluation{
+				{
 					ID: 10,
 				},
-				&stored.Evaluation{
+				{
 					ID: 11,
 				},
-				&stored.Evaluation{
+				{
 					ID: 12,
 				},
-				&stored.Evaluation{
+				{
 					ID: 13,
 				},
-				&stored.Evaluation{
+				{
 					ID: 14,
 				},
 			},
@@ -598,46 +598,46 @@ func TestPredict_GetPrediction(t *testing.T) {
 				},
 			},
 			[]*stored.Evaluation{
-				&stored.Evaluation{
+				{
 					ID: 1,
 				},
-				&stored.Evaluation{
+				{
 					ID: 2,
 				},
-				&stored.Evaluation{
+				{
 					ID: 3,
 				},
-				&stored.Evaluation{
+				{
 					ID: 4,
 				},
-				&stored.Evaluation{
+				{
 					ID: 5,
 				},
-				&stored.Evaluation{
+				{
 					ID: 6,
 				},
-				&stored.Evaluation{
+				{
 					ID: 7,
 				},
-				&stored.Evaluation{
+				{
 					ID: 8,
 				},
-				&stored.Evaluation{
+				{
 					ID: 9,
 				},
-				&stored.Evaluation{
+				{
 					ID: 10,
 				},
-				&stored.Evaluation{
+				{
 					ID: 11,
 				},
-				&stored.Evaluation{
+				{
 					ID: 12,
 				},
-				&stored.Evaluation{
+				{
 					ID: 13,
 				},
-				&stored.Evaluation{
+				{
 					ID: 14,
 				},
 			},
@@ -672,46 +672,46 @@ func TestPredict_GetPrediction(t *testing.T) {
 				},
 			},
 			[]*stored.Evaluation{
-				&stored.Evaluation{
+				{
 					ID: 1,
 				},
-				&stored.Evaluation{
+				{
 					ID: 2,
 				},
-				&stored.Evaluation{
+				{
 					ID: 3,
 				},
-				&stored.Evaluation{
+				{
 					ID: 4,
 				},
-				&stored.Evaluation{
+				{
 					ID: 5,
 				},
-				&stored.Evaluation{
+				{
 					ID: 6,
 				},
-				&stored.Evaluation{
+				{
 					ID: 7,
 				},
-				&stored.Evaluation{
+				{
 					ID: 8,
 				},
-				&stored.Evaluation{
+				{
 					ID: 9,
 				},
-				&stored.Evaluation{
+				{
 					ID: 10,
 				},
-				&stored.Evaluation{
+				{
 					ID: 11,
 				},
-				&stored.Evaluation{
+				{
 					ID: 12,
 				},
-				&stored.Evaluation{
+				{
 					ID: 13,
 				},
-				&stored.Evaluation{
+				{
 					ID: 14,
 				},
 			},
@@ -747,46 +747,46 @@ func TestPredict_GetPrediction(t *testing.T) {
 				},
 			},
 			[]*stored.Evaluation{
-				&stored.Evaluation{
+				{
 					ID: 1,
 				},
-				&stored.Evaluation{
+				{
 					ID: 2,
 				},
-				&stored.Evaluation{
+				{
 					ID: 3,
 				},
-				&stored.Evaluation{
+				{
 					ID: 4,
 				},
-				&stored.Evaluation{
+				{
 					ID: 5,
 				},
-				&stored.Evaluation{
+				{
 					ID: 6,
 				},
-				&stored.Evaluation{
+				{
 					ID: 7,
 				},
-				&stored.Evaluation{
+				{
 					ID: 8,
 				},
-				&stored.Evaluation{
+				{
 					ID: 9,
 				},
-				&stored.Evaluation{
+				{
 					ID: 10,
 				},
-				&stored.Evaluation{
+				{
 					ID: 11,
 				},
-				&stored.Evaluation{
+				{
 					ID: 12,
 				},
-				&stored.Evaluation{
+				{
 					ID: 13,
 				},
-				&stored.Evaluation{
+				{
 					ID: 14,
 				},
 			},
@@ -840,39 +840,39 @@ func TestModelPredict_GetIDsToRemove(t *testing.T) {
 				},
 			},
 			[]*stored.Evaluation{
-				&stored.Evaluation{
+				{
 					ID:      1,
 					Created: time.Time{}.Add(time.Duration(60) * time.Millisecond),
 				},
-				&stored.Evaluation{
+				{
 					ID:      2,
 					Created: time.Time{}.Add(time.Duration(59) * time.Millisecond),
 				},
-				&stored.Evaluation{
+				{
 					ID:      3,
 					Created: time.Time{}.Add(time.Duration(58) * time.Millisecond),
 				},
-				&stored.Evaluation{
+				{
 					ID:      4,
 					Created: time.Time{}.Add(time.Duration(57) * time.Millisecond),
 				},
-				&stored.Evaluation{
+				{
 					ID:      5,
 					Created: time.Time{}.Add(time.Duration(56) * time.Millisecond),
 				},
-				&stored.Evaluation{
+				{
 					ID:      6,
 					Created: time.Time{}.Add(time.Duration(55) * time.Millisecond),
 				},
-				&stored.Evaluation{
+				{
 					ID:      10,
 					Created: time.Time{}.Add(time.Duration(54) * time.Millisecond),
 				},
-				&stored.Evaluation{
+				{
 					ID:      12,
 					Created: time.Time{}.Add(time.Duration(53) * time.Millisecond),
 				},
-				&stored.Evaluation{
+				{
 					ID:      14,
 					Created: time.Time{}.Add(time.Duration(52) * time.Millisecond),
 				},
@@ -890,27 +890,27 @@ func TestModelPredict_GetIDsToRemove(t *testing.T) {
 				},
 			},
 			[]*stored.Evaluation{
-				&stored.Evaluation{
+				{
 					ID:      1,
 					Created: time.Time{}.Add(time.Duration(55) * time.Millisecond),
 				},
-				&stored.Evaluation{
+				{
 					ID:      2,
 					Created: time.Time{}.Add(time.Duration(56) * time.Millisecond),
 				},
-				&stored.Evaluation{
+				{
 					ID:      3,
 					Created: time.Time{}.Add(time.Duration(57) * time.Millisecond),
 				},
-				&stored.Evaluation{
+				{
 					ID:      4,
 					Created: time.Time{}.Add(time.Duration(58) * time.Millisecond),
 				},
-				&stored.Evaluation{
+				{
 					ID:      5,
 					Created: time.Time{}.Add(time.Duration(59) * time.Millisecond),
 				},
-				&stored.Evaluation{
+				{
 					ID:      6,
 					Created: time.Time{}.Add(time.Duration(60) * time.Millisecond),
 				},
