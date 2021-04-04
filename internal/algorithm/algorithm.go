@@ -17,10 +17,9 @@ limitations under the License.
 package algorithm
 
 import (
-	"bytes"
-	"fmt"
 	"os/exec"
-	"time"
+
+	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/hook"
 )
 
 const (
@@ -29,53 +28,24 @@ const (
 
 // Runner defines an algorithm runner, allowing algorithms to be run
 type Runner interface {
-	RunAlgorithmWithValue(algorithmPath string, value string, timeout int64) (string, error)
+	RunAlgorithmWithValue(algorithmPath string, value string, timeout int) (string, error)
 }
 
 type command = func(name string, arg ...string) *exec.Cmd
 
 // Run is an implementation of an algorithm runner that uses CPA executers to run shell commands
 type Run struct {
-	Command command
+	Executer hook.Executer
 }
 
 // RunAlgorithmWithValue runs an algorithm at the path provided, passing through the value provided
-func (r *Run) RunAlgorithmWithValue(algorithmPath string, value string, timeout int64) (string, error) {
-	// Build command string with value piped into it
-	cmd := r.Command(entrypoint, algorithmPath)
-
-	// Set up byte buffer to write values to stdin
-	inb := bytes.Buffer{}
-	// No need to catch error, doesn't produce error, instead it panics if buffer too large
-	inb.WriteString(value)
-	cmd.Stdin = &inb
-
-	// Set up byte buffers to read stdout and stderr
-	var outb, errb bytes.Buffer
-	cmd.Stdout = &outb
-	cmd.Stderr = &errb
-
-	// Start command
-	err := cmd.Start()
-	if err != nil {
-		return "", err
-	}
-
-	// Set up channel to wait for command to finish
-	done := make(chan error)
-	go func() { done <- cmd.Wait() }()
-
-	// Set up a timeout, after which if the command hasn't finished it will be stopped
-	timeoutListener := time.After(time.Duration(timeout) * time.Millisecond)
-
-	select {
-	case <-timeoutListener:
-		cmd.Process.Kill()
-		return "", fmt.Errorf("Algorithm at path '%s' with entrypoint '%s' timed out", algorithmPath, entrypoint)
-	case err = <-done:
-		if err != nil {
-			return "", err
-		}
-	}
-	return outb.String(), nil
+func (r *Run) RunAlgorithmWithValue(algorithmPath string, value string, timeout int) (string, error) {
+	return r.Executer.ExecuteWithValue(&hook.Definition{
+		Type:    "shell",
+		Timeout: timeout,
+		Shell: &hook.Shell{
+			Entrypoint: entrypoint,
+			Command:    []string{algorithmPath},
+		},
+	}, value)
 }

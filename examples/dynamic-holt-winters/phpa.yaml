@@ -68,7 +68,8 @@ spec:
                 parameterMode: query
             seasonalPeriods: 6
             storedSeasons: 4
-            method: "additive"
+            trend: "additive"
+            seasonal: additive
         decisionType: "maximum"
         metrics:
         - type: Resource

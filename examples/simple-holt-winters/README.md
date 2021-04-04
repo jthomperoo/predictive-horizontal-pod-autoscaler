@@ -59,7 +59,8 @@ config:
           gamma: 0.9
           seasonalPeriods: 6
           storedSeasons: 4
-          method: "additive"
+          trend: additive
+          seasonal: additive
       decisionType: "maximum"
       metrics:
       - type: Resource
@@ -93,7 +94,8 @@ period described, in this case it will pick the highest evaluation over the past
       (20 seconds), and season length is `6`, resulting in a season length of 20 * 6 = 120 seconds = 2 minutes.
       * **storedSeasons** - the number of seasons to store, for this example `4`, if there are more than 4 seasons
       stored, the oldest ones are removed.
-      * **method** - the Holt-Winters method to use, either `additive` or `multiplicative`.
+      * **trend** - Either `add`/`additive` or `mul`/`multiplicative`, defines the method for the trend element.
+      * **seasonal** - Either `add`/`additive` or `mul`/`multiplicative`, defines the method for the seasonal element.
   * **decisionType** - strategy for resolving multiple models, either `maximum`, `minimum` or `mean`, in this case
   `maximum`, meaning take the highest predicted value.
   * **metrics** - Horizontal Pod Autoscaler option, targeting 50% CPU utilisation.

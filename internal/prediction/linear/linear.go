@@ -67,7 +67,7 @@ func (p *Predict) GetPrediction(model *config.Model, evaluations []*stored.Evalu
 		panic(err)
 	}
 
-	timeout := int64(defaultTimeout)
+	timeout := defaultTimeout
 	if model.CalculationTimeout != nil {
 		timeout = *model.CalculationTimeout
 	}

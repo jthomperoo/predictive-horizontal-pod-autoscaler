@@ -95,7 +95,6 @@ func main() {
 	stdin, err := ioutil.ReadAll(os.Stdin)
 	if err != nil {
 		log.Fatal(err)
-		os.Exit(1)
 	}
 
 	modePtr := flag.String("mode", "no_mode", "command mode, either metric or evaluate")
@@ -122,7 +121,6 @@ func main() {
 		setup(predictiveConfig)
 	default:
 		log.Fatalf("Unknown command mode: %s", *modePtr)
-		os.Exit(1)
 	}
 }
 
@@ -171,7 +169,6 @@ func getEvaluation(stdin io.Reader, predictiveConfig *config.Config) {
 	err = yaml.NewYAMLOrJSONDecoder(stdin, 10).Decode(&spec)
 	if err != nil {
 		log.Fatal(err)
-		os.Exit(1)
 	}
 
 	// Create object from version and kind of piped value
@@ -179,14 +176,12 @@ func getEvaluation(stdin io.Reader, predictiveConfig *config.Config) {
 	resourceRuntime, err := scheme.Scheme.New(resourceGVK)
 	if err != nil {
 		log.Fatal(err)
-		os.Exit(1)
 	}
 
 	// Parse the unstructured k8s resource into the object created, then convert to generic metav1.Object
 	err = runtime.DefaultUnstructuredConverter.FromUnstructured(spec.UnstructuredResource.Object, resourceRuntime)
 	if err != nil {
 		log.Fatal(err)
-		os.Exit(1)
 	}
 	spec.Resource = resourceRuntime.(metav1.Object)
 
@@ -194,11 +189,6 @@ func getEvaluation(stdin io.Reader, predictiveConfig *config.Config) {
 	err = yaml.NewYAMLOrJSONDecoder(strings.NewReader(spec.Metrics[0].Value), 10).Decode(&combinedMetrics)
 	if err != nil {
 		log.Fatal(err)
-		os.Exit(1)
-	}
-
-	algorithmRunner := &algorithm.Run{
-		Command: exec.Command,
 	}
 
 	shellExec := &shell.Execute{
@@ -213,6 +203,10 @@ func getEvaluation(stdin io.Reader, predictiveConfig *config.Config) {
 			shellExec,
 			httpExec,
 		},
+	}
+
+	algorithmRunner := &algorithm.Run{
+		Executer: shellExec,
 	}
 
 	// Set up evaluator
@@ -242,7 +236,6 @@ func getEvaluation(stdin io.Reader, predictiveConfig *config.Config) {
 	jsonEvaluation, err := json.Marshal(result)
 	if err != nil {
 		log.Fatal(err)
-		os.Exit(1)
 	}
 
 	fmt.Print(string(jsonEvaluation))
@@ -253,7 +246,6 @@ func getMetrics(stdin io.Reader, predictiveConfig *config.Config) {
 	err := yaml.NewYAMLOrJSONDecoder(stdin, 10).Decode(&spec)
 	if err != nil {
 		log.Fatal(err)
-		os.Exit(1)
 	}
 
 	// Create object from version and kind of piped value
@@ -261,34 +253,29 @@ func getMetrics(stdin io.Reader, predictiveConfig *config.Config) {
 	resourceRuntime, err := scheme.Scheme.New(resourceGVK)
 	if err != nil {
 		log.Fatal(err)
-		os.Exit(1)
 	}
 
 	// Parse the unstructured k8s resource into the object created, then convert to generic metav1.Object
 	err = runtime.DefaultUnstructuredConverter.FromUnstructured(spec.UnstructuredResource.Object, resourceRuntime)
 	if err != nil {
 		log.Fatal(err)
-		os.Exit(1)
 	}
 	spec.Resource = resourceRuntime.(metav1.Object)
 
 	if len(predictiveConfig.Metrics) == 0 {
 		log.Fatal("Metric specs not supplied")
-		os.Exit(1)
 	}
 
 	// Create the in-cluster Kubernetes config
 	clusterConfig, err := rest.InClusterConfig()
 	if err != nil {
 		log.Fatal(err)
-		os.Exit(1)
 	}
 
 	// Create the Kubernetes clientset
 	clientset, err := kubernetes.NewForConfig(clusterConfig)
 	if err != nil {
 		log.Fatal(err)
-		os.Exit(1)
 	}
 
 	// Create metric gatherer, with required clients and configuration
@@ -310,14 +297,12 @@ func getMetrics(stdin io.Reader, predictiveConfig *config.Config) {
 	metrics, err := gatherer.GetMetrics(spec.Resource, predictiveConfig.Metrics, spec.Resource.GetNamespace())
 	if err != nil {
 		log.Fatal(err)
-		os.Exit(1)
 	}
 
 	// Marshal metrics into JSON
 	jsonMetrics, err := json.Marshal(metrics)
 	if err != nil {
 		log.Fatal(err)
-		os.Exit(1)
 	}
 
 	// Write serialised metrics to stdout

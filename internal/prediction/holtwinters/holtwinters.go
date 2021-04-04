@@ -34,13 +34,6 @@ const Type = "HoltWinters"
 const algorithmPath = "/app/algorithms/holt_winters/holt_winters.py"
 
 const (
-	// MethodAdditive specifies a HoltWinters time series prediction using the additive method
-	MethodAdditive = "additive"
-	// MethodMultiplicative specifies a HoltWinters time series prediction using the multiplicative method
-	MethodMultiplicative = "multiplicative"
-)
-
-const (
 	defaultTimeout = 30000
 )
 
@@ -78,8 +71,9 @@ type runTimeTuningFetchHookResult struct {
 
 // GetPrediction uses a linear regression to predict what the replica count should be based on historical evaluations
 func (p *Predict) GetPrediction(model *config.Model, evaluations []*stored.Evaluation) (int32, error) {
-	if model.HoltWinters == nil {
-		return 0, errors.New("No HoltWinters configuration provided for model")
+	err := p.validate(model)
+	if err != nil {
+		return 0, err
 	}
 
 	// Statsmodels requires at least 10 + 2 * (seasonal_periods // 2) to make a prediction with Holt Winters
@@ -162,7 +156,7 @@ func (p *Predict) GetPrediction(model *config.Model, evaluations []*stored.Evalu
 		panic(err)
 	}
 
-	timeout := int64(defaultTimeout)
+	timeout := defaultTimeout
 	if model.CalculationTimeout != nil {
 		timeout = *model.CalculationTimeout
 	}
@@ -207,4 +201,16 @@ func (p *Predict) GetIDsToRemove(model *config.Model, evaluations []*stored.Eval
 // GetType returns the type of the Prediction model
 func (p *Predict) GetType() string {
 	return Type
+}
+
+func (p *Predict) validate(model *config.Model) error {
+	if model.HoltWinters == nil {
+		return errors.New("No HoltWinters configuration provided for model")
+	}
+
+	if model.HoltWinters.Trend == "" {
+		return errors.New("No required 'trend' value provided for model")
+	}
+
+	return nil
 }

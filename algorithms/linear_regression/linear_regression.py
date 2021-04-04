@@ -13,7 +13,6 @@
 # limitations under the License.
 
 # pylint: disable=no-member, invalid-name
-
 """
 This linear regression script performs a linear regression using the provided values and configuration using the
 statsmodel library.
@@ -49,6 +48,7 @@ from dataclasses_json import dataclass_json, LetterCase
 #   ]
 # }
 
+
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass
 class EvaluationValue:
@@ -56,6 +56,7 @@ class EvaluationValue:
     JSON data representation of an evaluation value, contains the scaling target replicas
     """
     target_replicas: int
+
 
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass
@@ -67,6 +68,7 @@ class Evaluation:
     created: str
     val: EvaluationValue
 
+
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass
 class AlgorithmInput:
@@ -76,6 +78,7 @@ class AlgorithmInput:
     look_ahead: int
     evaluations: List[Evaluation]
     current_time: Optional[str] = None
+
 
 stdin = sys.stdin.read()
 

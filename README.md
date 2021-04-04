@@ -13,18 +13,18 @@
 </p>
 
 # Predictive Horizontal Pod Autoscaler
-This is a [Custom Pod Autoscaler](https://www.github.com/jthomperoo/custom-pod-autoscaler); building on the Horizontal
-Pod Autoscaler functionality to add predictive capabilities by using various statistical methods.
 
-This uses the
-[Horizontal Pod Autoscaler Custom Pod Autoscaler](https://www.github.com/jthomperoo/horizontal-pod-autoscaler)
-extensively to provide most functionality for the Horizontal Pod Autoscaler parts.
+This is a [Custom Pod Autoscaler](https://www.github.com/jthomperoo/custom-pod-autoscaler); aiming to have identical
+functionality to the Horizontal Pod Autoscaler, however with added predictive elements using statistical models.
 
-## How does it work?
+This uses the [Horizontal Pod Autoscaler Custom Pod
+Autoscaler](https://www.github.com/jthomperoo/horizontal-pod-autoscaler) extensively to provide most functionality for
+the Horizontal Pod Autoscaler parts.
 
-This project works by calculating the number of replicas a resource should have, then storing these values and using
-statistical models against them to produce predictions for the future. These predictions are compared and can be used
-instead of the raw replica count calculated by the Horizontal Pod Autoscaler logic.
+# Why would I use it?
+
+This autoscaler lets you choose models and fine tune them in order to predict how many replicas a resource should have,
+preempting events such as regular, repeated high load.
 
 ## Features
 
@@ -40,14 +40,23 @@ solutions such as EKS or GCP.
     * Initial Readiness Delay.
 * Runs in Kubernetes as a standard Pod.
 
+## How does it work?
+
+This project works by calculating the number of replicas a resource should have, then storing these values and using
+statistical models against them to produce predictions for the future. These predictions are compared and can be used
+instead of the raw replica count calculated by the Horizontal Pod Autoscaler logic.
+
 ## More information
 
 See the [wiki for more information, such as guides and
 references](https://predictive-horizontal-pod-autoscaler.readthedocs.io/en/latest/).
 
+See the [`examples/` directory](./examples) for working code samples.
+
 ## Developing this project
 
 ### Environment
+
 Developing this project requires these dependencies:
 
 * [Go](https://golang.org/doc/install) >= `1.13`
@@ -65,6 +74,23 @@ To view docs locally, requires:
 
 * [mkdocs](https://www.mkdocs.org/)
 
+It is recommended to test locally using a local Kubernetes managment system, such as
+[k3d](https://github.com/rancher/k3d) (allows running a small Kubernetes cluster locally using Docker).
+
+Once you have
+a cluster available, you should install the [Custom Pod Autoscaler Operator
+(CPAO)](https://github.com/jthomperoo/custom-pod-autoscaler-operator/blob/master/INSTALL.md)
+onto the cluster to let you install the PHPA.
+
+With the CPAO installed you can install your development builds of the PHPA onto the cluster by building the image
+locally, and then pushing the image to the K8s cluster's registry (to do that with k3d you can use the
+`k3d image import` command).
+
+Finally you can deploy a PHPA example (see the [`examples/` directory](./examples) for choices) to test your changes.
+
+> Note that the examples generally use `ImagePullPolicy: Always`, you may need to change this to
+> `ImagePullPolicy: IfNotPresent` to use your local build.
+
 ### Commands
 
 * `go mod vendor` - generates a vendor folder.
@@ -74,3 +100,4 @@ To view docs locally, requires:
 * `make beautify` - beautifies the code, must be run to pass the CI.
 * `make unittest` - runs the unit tests.
 * `make doc` - hosts the documentation locally, at `127.0.0.1:8000`.
+- `make view_coverage` - opens up any generated coverage reports in the browser.

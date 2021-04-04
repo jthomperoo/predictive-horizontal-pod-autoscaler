@@ -9,8 +9,8 @@ default: vendor_modules
 
 test: vendor_modules
 	@echo "=============Running unit tests============="
-	go test ./... -cover -mod=vendor -coverprofile unit_cover.out --tags=unit
-	pytest algorithms/
+	go test ./... -cover -mod=vendor -coverprofile application_coverage.out --tags=unit
+	pytest algorithms/ --cov-report term --cov-report=xml:algorithm_coverage.out --cov-report=html:.algorithm_coverage --cov=algorithms/
 
 lint: vendor_modules
 	@echo "=============Linting============="
@@ -30,6 +30,11 @@ docker: default
 doc:
 	@echo "=============Serving docs============="
 	mkdocs serve
+
+view_coverage:
+	@echo "=============Loading coverage HTML============="
+	go tool cover -html=application_coverage.out
+	python -m webbrowser file://$(shell pwd)/.algorithm_coverage/index.html
 
 vendor_modules:
 	go mod vendor

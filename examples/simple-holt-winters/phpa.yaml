@@ -62,7 +62,8 @@ spec:
             gamma: 0.9
             seasonalPeriods: 6
             storedSeasons: 4
-            method: "additive"
+            trend: additive
+            seasonal: additive
         decisionType: "maximum"
         metrics:
         - type: Resource
@@ -72,8 +73,8 @@ spec:
               type: Utilization
               averageUtilization: 50
     - name: interval
-      value: "5000"
+      value: "10000"
     - name: startTime
       value: "60000"
     - name: downscaleStabilization
-      value: "30"
+      value: "0"

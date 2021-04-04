@@ -45,9 +45,16 @@ jobs:
       if: github.repository == 'jthomperoo/predictive-horizontal-pod-autoscaler'
       with:
         token: ${{secrets.CODECOV_TOKEN}}
-        file: ./unit_cover.out
+        file: ./application_coverage.out
         flags: unittests
-        name: predictive-horizontal-pod-autoscaler-unittests
+        name: application-unittests
+    - uses: codecov/codecov-action@v1.0.3
+      if: github.repository == 'jthomperoo/predictive-horizontal-pod-autoscaler'
+      with:
+        token: ${{secrets.CODECOV_TOKEN}}
+        file: ./algorithm_coverage.out
+        flags: unittests
+        name: algorithm-unittests
     - name: Deploy
       env:
         DOCKER_USER: ${{ secrets.DOCKER_USER }}

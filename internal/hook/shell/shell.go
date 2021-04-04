@@ -62,7 +62,7 @@ func (e *Execute) ExecuteWithValue(definition *hook.Definition, value string) (s
 		return "", fmt.Errorf("Entrypoint '%s', command '%s' timed out", definition.Shell.Entrypoint, definition.Shell.Command)
 	case err = <-done:
 		if err != nil {
-			return "", err
+			return "", fmt.Errorf("%v: %s", err, errb.String())
 		}
 	}
 	return outb.String(), nil

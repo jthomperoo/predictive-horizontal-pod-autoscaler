@@ -61,7 +61,8 @@ Example:
         gamma: 0.9
         seasonalPeriods: 6
         storedSeasons: 4
-        method: "additive"
+        trend: additive
+        seasonal: additive
     decisionType: "maximum"
 ```
 
@@ -74,6 +75,8 @@ requires tweaking and analysis to be able to optimise. See [here](https://github
 (10 seconds), and your repeated season was 60 seconds long, this value would be `6`.
 - **storedSeasons** - the number of seasons to store, for example `4`, if there are `>4` seasons stored, the oldest
 season will be removed.
+- **trend** - Either `add`/`additive` or `mul`/`multiplicative`, defines the method for the trend element.
+- **seasonal** - Either `add`/`additive` or `mul`/`multiplicative`, defines the method for the seasonal element.
 
 This is the model in action, taken from the `simple-holt-winters` example:
 ![Predicted values overestimating but still fitting actual values](../img/holt_winters_prediction_vs_actual.svg)
@@ -92,8 +95,6 @@ documented by the [Holt-Winters Exponential Smoothing statsmodels
 documentation](https://www.statsmodels.org/dev/generated/statsmodels.tsa.holtwinters.ExponentialSmoothing.html) - the
 names of the variables in this documentation map to the camelcase names described here.
 
-- **trend** - Either `add`/`additive` or `mul`/`multiplicative`, defines the method for the trend element.
-- **seasonal** - Either `add`/`additive` or `mul`/`multiplicative`, defines the method for the seasonal element.
 - **dampedTrend** - Boolean value to determine if the trend should be damped.
 - **initializationMethod** - Which initialization method to use, see statsmodels for details, either `estimated`,
 `heuristic`, `known`, or `legacy-heuristic`
@@ -104,11 +105,11 @@ names of the variables in this documentation map to the camelcase names describe
 ### Holt-Winters Runtime Tuning
 
 The PHPA supports dynamically fetching the tuning values for the Holt-Winters algorithm (`alpha`, `beta`, and `gamma`).
-This is done using a feature of the Custom Pod Autoscaler called
-[methods](https://custom-pod-autoscaler.readthedocs.io/en/latest/user-guide/methods/) - these are configurable hooks
-that allow the PHPA to reach out to an external source to determine what the tuning values should be.
 
-For example, a method using a HTTP request to fetch the values of runtime is configured as:
+This is done using a `hook` system, to see more information of how the dynamic hook system works [visit the hooks
+user guide](./hooks.md)
+
+For example, a hook using a HTTP request to fetch the values of runtime is configured as:
 
 ```yaml
 - name: predictiveConfig
@@ -129,13 +130,13 @@ For example, a method using a HTTP request to fetch the values of runtime is con
             parameterMode: query
         seasonalPeriods: 6
         storedSeasons: 4
-        method: "additive"
+        trend: "additive"
     decisionType: "maximum"
 ```
 
-The method is defined with the name `runtimeTuningFetchHook`.
+The hook is defined with the name `runtimeTuningFetchHook`.
 
-The supported methods for the PHPA are:
+The supported hook types for the PHPA are:
 
 - Shell scripts
 - HTTP requests
@@ -144,12 +145,12 @@ The process is as follows:
 
 1. PHPA begins Holt-Winters calculation.
 2. The values are initially set to any hardcoded values supplied in the configuration.
-3. A runtime tuning configuration has been supplied, using this configuration a method is executed (for example a HTTP
+3. A runtime tuning configuration has been supplied, using this configuration a hook is executed (for example a HTTP
 request is sent).
-  - This method will provide as input data in JSON that includes the current model, and an array of timestamped
+  - This hook will provide as input data in JSON that includes the current model, and an array of timestamped
   previous scaling decisions (referred to as `evaluations`, [see below](#request-format)).
   - The response should conform to the expected JSON structure ([see below](#response-format)).
-4. If the method execution is successful, and the response is valid, the tuning values are extracted and any provided
+4. If the hook execution is successful, and the response is valid, the tuning values are extracted and any provided
 values overwrite the hardcoded values.
 5. If all required tuning values are provided the tuning values are used to calculate.
 
@@ -177,7 +178,7 @@ runtime, and the `beta` and `gamma` values could be hardcoded in configuration:
         gamma: 0.9
         seasonalPeriods: 6
         storedSeasons: 4
-        method: "additive"
+        trend: "additive"
     decisionType: "maximum"
 ```
 
@@ -206,7 +207,7 @@ as a backup:
         gamma: 0.9
         seasonalPeriods: 6
         storedSeasons: 4
-        method: "additive"
+        trend: "additive"
     decisionType: "maximum"
 ```
 
@@ -243,7 +244,7 @@ The data that the external source will recieve will be formatted as:
       },
       "seasonalPeriods": 6,
       "storedSeasons": 4,
-      "method": "additive"
+      "trend": "additive"
     }
   },
   "evaluations": [

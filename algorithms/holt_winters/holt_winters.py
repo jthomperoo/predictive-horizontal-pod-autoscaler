@@ -13,8 +13,6 @@
 # limitations under the License.
 
 # pylint: disable=no-member, invalid-name
-
-
 """
 This holt winters script performs a holt winters calculation using the provided values and configuration using the
 statsmodel library.
@@ -29,6 +27,7 @@ import warnings
 import statsmodels.tsa.api as sm
 from dataclasses_json import dataclass_json, LetterCase
 from statsmodels.tools.sm_exceptions import ConvergenceWarning
+
 warnings.simplefilter('ignore', ConvergenceWarning)
 
 # Takes in the replica series, alpha, beta, gamma, season length, and the trend and seasonal (add vs mul)
@@ -48,6 +47,7 @@ warnings.simplefilter('ignore', ConvergenceWarning)
 #   ],
 #   "dampedTrend": false,
 # }
+
 
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass
@@ -84,20 +84,23 @@ except KeyError as ex:
     print("Invalid JSON provided: missing {0}, exiting".format(str(ex)), file=sys.stderr)
     sys.exit(1)
 
-
 if len(algorithm_input.series) < 10 + 2 * (algorithm_input.seasonal_periods // 2):
     print("Invalid data provided, must be at least 10 + 2 * (seasonal_periods // 2) observations, exiting",
           file=sys.stderr)
     sys.exit(1)
 
-model = sm.ExponentialSmoothing(algorithm_input.series, trend=algorithm_input.trend, seasonal=algorithm_input.seasonal,
+model = sm.ExponentialSmoothing(algorithm_input.series,
+                                trend=algorithm_input.trend,
+                                seasonal=algorithm_input.seasonal,
                                 seasonal_periods=algorithm_input.seasonal_periods,
                                 initialization_method=algorithm_input.initialization_method,
-                                damped_trend=algorithm_input.damped_trend, initial_level=algorithm_input.initial_level,
+                                damped_trend=algorithm_input.damped_trend,
+                                initial_level=algorithm_input.initial_level,
                                 initial_trend=algorithm_input.initial_trend,
                                 initial_seasonal=algorithm_input.initial_seasonal)
 
-fitted_model = model.fit(smoothing_level=algorithm_input.alpha, smoothing_trend=algorithm_input.beta,
+fitted_model = model.fit(smoothing_level=algorithm_input.alpha,
+                         smoothing_trend=algorithm_input.beta,
                          smoothing_seasonal=algorithm_input.gamma)
 
 # Predict the value one ahead

@@ -58,7 +58,7 @@ func TestPredict_GetPrediction(t *testing.T) {
 			errors.New("algorithm fail"),
 			&linear.Predict{
 				Runner: &fake.Run{
-					RunAlgorithmWithValueReactor: func(algorithmPath, value string, timeout int64) (string, error) {
+					RunAlgorithmWithValueReactor: func(algorithmPath, value string, timeout int) (string, error) {
 						return "", errors.New("algorithm fail")
 					},
 				},
@@ -78,7 +78,7 @@ func TestPredict_GetPrediction(t *testing.T) {
 			errors.New(`strconv.Atoi: parsing "invalid": invalid syntax`),
 			&linear.Predict{
 				Runner: &fake.Run{
-					RunAlgorithmWithValueReactor: func(algorithmPath, value string, timeout int64) (string, error) {
+					RunAlgorithmWithValueReactor: func(algorithmPath, value string, timeout int) (string, error) {
 						return "invalid", nil
 					},
 				},
@@ -98,7 +98,7 @@ func TestPredict_GetPrediction(t *testing.T) {
 			nil,
 			&linear.Predict{
 				Runner: &fake.Run{
-					RunAlgorithmWithValueReactor: func(algorithmPath, value string, timeout int64) (string, error) {
+					RunAlgorithmWithValueReactor: func(algorithmPath, value string, timeout int) (string, error) {
 						return "3", nil
 					},
 				},

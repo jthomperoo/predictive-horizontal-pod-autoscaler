@@ -39,14 +39,14 @@ func TestAlgorithm_RunAlgorithmWithValue(t *testing.T) {
 		run           fake.Run
 		algorithmPath string
 		value         string
-		timeout       int64
+		timeout       int
 	}{
 		{
 			"Return error",
 			"",
 			errors.New("runner error"),
 			fake.Run{
-				RunAlgorithmWithValueReactor: func(algorithmPath, value string, timeout int64) (string, error) {
+				RunAlgorithmWithValueReactor: func(algorithmPath, value string, timeout int) (string, error) {
 					return "", errors.New("runner error")
 				},
 			},
@@ -59,7 +59,7 @@ func TestAlgorithm_RunAlgorithmWithValue(t *testing.T) {
 			"test",
 			nil,
 			fake.Run{
-				RunAlgorithmWithValueReactor: func(algorithmPath, value string, timeout int64) (string, error) {
+				RunAlgorithmWithValueReactor: func(algorithmPath, value string, timeout int) (string, error) {
 					return "test", nil
 				},
 			},

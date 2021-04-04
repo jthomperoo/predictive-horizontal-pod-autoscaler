@@ -61,7 +61,7 @@ type Model struct {
 	Type               string       `json:"type"`
 	Name               string       `json:"name"`
 	PerInterval        int          `json:"perInterval"`
-	CalculationTimeout *int64       `json:"calculationTimeout"`
+	CalculationTimeout *int         `json:"calculationTimeout"`
 	Linear             *Linear      `json:"linear"`
 	HoltWinters        *HoltWinters `json:"holtWinters"`
 }

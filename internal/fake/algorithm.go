@@ -18,10 +18,10 @@ package fake
 
 // Run (fake) provides a way to insert functionality into an algorithm Runner
 type Run struct {
-	RunAlgorithmWithValueReactor func(algorithmPath string, value string, timeout int64) (string, error)
+	RunAlgorithmWithValueReactor func(algorithmPath string, value string, timeout int) (string, error)
 }
 
 // RunAlgorithmWithValue calls the fake Runner function
-func (f *Run) RunAlgorithmWithValue(algorithmPath string, value string, timeout int64) (string, error) {
+func (f *Run) RunAlgorithmWithValue(algorithmPath string, value string, timeout int) (string, error) {
 	return f.RunAlgorithmWithValueReactor(algorithmPath, value, timeout)
 }
