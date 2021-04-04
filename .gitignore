@@ -3,3 +3,4 @@
 *.out
 __pycache__
 .algorithm_coverage
+.coverage

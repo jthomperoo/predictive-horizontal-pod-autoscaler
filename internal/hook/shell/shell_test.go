@@ -198,7 +198,7 @@ func TestMain(m *testing.M) {
 		},
 		{
 			"Failed shell command",
-			errors.New("exit status 1"),
+			errors.New("exit status 1: shell command failed"),
 			"",
 			&hook.Definition{
 				Type:    shell.Type,
