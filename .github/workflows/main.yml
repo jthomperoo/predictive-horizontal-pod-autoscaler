@@ -23,7 +23,7 @@ jobs:
       run: |
         # Get golint
         export PATH=$PATH:$(go env GOPATH)/bin
-        GO111MODULE=off go get -u golang.org/x/lint/golint@v0.0.0-20201208152925-83fdc39ff7b5
+        go install golang.org/x/lint/golint@v0.0.0-20201208152925-83fdc39ff7b5
         # Lint and test
         go mod vendor
         pip install -r requirements-dev.txt
