@@ -9,11 +9,14 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     steps:
-    - name: Set up Go 1.13
+    - name: Set up Go 1.16.2
       uses: actions/setup-go@v1
       with:
-        go-version: 1.13
+        go-version: 1.16.2
       id: go
+    - uses: actions/setup-python@v2
+      with:
+        python-version: '3.8.5'
     - name: Check out code into the Go module directory
       uses: actions/checkout@v1
     - name: Lint, test and build
@@ -23,8 +26,13 @@ jobs:
         GO111MODULE=off go get -u golang.org/x/lint/golint
         # Lint and test
         go mod vendor
+        pip install -r requirements-dev.txt
+        pip install -r algorithms/requirements.txt
         make lint
-        make unittest
+        make beautify
+        # Exit if after beautification there are any code differences
+        git diff --exit-code
+        make test
         # Build
         if [ ${{ github.event_name }} == "release" ]; then
           # github.ref is in the form refs/tags/VERSION, so apply regex to just get version
@@ -37,9 +45,16 @@ jobs:
       if: github.repository == 'jthomperoo/predictive-horizontal-pod-autoscaler'
       with:
         token: ${{secrets.CODECOV_TOKEN}}
-        file: ./unit_cover.out
+        file: ./application_coverage.out
         flags: unittests
-        name: predictive-horizontal-pod-autoscaler-unittests
+        name: application-unittests
+    - uses: codecov/codecov-action@v1.0.3
+      if: github.repository == 'jthomperoo/predictive-horizontal-pod-autoscaler'
+      with:
+        token: ${{secrets.CODECOV_TOKEN}}
+        file: ./algorithm_coverage.out
+        flags: unittests
+        name: algorithm-unittests
     - name: Deploy
       env:
         DOCKER_USER: ${{ secrets.DOCKER_USER }}

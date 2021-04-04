@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright 2019 The Predictive Horizontal Pod Autoscaler Authors.
+# Copyright 2021 The Predictive Horizontal Pod Autoscaler Authors.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,4 +19,5 @@ echo "Setting up local database"
 /app/predictive-horizontal-pod-autoscaler -mode=setup
 
 echo "Starting autoscaler"
-exec /cpa/custom-pod-autoscaler
+
+exec /app/custom-pod-autoscaler

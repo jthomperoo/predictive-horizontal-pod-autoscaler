@@ -11,5 +11,6 @@ nav:
   - 'Initial Readiness Delay': 'user-guide/initial-readiness-delay.md'
   - 'CPU Initialization Period': 'user-guide/cpu-initialization-period.md'
   - Tolerance: 'user-guide/tolerance.md'
+  - Hooks: 'user-guide/hooks.md'
 - Reference:
   - Configuration: 'reference/configuration.md'

@@ -1,0 +1,108 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: predictive-horizontal-pod-autoscaler-example
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  - replicationcontrollers
+  - replicationcontrollers/scale
+  verbs:
+  - '*'
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  - deployments/scale
+  - replicasets
+  - replicasets/scale
+  - statefulsets
+  - statefulsets/scale
+  verbs:
+  - '*'
+- apiGroups:
+  - metrics.k8s.io
+  resources:
+  - '*'
+  verbs:
+  - '*'
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: predictive-horizontal-pod-autoscaler-example
+  labels:
+    type: local
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 10Mi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/data"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: predictive-horizontal-pod-autoscaler-example
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Mi
+---
+apiVersion: custompodautoscaler.com/v1
+kind: CustomPodAutoscaler
+metadata:
+  name: predictive-horizontal-pod-autoscaler-example
+spec:
+  template:
+    spec:
+      volumes:
+        - name: predictive-horizontal-pod-autoscaler-example
+          persistentVolumeClaim:
+            claimName: predictive-horizontal-pod-autoscaler-example
+      containers:
+      - name: predictive-horizontal-pod-autoscaler-example
+        image: jthomperoo/predictive-horizontal-pod-autoscaler:latest
+        imagePullPolicy: Always
+        volumeMounts:
+          - mountPath: "/store/"
+            name: predictive-horizontal-pod-autoscaler-example
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: php-apache
+  provisionRole: false
+  config:
+    - name: minReplicas
+      value: "1"
+    - name: maxReplicas
+      value: "10"
+    - name: predictiveConfig
+      value: |
+        models:
+        - type: Linear
+          name: LinearPrediction
+          perInterval: 1
+          linear:
+            lookAhead: 10000
+            storedValues: 6
+        decisionType: "maximum"
+        metrics:
+        - type: Resource
+          resource:
+            name: cpu
+            target:
+              averageUtilization: 50
+              type: Utilization
+    - name: interval
+      value: "10000"
+    - name: downscaleStabilization
+      value: "0"

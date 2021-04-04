@@ -1,0 +1,5 @@
+pylint==2.5.3
+pytest==5.4.3
+pytest-subtests==0.3.2
+pytest-cov==2.10.0
+yapf==0.31.0
