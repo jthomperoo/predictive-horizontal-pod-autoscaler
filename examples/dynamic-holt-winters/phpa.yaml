@@ -39,7 +39,7 @@ spec:
       containers:
       - name: dynamic-holt-winters-example
         image: jthomperoo/predictive-horizontal-pod-autoscaler:latest
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
