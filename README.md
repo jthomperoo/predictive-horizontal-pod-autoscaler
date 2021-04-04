@@ -59,10 +59,10 @@ See the [`examples/` directory](./examples) for working code samples.
 
 Developing this project requires these dependencies:
 
-* [Go](https://golang.org/doc/install) >= `1.13`
-* [Golint](https://github.com/golang/lint)
+* [Go](https://golang.org/doc/install) >= `1.16`
+* [Golint](https://github.com/golang/lint) == `v0.0.0-20201208152925-83fdc39ff7b5`
 * [Docker](https://docs.docker.com/install/)
-* [Python]() == `3.8.5`
+* [Python](https://www.python.org/downloads/) == `3.8.5`
 
 Any Python dependencies must be installed by running:
 
@@ -100,4 +100,4 @@ Finally you can deploy a PHPA example (see the [`examples/` directory](./example
 * `make beautify` - beautifies the code, must be run to pass the CI.
 * `make unittest` - runs the unit tests.
 * `make doc` - hosts the documentation locally, at `127.0.0.1:8000`.
-- `make view_coverage` - opens up any generated coverage reports in the browser.
+* `make view_coverage` - opens up any generated coverage reports in the browser.
