@@ -4,3 +4,8 @@ mkdocs:
  configuration: mkdocs.yml
 
 formats: all
+
+python:
+  version: 3.7
+  install:
+    - requirements: docs/requirements.txt

@@ -1,8 +1,14 @@
 site_name: Predictive Horizontal Pod Autoscaler
-theme: readthedocs
+theme: material
+markdown_extensions:
+  - mdx_truly_sane_lists
+  - codehilite
+plugins:
+  - search
 nav:
 - Home: 'index.md'
 - 'User Guide':
+  - 'Getting Started': 'user-guide/getting-started.md'
   - Metrics: 'user-guide/metrics.md'
   - Models: 'user-guide/models.md'
   - 'Sync Period': 'user-guide/sync-period.md'
