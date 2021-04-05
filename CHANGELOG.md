@@ -22,6 +22,7 @@ Versioning](https://semver.org/spec/v2.0.0.html).
   - `initialSeasonal` - The initial seasonal value, required if `initializationMethod` is `known`.
 - Holt-Winters `seasonLength` variable renamed to `seasonalPeriods`.
 - Holt-Winters `method` split into `trend` and `seasonal` variables.
+- Switched docs theme to material theme.
 
 ## [v0.6.0] - 2020-08-31
 ### Changed
