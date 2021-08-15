@@ -53,6 +53,41 @@ func TestPredict_GetPrediction(t *testing.T) {
 			[]*stored.Evaluation{},
 		},
 		{
+			"Fail no evaluations",
+			0,
+			errors.New("No evaluations provided for Linear regression model"),
+			&linear.Predict{},
+			&config.Model{
+				Type: linear.Type,
+				Linear: &config.Linear{
+					StoredValues: 5,
+					LookAhead:    0,
+				},
+			},
+			[]*stored.Evaluation{},
+		},
+		{
+			"Success, only one evaluation, return without the prediction",
+			32,
+			nil,
+			&linear.Predict{},
+			&config.Model{
+				Type: linear.Type,
+				Linear: &config.Linear{
+					StoredValues: 5,
+					LookAhead:    0,
+				},
+			},
+			[]*stored.Evaluation{
+				{
+					ID: 0,
+					Evaluation: stored.DBEvaluation{
+						TargetReplicas: 32,
+					},
+				},
+			},
+		},
+		{
 			"Fail execution of algorithm fails",
 			0,
 			errors.New("algorithm fail"),
@@ -70,7 +105,14 @@ func TestPredict_GetPrediction(t *testing.T) {
 					LookAhead:    0,
 				},
 			},
-			[]*stored.Evaluation{},
+			[]*stored.Evaluation{
+				{
+					ID: 0,
+				},
+				{
+					ID: 1,
+				},
+			},
 		},
 		{
 			"Fail algorithm returns non-integer castable value",
@@ -90,7 +132,14 @@ func TestPredict_GetPrediction(t *testing.T) {
 					LookAhead:    0,
 				},
 			},
-			[]*stored.Evaluation{},
+			[]*stored.Evaluation{
+				{
+					ID: 0,
+				},
+				{
+					ID: 1,
+				},
+			},
 		},
 		{
 			"Success",
@@ -110,7 +159,14 @@ func TestPredict_GetPrediction(t *testing.T) {
 					LookAhead:    0,
 				},
 			},
-			[]*stored.Evaluation{},
+			[]*stored.Evaluation{
+				{
+					ID: 0,
+				},
+				{
+					ID: 1,
+				},
+			},
 		},
 	}
 	for _, test := range tests {

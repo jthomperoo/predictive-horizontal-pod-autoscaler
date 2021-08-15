@@ -58,6 +58,16 @@ func (p *Predict) GetPrediction(model *config.Model, evaluations []*stored.Evalu
 		return 0, errors.New("No Linear configuration provided for model")
 	}
 
+	if len(evaluations) == 0 {
+		return 0, errors.New("No evaluations provided for Linear regression model")
+	}
+
+	if len(evaluations) == 1 {
+		// If only 1 evaluation is provided do not try and calculate using the linear regression model, just return
+		// the target replicas from the only evaluation
+		return evaluations[0].Evaluation.TargetReplicas, nil
+	}
+
 	parameters, err := json.Marshal(linearRegressionParameters{
 		LookAhead:   model.Linear.LookAhead,
 		Evaluations: evaluations,
