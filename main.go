@@ -42,7 +42,7 @@ import (
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/sqlite3"
 	_ "github.com/golang-migrate/migrate/v4/source/file" // Driver for loading evaluations from file system
-	cpametric "github.com/jthomperoo/custom-pod-autoscaler/metric"
+	cpametric "github.com/jthomperoo/custom-pod-autoscaler/v2/metric"
 	hpaevaluate "github.com/jthomperoo/horizontal-pod-autoscaler/evaluate"
 	"github.com/jthomperoo/horizontal-pod-autoscaler/metric"
 	"github.com/jthomperoo/horizontal-pod-autoscaler/podclient"
@@ -78,10 +78,10 @@ const (
 
 // EvaluateSpec represents the information fed to the evaluator
 type EvaluateSpec struct {
-	Metrics              []*cpametric.Metric       `json:"metrics"`
-	UnstructuredResource unstructured.Unstructured `json:"resource"`
-	Resource             metav1.Object             `json:"-"`
-	RunType              string                    `json:"runType"`
+	Metrics              []*cpametric.ResourceMetric `json:"metrics"`
+	UnstructuredResource unstructured.Unstructured   `json:"resource"`
+	Resource             metav1.Object               `json:"-"`
+	RunType              string                      `json:"runType"`
 }
 
 // MetricSpec represents the information fed to the metric gatherer

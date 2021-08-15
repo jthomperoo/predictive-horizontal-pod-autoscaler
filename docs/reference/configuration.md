@@ -22,8 +22,8 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: php-apache
-  provisionRole: false
-  config: 
+  roleRequiresMetricsServer: true
+  config:
     - name: minReplicas
       value: "1"
     - name: maxReplicas
@@ -65,12 +65,12 @@ The predictiveConfig is provided through this environment variable, and represen
 
 ## decisionType
 
-Example:  
+Example:
 ```yaml
 decisionType: mean
 ```
 
-Default value: `maximum`.  
+Default value: `maximum`.
 Possible values:
 
 - **maximum** - pick the highest evaluation of the models.
@@ -82,11 +82,11 @@ Decider on which evaluation to pick if there are multiple models provided.
 
 ## dbPath
 
-Example:  
+Example:
 ```yaml
 dbPath: "/tmp/path/store.db"
 ```
-Default value: `/store/predictive-horizontal-pod-autoscaler.db`.  
+Default value: `/store/predictive-horizontal-pod-autoscaler.db`.
 
 The path to store the SQLite3 database, e.g. for storing the DB in a volume to persist it.
 
@@ -97,18 +97,18 @@ Example:
 migrationPath: "/tmp/migrations/sql"
 ```
 
-Default value: `/app/sql`.  
+Default value: `/app/sql`.
 
 The path of the SQL migrations for the SQLite3 database.
 
 ## models
 
-List of statistical models to apply.  
+List of statistical models to apply.
 See [the models section for details](../../user-guide/models).
 
 ## metrics
 
-List of metrics to target for evaluating replica counts.  
+List of metrics to target for evaluating replica counts.
 See [the metrics section for details](../../user-guide/metrics).
 
 ## cpuInitializationPeriod
@@ -117,9 +117,9 @@ Example:
 ```yaml
 cpuInitializationPeriod: 150
 ```
-Default value: `300` (5 minutes).  
-Set in seconds.  
-Equivalent to `--horizontal-pod-autoscaler-cpu-initialization-period`; the period after pod start when CPU samples might be skipped.  
+Default value: `300` (5 minutes).
+Set in seconds.
+Equivalent to `--horizontal-pod-autoscaler-cpu-initialization-period`; the period after pod start when CPU samples might be skipped.
 
 ## initialReadinessDelay
 
@@ -127,8 +127,8 @@ Example:
 ```yaml
 initialReadinessDelay: 45
 ```
-Default value: `30` (30 seconds).  
-Set in seconds.  
+Default value: `30` (30 seconds).
+Set in seconds.
 Equivalent to `--horizontal-pod-autoscaler-initial-readiness-delay`; the period after pod start during which readiness changes will be treated as initial readiness.
 
 ## tolerance
@@ -137,5 +137,5 @@ Example:
 ```yaml
 tolerance: 0.25
 ```
-Default value: `0.1`.  
+Default value: `0.1`.
 Equivalent to `--horizontal-pod-autoscaler-tolerance`; the minimum change (from 1.0) in the desired-to-actual metrics ratio for the horizontal pod autoscaler to consider scaling.

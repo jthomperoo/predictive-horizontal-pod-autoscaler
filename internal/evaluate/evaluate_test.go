@@ -22,8 +22,8 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/jthomperoo/custom-pod-autoscaler/autoscaler"
-	cpaevaluate "github.com/jthomperoo/custom-pod-autoscaler/evaluate"
+	cpaconfig "github.com/jthomperoo/custom-pod-autoscaler/v2/config"
+	cpaevaluate "github.com/jthomperoo/custom-pod-autoscaler/v2/evaluate"
 	hpaevaluate "github.com/jthomperoo/horizontal-pod-autoscaler/evaluate"
 	"github.com/jthomperoo/horizontal-pod-autoscaler/metric"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/config"
@@ -65,7 +65,7 @@ func TestGetEvaluation(t *testing.T) {
 			nil,
 			nil,
 			nil,
-			autoscaler.RunType,
+			cpaconfig.ScalerRunType,
 		},
 		{
 			"Fail, fail to retrieve evaluations from store",
@@ -98,7 +98,7 @@ func TestGetEvaluation(t *testing.T) {
 				},
 			},
 			nil,
-			autoscaler.RunType,
+			cpaconfig.ScalerRunType,
 		},
 		{
 			"Fail, no model exists, fail to add new",
@@ -134,7 +134,7 @@ func TestGetEvaluation(t *testing.T) {
 				},
 			},
 			nil,
-			autoscaler.RunType,
+			cpaconfig.ScalerRunType,
 		},
 		{
 			"Fail, no model exists, add new and fail to retrieve newly added",
@@ -178,7 +178,7 @@ func TestGetEvaluation(t *testing.T) {
 				},
 			},
 			nil,
-			autoscaler.RunType,
+			cpaconfig.ScalerRunType,
 		},
 		{
 			"Fail, scaler not interval run, fail to update model",
@@ -218,7 +218,7 @@ func TestGetEvaluation(t *testing.T) {
 				},
 			},
 			nil,
-			autoscaler.RunType,
+			cpaconfig.ScalerRunType,
 		},
 		{
 			"Fail, scaler interval run, fail to update model",
@@ -258,7 +258,7 @@ func TestGetEvaluation(t *testing.T) {
 				},
 			},
 			nil,
-			autoscaler.RunType,
+			cpaconfig.ScalerRunType,
 		},
 		{
 			"Fail, scaler inteval run, fail to add evaluation",
@@ -301,7 +301,7 @@ func TestGetEvaluation(t *testing.T) {
 				},
 			},
 			nil,
-			autoscaler.RunType,
+			cpaconfig.ScalerRunType,
 		},
 		{
 			"Fail, scaler inteval run, fail to get evaluations",
@@ -347,7 +347,7 @@ func TestGetEvaluation(t *testing.T) {
 				},
 			},
 			nil,
-			autoscaler.RunType,
+			cpaconfig.ScalerRunType,
 		},
 		{
 			"Fail, scaler inteval run, fail to get prediction",
@@ -396,7 +396,7 @@ func TestGetEvaluation(t *testing.T) {
 				},
 			},
 			nil,
-			autoscaler.RunType,
+			cpaconfig.ScalerRunType,
 		},
 		{
 			"Fail, scaler inteval run, fail to get IDs to remove",
@@ -448,7 +448,7 @@ func TestGetEvaluation(t *testing.T) {
 				},
 			},
 			nil,
-			autoscaler.RunType,
+			cpaconfig.ScalerRunType,
 		},
 		{
 			"Fail, scaler inteval run, fail to remove evaluations",
@@ -503,7 +503,7 @@ func TestGetEvaluation(t *testing.T) {
 				},
 			},
 			nil,
-			autoscaler.RunType,
+			cpaconfig.ScalerRunType,
 		},
 		{
 			"Fail, unknown decision type",
@@ -568,7 +568,7 @@ func TestGetEvaluation(t *testing.T) {
 				DecisionType: "unknown",
 			},
 			nil,
-			autoscaler.RunType,
+			cpaconfig.ScalerRunType,
 		},
 		{
 			"Success, two models, pick maximum replicas, evaluation lower than prediction",
@@ -635,7 +635,7 @@ func TestGetEvaluation(t *testing.T) {
 				DecisionType: config.DecisionMaximum,
 			},
 			nil,
-			autoscaler.RunType,
+			cpaconfig.ScalerRunType,
 		},
 		{
 			"Success, two models, pick minimum replicas, evaluation lower than prediction",
@@ -702,7 +702,7 @@ func TestGetEvaluation(t *testing.T) {
 				DecisionType: config.DecisionMinimum,
 			},
 			nil,
-			autoscaler.RunType,
+			cpaconfig.ScalerRunType,
 		},
 		{
 			"Success, two models, pick mean replicas, evaluation lower than prediction",
@@ -769,7 +769,7 @@ func TestGetEvaluation(t *testing.T) {
 				DecisionType: config.DecisionMean,
 			},
 			nil,
-			autoscaler.RunType,
+			cpaconfig.ScalerRunType,
 		},
 		{
 			"Success, four models, pick median replicas",
@@ -852,7 +852,7 @@ func TestGetEvaluation(t *testing.T) {
 				DecisionType: config.DecisionMedian,
 			},
 			nil,
-			autoscaler.RunType,
+			cpaconfig.ScalerRunType,
 		},
 		{
 			"Success, five models, pick median replicas",
@@ -943,7 +943,7 @@ func TestGetEvaluation(t *testing.T) {
 				DecisionType: config.DecisionMedian,
 			},
 			nil,
-			autoscaler.RunType,
+			cpaconfig.ScalerRunType,
 		},
 		{
 			"Success, one model, evaluation higher than prediction",
@@ -1002,7 +1002,7 @@ func TestGetEvaluation(t *testing.T) {
 				DecisionType: config.DecisionMaximum,
 			},
 			nil,
-			autoscaler.RunType,
+			cpaconfig.ScalerRunType,
 		},
 	}
 	for _, test := range tests {

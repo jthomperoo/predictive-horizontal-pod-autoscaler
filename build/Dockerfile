@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # CPA base image
-FROM custompodautoscaler/python-3-8:v1.0.1
+FROM custompodautoscaler/python-3-8:v2.2.0
 
 ENV USER_UID=1001 \
     USER_NAME=phpa

@@ -1,34 +1,3 @@
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
-  name: predictive-horizontal-pod-autoscaler-example
-rules:
-- apiGroups:
-  - ""
-  resources:
-  - pods
-  - replicationcontrollers
-  - replicationcontrollers/scale
-  verbs:
-  - '*'
-- apiGroups:
-  - apps
-  resources:
-  - deployments
-  - deployments/scale
-  - replicasets
-  - replicasets/scale
-  - statefulsets
-  - statefulsets/scale
-  verbs:
-  - '*'
-- apiGroups:
-  - metrics.k8s.io
-  resources:
-  - '*'
-  verbs:
-  - '*'
----
 apiVersion: v1
 kind: PersistentVolume
 metadata:
@@ -79,7 +48,7 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: php-apache
-  provisionRole: false
+  roleRequiresMetricsServer: true
   config:
     - name: minReplicas
       value: "1"

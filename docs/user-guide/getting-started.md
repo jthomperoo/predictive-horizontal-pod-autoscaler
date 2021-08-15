@@ -130,37 +130,6 @@ Now we need to set up the autoscaler. This autoscaler will be configured to watc
 apply a linear regression to predict ahead of time what the replica count should be.
 
 ```yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
-  name: simple-linear-example
-rules:
-- apiGroups:
-  - ""
-  resources:
-  - pods
-  - replicationcontrollers
-  - replicationcontrollers/scale
-  verbs:
-  - '*'
-- apiGroups:
-  - apps
-  resources:
-  - deployments
-  - deployments/scale
-  - replicasets
-  - replicasets/scale
-  - statefulsets
-  - statefulsets/scale
-  verbs:
-  - '*'
-- apiGroups:
-  - metrics.k8s.io
-  resources:
-  - '*'
-  verbs:
-  - '*'
----
 apiVersion: custompodautoscaler.com/v1
 kind: CustomPodAutoscaler
 metadata:
@@ -176,7 +145,7 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: php-apache
-  provisionRole: false
+  roleRequiresMetricsServer: true
   config:
     - name: minReplicas
       value: "1"
@@ -224,8 +193,6 @@ required number of replicas, for example with a sequence of increasing calculate
 preemptively scale to `7` after applying a linear regression.
 
 The key elements of the PHPA YAML defined above are:
-
-- The role defined at the top allows the autoscaler to have access to the metrics server.
 
 - The autoscaler is targeting our test application; identifying it by the fact it is a `Deployment` with the name
 `php-apache`:
