@@ -1,34 +1,3 @@
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
-  name: dynamic-holt-winters-example
-rules:
-- apiGroups:
-  - ""
-  resources:
-  - pods
-  - replicationcontrollers
-  - replicationcontrollers/scale
-  verbs:
-  - '*'
-- apiGroups:
-  - apps
-  resources:
-  - deployments
-  - deployments/scale
-  - replicasets
-  - replicasets/scale
-  - statefulsets
-  - statefulsets/scale
-  verbs:
-  - '*'
-- apiGroups:
-  - metrics.k8s.io
-  resources:
-  - '*'
-  verbs:
-  - '*'
----
 apiVersion: custompodautoscaler.com/v1
 kind: CustomPodAutoscaler
 metadata:
@@ -44,7 +13,7 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: php-apache
-  provisionRole: false
+  roleRequiresMetricsServer: true
   config:
     - name: minReplicas
       value: "1"

@@ -24,7 +24,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/jthomperoo/custom-pod-autoscaler/evaluate"
+	"github.com/jthomperoo/custom-pod-autoscaler/v2/evaluate"
 )
 
 // DBEvaluation is an evaluation that can be stored in a SQL db, it is exactly the same as the evaluation but just with

@@ -24,15 +24,19 @@ jobs:
         # Get golint
         export PATH=$PATH:$(go env GOPATH)/bin
         go install golang.org/x/lint/golint@v0.0.0-20201208152925-83fdc39ff7b5
+
         # Lint and test
-        go mod vendor
+        make vendor_modules
         pip install -r requirements-dev.txt
         pip install -r algorithms/requirements.txt
         make lint
         make beautify
+
         # Exit if after beautification there are any code differences
         git diff --exit-code
+
         make test
+
         # Build
         if [ ${{ github.event_name }} == "release" ]; then
           # github.ref is in the form refs/tags/VERSION, so apply regex to just get version
@@ -41,20 +45,6 @@ jobs:
           VERSION=$(git rev-parse --short ${{ github.sha }})
         fi
         make docker VERSION=${VERSION}
-    - uses: codecov/codecov-action@v1.0.3
-      if: github.repository == 'jthomperoo/predictive-horizontal-pod-autoscaler'
-      with:
-        token: ${{secrets.CODECOV_TOKEN}}
-        file: ./application_coverage.out
-        flags: unittests
-        name: application-unittests
-    - uses: codecov/codecov-action@v1.0.3
-      if: github.repository == 'jthomperoo/predictive-horizontal-pod-autoscaler'
-      with:
-        token: ${{secrets.CODECOV_TOKEN}}
-        file: ./algorithm_coverage.out
-        flags: unittests
-        name: algorithm-unittests
     - name: Deploy
       env:
         DOCKER_USER: ${{ secrets.DOCKER_USER }}

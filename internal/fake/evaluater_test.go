@@ -21,7 +21,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/jthomperoo/custom-pod-autoscaler/evaluate"
+	"github.com/jthomperoo/custom-pod-autoscaler/v2/evaluate"
 	"github.com/jthomperoo/horizontal-pod-autoscaler/metric"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/fake"
 )
