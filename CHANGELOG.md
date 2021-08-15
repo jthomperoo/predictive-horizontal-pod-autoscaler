@@ -5,6 +5,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Changed
+- Updated to Custom Pod Autoscaler `v2.2.0`.
+- Updated to Horizontal Pod Autoscaler CPA `v0.7.0`.
+### Fixed
+- Linear regression no longer fails on first run.
 
 ## [v0.7.0] - 2021-04-05
 ### Added
