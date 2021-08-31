@@ -31,14 +31,14 @@ k3d cluster create phpa-test-cluster
 The PHPA requires the [Custom Pod Autoscaler Operator
 (CPAO)](https://github.com/jthomperoo/custom-pod-autoscaler-operator) to handle management of autoscalers.
 
-In this guide we are using `v1.0.3` of the CPAO, but check out the [installation
+In this guide we are using `v1.1.1` of the CPAO, but check out the [installation
 guide](https://github.com/jthomperoo/custom-pod-autoscaler-operator/blob/master/INSTALL.md) for more up to date
 instructions for later releases.
 
-Run the following commands to install `v1.0.3` of the CPAO:
+Run the following commands to install `v1.1.1` of the CPAO:
 
 ```bash
-VERSION=v1.0.3
+VERSION=v1.1.1
 HELM_CHART=custom-pod-autoscaler-operator
 helm install ${HELM_CHART} https://github.com/jthomperoo/custom-pod-autoscaler-operator/releases/download/${VERSION}/custom-pod-autoscaler-operator-${VERSION}.tgz
 ```
