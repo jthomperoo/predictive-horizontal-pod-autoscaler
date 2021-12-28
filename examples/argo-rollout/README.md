@@ -1,6 +1,6 @@
 # Argo Rollout
 
-> Note: this feature is not yet released.
+> Note: this feature is only available in the Predictive Horizontal Pod Autoscaler v0.9.0 and above.
 
 > Note: this example requires using a Custom Pod Autoscaler Operator `v1.2.0` and above.
 
