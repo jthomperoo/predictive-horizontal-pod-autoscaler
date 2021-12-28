@@ -1,52 +1,78 @@
-# Simple Linear Example
+# Argo Rollout
+
+> Note: this feature is not yet released.
+
+> Note: this example requires using a Custom Pod Autoscaler Operator `v1.2.0` and above.
 
 ## Overview
 
-This example is showing a predictive horizontal pod autoscaler using a linear regression model, with no persistent storage, so if the scaler is deleted the data will not persist.
+This example is showing how to target an [Argo Rollout](https://argoproj.github.io/argo-rollouts/), other than that it
+is identical to the [simple-linear example](../simple-linear).
+
+This example was based on the [Horizontal Pod Autoscaler
+Walkthrough](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale-walkthrough/).
 
 ## Usage
-If you want to deploy this onto your cluster, you first need to install the [Custom Pod Autoscaler Operator](https://github.com/jthomperoo/custom-pod-autoscaler-operator), follow the [installation guide for instructions for installing the operator](https://github.com/jthomperoo/custom-pod-autoscaler-operator/blob/master/INSTALL.md).
 
-This example was based on the [Horizontal Pod Autoscaler Walkthrough](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale-walkthrough/).
+### Enable Argo Rollouts
 
-1. Use `kubectl apply -f deployment.yaml` to spin up the app/deployment to manage, called `php-apache`.
-2. Use `kubectl apply -f phpa.yaml` to start the autoscaler, pointing at the previously created deployment.
-3. Use `kubectl logs simple-linear-example --follow` to see the autoscaler working and the log output it produces.
-4. Increase the load with: `kubectl run -i --tty load-generator --rm --image=busybox --restart=Never -- /bin/sh -c "while sleep 0.01; do wget -q -O- http://php-apache; done"`
-5. Watch as the number of replicas increases.
-6. Use `kubectl exec -it simple-linear-example sqlite3 /store/predictive-horizontal-pod-autoscaler.db 'SELECT * FROM evaluation;'` to see the evaluations stored locally and tracked by the autoscaler.
+Using this requires Argo Rollouts to be enabled on your Kubernetes cluster, [follow this guide to set up Argo Rollouts
+on your cluster](https://argoproj.github.io/argo-rollouts/installation/)
 
-## Explained
+### Enable CPAs
 
-The example has some configuration
-```yaml
-config:
-  - name: minReplicas
-    value: "1"
-  - name: maxReplicas
-    value: "5"
-  - name: predictiveConfig
-    value: |
-      models:
-      - type: Linear
-        name: LinearPrediction
-        perInterval: 1
-        linear:
-          lookAhead: 10000
-          storedValues: 6
-      decisionType: "maximum"
-      metrics:
-      - type: Resource
-        resource:
-          name: cpu
-          target:
-            averageUtilization: 50
-            type: Utilization
-  - name: interval
-    value: "10000"
-  - name: downscaleStabilization
-    value: "30"
+Using this CPA requires CPAs to be enabled on your Kubernetes cluster, [follow this guide to set up CPAs on your
+cluster](https://github.com/jthomperoo/custom-pod-autoscaler-operator#installation).
+
+### Deploy an Argo Rollout to Manage
+
+First a rollout needs to be deployed that the CPA can manage, you can deploy with the following command:
+
+```bash
+kubectl apply -f rollout.yaml
 ```
-The `minReplicas`, `maxReplicas` and `interval` are Custom Pod Autoscaler options, setting minimum and maximum replicas, and the time interval inbetween each autoscale being run, i.e. the autoscaler checks every 10 seconds.
-The `downscaleStabilization` is also a Custom Pod Autoscaler option, in this case changing the `downscaleStabilization` from the default 300 seconds (5 minutes), to 30 seconds. The `downscaleStabilization` option handles how quickly an autoscaler can scale down, ensuring that it will pick the highest evaluation that has occurred within the last time period described, in this case it will pick the highest evaluation over the past 30 seconds.
-The `predictiveConfig` option is the Predictive Horizontal Pod Autoscaler options, detailing a linear regression model that runs on every interval, looking 10 seconds ahead, keeping track of the past 6 replica values in order to predict the next result, and the `decisionType` is maximum, which if there were multiple models provided would mean that the PHPA would use the one with the highest replica count; there are two other options, `mean` and `minimum`. The `metrics` option is a Horizontal Pod Autoscaler option, targeting CPU utilisation.
+
+You can check if the rollout is deployed by running this command:
+
+```bash
+kubectl argo rollouts get rollout php-apache
+```
+
+You should see that the rollout is set up to initially have only `1` replica.
+
+### Deploy the Predictive Horizontal Pod Autoscaler
+
+Deploy the PHPA with the following command:
+
+```bash
+kubectl apply -f phpa.yaml
+```
+
+### Increase the CPU Load
+
+Run the following command to increase the CPU load by making HTTP requests, this may take a while:
+
+```bash
+kubectl run -i --tty load-generator --rm --image=busybox --restart=Never -- /bin/sh -c "while sleep 0.01; do wget -q -O- http://php-apache; done"
+```
+
+You can stop increasing the load by using Ctrl+C.
+
+You should see the number of replicas of the `php-apache` rollout increase.
+
+## Configuration
+
+This example targets the rollout using a `scaleTargetRef` configured using the following:
+
+```yaml
+scaleTargetRef:
+  apiVersion: argoproj.io/v1alpha1
+  kind: Rollout
+  name: php-apache
+```
+
+This example also requests that the CPA is provisioned with the role required by providing the following option:
+
+```yaml
+roleRequiresArgoRollouts: true
+```
