@@ -5,6 +5,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- Support for `argoproj.io/v1alpha1` `Rollout` resource.
+### Changed
+- Bump `jthomperoo/custom-pod-autoscaler` to `v2.3.0`
+- Bump `jthomperoo/horizontal-pod-autoscaler` to `v0.8.0`
 
 ## [v0.8.0] - 2021-08-15
 ### Changed
