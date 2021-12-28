@@ -39,6 +39,7 @@ import (
 	"strings"
 	"time"
 
+	argov1alpha1 "github.com/argoproj/argo-rollouts/pkg/apis/rollouts/v1alpha1"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/sqlite3"
 	_ "github.com/golang-migrate/migrate/v4/source/file" // Driver for loading evaluations from file system
@@ -63,7 +64,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/yaml"
 	cacheddiscovery "k8s.io/client-go/discovery/cached"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/kubernetes/scheme"
+	clientsetscheme "k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/restmapper"
 	"k8s.io/kubernetes/pkg/controller/podautoscaler/metrics"
@@ -112,11 +113,20 @@ func main() {
 		log.Fatal(err)
 	}
 
+	// Set up Kubernetes resource scheme
+	scheme := runtime.NewScheme()
+	schemeBuilder := runtime.NewSchemeBuilder(argov1alpha1.AddToScheme)
+	schemeBuilder.Register(clientsetscheme.AddToScheme)
+	err = schemeBuilder.AddToScheme(scheme)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	switch *modePtr {
 	case "metric":
-		getMetrics(bytes.NewReader(stdin), predictiveConfig)
+		getMetrics(bytes.NewReader(stdin), predictiveConfig, scheme)
 	case "evaluate":
-		getEvaluation(bytes.NewReader(stdin), predictiveConfig)
+		getEvaluation(bytes.NewReader(stdin), predictiveConfig, scheme)
 	case "setup":
 		setup(predictiveConfig)
 	default:
@@ -157,7 +167,7 @@ func setup(predictiveConfig *config.Config) {
 	}
 }
 
-func getEvaluation(stdin io.Reader, predictiveConfig *config.Config) {
+func getEvaluation(stdin io.Reader, predictiveConfig *config.Config, scheme *runtime.Scheme) {
 	// Open DB connection
 	db, err := sql.Open("sqlite3", predictiveConfig.DBPath)
 	if err != nil {
@@ -173,7 +183,7 @@ func getEvaluation(stdin io.Reader, predictiveConfig *config.Config) {
 
 	// Create object from version and kind of piped value
 	resourceGVK := spec.UnstructuredResource.GroupVersionKind()
-	resourceRuntime, err := scheme.Scheme.New(resourceGVK)
+	resourceRuntime, err := scheme.New(resourceGVK)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -241,7 +251,7 @@ func getEvaluation(stdin io.Reader, predictiveConfig *config.Config) {
 	fmt.Print(string(jsonEvaluation))
 }
 
-func getMetrics(stdin io.Reader, predictiveConfig *config.Config) {
+func getMetrics(stdin io.Reader, predictiveConfig *config.Config, scheme *runtime.Scheme) {
 	var spec MetricSpec
 	err := yaml.NewYAMLOrJSONDecoder(stdin, 10).Decode(&spec)
 	if err != nil {
@@ -250,7 +260,7 @@ func getMetrics(stdin io.Reader, predictiveConfig *config.Config) {
 
 	// Create object from version and kind of piped value
 	resourceGVK := spec.UnstructuredResource.GroupVersionKind()
-	resourceRuntime, err := scheme.Scheme.New(resourceGVK)
+	resourceRuntime, err := scheme.New(resourceGVK)
 	if err != nil {
 		log.Fatal(err)
 	}

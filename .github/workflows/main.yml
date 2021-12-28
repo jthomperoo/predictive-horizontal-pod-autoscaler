@@ -28,7 +28,6 @@ jobs:
         # Lint and test
         make vendor_modules
         pip install -r requirements-dev.txt
-        pip install -r algorithms/requirements.txt
         make lint
         make beautify
 

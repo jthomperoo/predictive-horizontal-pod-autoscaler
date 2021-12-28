@@ -12,8 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Build stage, must be done in Docker for cross compatiblity because CGO is required for go-sqlite3
+FROM golang:1.16 AS build
+
+WORKDIR /app
+
+COPY . ./
+
+RUN make
+
 # CPA base image
-FROM custompodautoscaler/python-3-8:v2.2.0
+FROM custompodautoscaler/python-3-8:v2.3.0
 
 ENV USER_UID=1001 \
     USER_NAME=phpa
@@ -31,11 +40,13 @@ ENV configPath /app/config.yaml
 # Add in entry point script
 COPY build/entrypoint.sh /
 # Add in config and horizontal-pod-autoscaler binary
-COPY config.yaml dist/* ./
+COPY config.yaml ./
 # Add in db migrations
 COPY sql ./sql
 # Add in Python aglorithms
 COPY algorithms ./algorithms
+# Add in built binary
+COPY --from=build /app/dist/* ./
 
 RUN mkdir -p ${HOME} && \
     chown ${USER_UID}:0 ${HOME} && \

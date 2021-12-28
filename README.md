@@ -69,12 +69,6 @@ Any Python dependencies must be installed by running:
 pip install -r requirements-dev.txt
 ```
 
-To view docs locally you need some Python dependencies, run:
-
-```bash
-pip install -r docs/requirements.txt
-```
-
 It is recommended to test locally using a local Kubernetes managment system, such as
 [k3d](https://github.com/rancher/k3d) (allows running a small Kubernetes cluster locally using Docker).
 
