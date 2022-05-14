@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # Build stage, must be done in Docker for cross compatiblity because CGO is required for go-sqlite3
-FROM golang:1.16 AS build
+FROM golang:1.17 AS build
 
 WORKDIR /app
 

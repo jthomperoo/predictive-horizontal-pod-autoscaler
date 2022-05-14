@@ -23,7 +23,7 @@ format:
 	go mod tidy
 	find algorithms -name '*.py' -print0 | xargs -0 yapf -i
 
-docker: default
+docker:
 	@echo "=============Building docker images============="
 	docker build -f build/Dockerfile -t $(REGISTRY)/$(NAME):$(VERSION) .
 
