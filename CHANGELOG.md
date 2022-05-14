@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [v0.10.0] - 2022-05-14
 ### Changed
 - Removed dependency on `jthomperoo/horizontal-pod-autoscaler` in favour of `jthomperoo/k8shorizmetrics`.
 - Bump `jthomperoo/custom-pod-autoscaler` to `v2.6.0`.
@@ -89,7 +91,9 @@ Holt-Winters configuration.
 - Added the ability to use Linear Regression models to predict future scaling.
 
 [Unreleased]:
-https://github.com/jthomperoo/predictive-horizontal-pod-autoscaler/compare/v0.9.0...HEAD
+https://github.com/jthomperoo/predictive-horizontal-pod-autoscaler/compare/v0.10.0...HEAD
+[v0.10.0]:
+https://github.com/jthomperoo/predictive-horizontal-pod-autoscaler/compare/v0.9.0...v0.10.0
 [v0.9.0]:
 https://github.com/jthomperoo/predictive-horizontal-pod-autoscaler/compare/v0.8.0...v0.9.0
 [v0.8.0]:
