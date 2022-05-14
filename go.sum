@@ -273,8 +273,6 @@ github.com/jstemmer/go-junit-report v0.0.0-20190106144839-af01ea7f8024/go.mod h1
 github.com/jstemmer/go-junit-report v0.9.1/go.mod h1:Brl9GWCQeLvo8nXZwPNNblvFj/XSXhF0NWZEnDohbsk=
 github.com/jthomperoo/custom-pod-autoscaler/v2 v2.6.0 h1:afDx0D8Pr/ZyjqtO7BiWT3nSrF2ZqK9pVZkydhIDDns=
 github.com/jthomperoo/custom-pod-autoscaler/v2 v2.6.0/go.mod h1:cTmVWYg9huGIhBWj5/UecQUeWGM+DMT/iRe+8ahnZ5A=
-github.com/jthomperoo/k8shorizmetrics v0.0.0-20220514122145-eb70fffe6e06 h1:D2CwJqbSASMBZmq8RFXxUchE88U8neI9pgEUOrhouAA=
-github.com/jthomperoo/k8shorizmetrics v0.0.0-20220514122145-eb70fffe6e06/go.mod h1:MnIAv05IAb/DxcoyvbBrPTjBIfkQbrcBJfZw+hsg+Zo=
 github.com/jthomperoo/k8shorizmetrics v1.0.0 h1:GYAOPSbfE760WGj8ic6PH4IQetFuiXjQJUOPFQMIi5Q=
 github.com/jthomperoo/k8shorizmetrics v1.0.0/go.mod h1:MnIAv05IAb/DxcoyvbBrPTjBIfkQbrcBJfZw+hsg+Zo=
 github.com/julienschmidt/httprouter v1.2.0/go.mod h1:SYymIcj16QtmaHHD7aYtjjsJG7VTCxuUUipMqKk8s4w=
