@@ -191,7 +191,7 @@ func TestExecute_ExecuteWithValue(t *testing.T) {
 		{
 			"Fail, bad response code",
 			"",
-			errors.New(`HTTP request failed, status: [400], response: 'bad request!'`),
+			errors.New(`http request failed, status: [400], response: 'bad request!'`),
 			&hook.Definition{
 				Type: "http",
 				HTTP: &hook.HTTP{
