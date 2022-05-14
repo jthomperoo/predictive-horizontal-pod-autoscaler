@@ -22,7 +22,7 @@ COPY . ./
 RUN make
 
 # CPA base image
-FROM custompodautoscaler/python-3-8:v2.6.0
+FROM custompodautoscaler/python-3-8:v2.7.0
 
 ENV USER_UID=1001 \
     USER_NAME=phpa
