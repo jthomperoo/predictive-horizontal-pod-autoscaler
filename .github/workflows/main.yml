@@ -31,7 +31,7 @@ jobs:
         make lint
         make format
 
-        # Exit if after beautification there are any code differences
+        # Exit if after formatting there are any code differences
         git diff --exit-code
 
         make test
@@ -50,6 +50,7 @@ jobs:
         DOCKER_PASS: ${{ secrets.DOCKER_PASS }}
       if: github.event_name != 'pull_request' && github.repository == 'jthomperoo/predictive-horizontal-pod-autoscaler'
       run: |
+
         if [ ${{ github.event_name }} == "release" ]; then
           # github.ref is in the form refs/tags/VERSION, so apply regex to just get version
           VERSION=$(echo "${{ github.ref }}" | grep -P '([^\/]+$)' -o)
