@@ -6,7 +6,7 @@ require (
 	github.com/golang-migrate/migrate/v4 v4.7.0
 	github.com/google/go-cmp v0.5.8
 	github.com/jthomperoo/custom-pod-autoscaler/v2 v2.6.0
-	github.com/jthomperoo/k8shorizmetrics v0.0.0-20220514122145-eb70fffe6e06
+	github.com/jthomperoo/k8shorizmetrics v1.0.0
 	github.com/mattn/go-sqlite3 v1.14.13
 	k8s.io/api v0.24.0
 	k8s.io/apimachinery v0.24.0
