@@ -1,6 +1,3 @@
-//go:build unit
-// +build unit
-
 /*
 Copyright 2021 The Predictive Horizontal Pod Autoscaler Authors.
 
@@ -98,7 +95,7 @@ func TestMain(m *testing.M) {
 	tests = []test{
 		{
 			"Missing shell method configuration",
-			errors.New(`Missing required 'shell' configuration on hook definition`),
+			errors.New(`missing required 'shell' configuration on hook definition`),
 			"",
 			&hook.Definition{
 				Type: "shell",

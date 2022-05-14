@@ -1,5 +1,5 @@
 /*
-Copyright 2021 The Predictive Horizontal Pod Autoscaler Authors.
+Copyright 2022 The Predictive Horizontal Pod Autoscaler Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -24,8 +24,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	cpaconfig "github.com/jthomperoo/custom-pod-autoscaler/v2/config"
 	cpaevaluate "github.com/jthomperoo/custom-pod-autoscaler/v2/evaluate"
-	hpaevaluate "github.com/jthomperoo/horizontal-pod-autoscaler/evaluate"
-	"github.com/jthomperoo/horizontal-pod-autoscaler/metric"
+	"github.com/jthomperoo/k8shorizmetrics/metrics"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/config"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/evaluate"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/fake"
@@ -45,11 +44,12 @@ func TestGetEvaluation(t *testing.T) {
 		description      string
 		expected         *cpaevaluate.Evaluation
 		expectedErr      error
-		hpaEvaluator     hpaevaluate.Evaluater
+		hpaEvaluator     evaluate.HPAEvaluator
 		store            stored.Storer
 		predicters       []prediction.Predicter
 		predictiveConfig *config.Config
-		metrics          []*metric.Metric
+		metrics          []*metrics.Metric
+		currentReplicas  int32
 		runType          string
 	}{
 		{
@@ -57,14 +57,15 @@ func TestGetEvaluation(t *testing.T) {
 			nil,
 			errors.New(`fail to get evaluation`),
 			&fake.Evaluater{
-				GetEvaluationReactor: func(gatheredMetrics []*metric.Metric) (*cpaevaluate.Evaluation, error) {
-					return nil, errors.New("fail to get evaluation")
+				EvaluateReactor: func(gatheredMetrics []*metrics.Metric, currentReplicas int32) (int32, error) {
+					return 0, errors.New("fail to get evaluation")
 				},
 			},
 			nil,
 			nil,
 			nil,
 			nil,
+			0,
 			cpaconfig.ScalerRunType,
 		},
 		{
@@ -72,10 +73,8 @@ func TestGetEvaluation(t *testing.T) {
 			nil,
 			errors.New(`fail to get model from store`),
 			&fake.Evaluater{
-				GetEvaluationReactor: func(gatheredMetrics []*metric.Metric) (*cpaevaluate.Evaluation, error) {
-					return &cpaevaluate.Evaluation{
-						TargetReplicas: 3,
-					}, nil
+				EvaluateReactor: func(gatheredMetrics []*metrics.Metric, currentReplicas int32) (int32, error) {
+					return 3, nil
 				},
 			},
 			&fake.Store{
@@ -98,6 +97,7 @@ func TestGetEvaluation(t *testing.T) {
 				},
 			},
 			nil,
+			0,
 			cpaconfig.ScalerRunType,
 		},
 		{
@@ -105,10 +105,8 @@ func TestGetEvaluation(t *testing.T) {
 			nil,
 			errors.New(`fail to add new model`),
 			&fake.Evaluater{
-				GetEvaluationReactor: func(gatheredMetrics []*metric.Metric) (*cpaevaluate.Evaluation, error) {
-					return &cpaevaluate.Evaluation{
-						TargetReplicas: 3,
-					}, nil
+				EvaluateReactor: func(gatheredMetrics []*metrics.Metric, currentReplicas int32) (int32, error) {
+					return 3, nil
 				},
 			},
 			&fake.Store{
@@ -134,6 +132,7 @@ func TestGetEvaluation(t *testing.T) {
 				},
 			},
 			nil,
+			0,
 			cpaconfig.ScalerRunType,
 		},
 		{
@@ -141,10 +140,8 @@ func TestGetEvaluation(t *testing.T) {
 			nil,
 			errors.New(`fail to get added model`),
 			&fake.Evaluater{
-				GetEvaluationReactor: func(gatheredMetrics []*metric.Metric) (*cpaevaluate.Evaluation, error) {
-					return &cpaevaluate.Evaluation{
-						TargetReplicas: 3,
-					}, nil
+				EvaluateReactor: func(gatheredMetrics []*metrics.Metric, currentReplicas int32) (int32, error) {
+					return 3, nil
 				},
 			},
 			func() *fake.Store {
@@ -178,6 +175,7 @@ func TestGetEvaluation(t *testing.T) {
 				},
 			},
 			nil,
+			0,
 			cpaconfig.ScalerRunType,
 		},
 		{
@@ -185,10 +183,8 @@ func TestGetEvaluation(t *testing.T) {
 			nil,
 			errors.New(`fail to update model`),
 			&fake.Evaluater{
-				GetEvaluationReactor: func(gatheredMetrics []*metric.Metric) (*cpaevaluate.Evaluation, error) {
-					return &cpaevaluate.Evaluation{
-						TargetReplicas: 3,
-					}, nil
+				EvaluateReactor: func(gatheredMetrics []*metrics.Metric, currentReplicas int32) (int32, error) {
+					return 3, nil
 				},
 			},
 			&fake.Store{
@@ -218,6 +214,7 @@ func TestGetEvaluation(t *testing.T) {
 				},
 			},
 			nil,
+			0,
 			cpaconfig.ScalerRunType,
 		},
 		{
@@ -225,10 +222,8 @@ func TestGetEvaluation(t *testing.T) {
 			nil,
 			errors.New(`fail to update model`),
 			&fake.Evaluater{
-				GetEvaluationReactor: func(gatheredMetrics []*metric.Metric) (*cpaevaluate.Evaluation, error) {
-					return &cpaevaluate.Evaluation{
-						TargetReplicas: 3,
-					}, nil
+				EvaluateReactor: func(gatheredMetrics []*metrics.Metric, currentReplicas int32) (int32, error) {
+					return 3, nil
 				},
 			},
 			&fake.Store{
@@ -258,6 +253,7 @@ func TestGetEvaluation(t *testing.T) {
 				},
 			},
 			nil,
+			0,
 			cpaconfig.ScalerRunType,
 		},
 		{
@@ -265,10 +261,8 @@ func TestGetEvaluation(t *testing.T) {
 			nil,
 			errors.New(`fail to add evaluation`),
 			&fake.Evaluater{
-				GetEvaluationReactor: func(gatheredMetrics []*metric.Metric) (*cpaevaluate.Evaluation, error) {
-					return &cpaevaluate.Evaluation{
-						TargetReplicas: 3,
-					}, nil
+				EvaluateReactor: func(gatheredMetrics []*metrics.Metric, currentReplicas int32) (int32, error) {
+					return 3, nil
 				},
 			},
 			&fake.Store{
@@ -301,6 +295,7 @@ func TestGetEvaluation(t *testing.T) {
 				},
 			},
 			nil,
+			0,
 			cpaconfig.ScalerRunType,
 		},
 		{
@@ -308,10 +303,8 @@ func TestGetEvaluation(t *testing.T) {
 			nil,
 			errors.New(`fail to get evaluations`),
 			&fake.Evaluater{
-				GetEvaluationReactor: func(gatheredMetrics []*metric.Metric) (*cpaevaluate.Evaluation, error) {
-					return &cpaevaluate.Evaluation{
-						TargetReplicas: 3,
-					}, nil
+				EvaluateReactor: func(gatheredMetrics []*metrics.Metric, currentReplicas int32) (int32, error) {
+					return 3, nil
 				},
 			},
 			&fake.Store{
@@ -347,6 +340,7 @@ func TestGetEvaluation(t *testing.T) {
 				},
 			},
 			nil,
+			0,
 			cpaconfig.ScalerRunType,
 		},
 		{
@@ -354,10 +348,8 @@ func TestGetEvaluation(t *testing.T) {
 			nil,
 			errors.New(`fail to get prediction`),
 			&fake.Evaluater{
-				GetEvaluationReactor: func(gatheredMetrics []*metric.Metric) (*cpaevaluate.Evaluation, error) {
-					return &cpaevaluate.Evaluation{
-						TargetReplicas: 3,
-					}, nil
+				EvaluateReactor: func(gatheredMetrics []*metrics.Metric, currentReplicas int32) (int32, error) {
+					return 3, nil
 				},
 			},
 			&fake.Store{
@@ -396,6 +388,7 @@ func TestGetEvaluation(t *testing.T) {
 				},
 			},
 			nil,
+			0,
 			cpaconfig.ScalerRunType,
 		},
 		{
@@ -403,10 +396,8 @@ func TestGetEvaluation(t *testing.T) {
 			nil,
 			errors.New(`fail to get IDs to remove`),
 			&fake.Evaluater{
-				GetEvaluationReactor: func(gatheredMetrics []*metric.Metric) (*cpaevaluate.Evaluation, error) {
-					return &cpaevaluate.Evaluation{
-						TargetReplicas: 3,
-					}, nil
+				EvaluateReactor: func(gatheredMetrics []*metrics.Metric, currentReplicas int32) (int32, error) {
+					return 3, nil
 				},
 			},
 			&fake.Store{
@@ -448,6 +439,7 @@ func TestGetEvaluation(t *testing.T) {
 				},
 			},
 			nil,
+			0,
 			cpaconfig.ScalerRunType,
 		},
 		{
@@ -455,10 +447,8 @@ func TestGetEvaluation(t *testing.T) {
 			nil,
 			errors.New(`fail to remove evaluation`),
 			&fake.Evaluater{
-				GetEvaluationReactor: func(gatheredMetrics []*metric.Metric) (*cpaevaluate.Evaluation, error) {
-					return &cpaevaluate.Evaluation{
-						TargetReplicas: 3,
-					}, nil
+				EvaluateReactor: func(gatheredMetrics []*metrics.Metric, currentReplicas int32) (int32, error) {
+					return 3, nil
 				},
 			},
 			&fake.Store{
@@ -503,17 +493,16 @@ func TestGetEvaluation(t *testing.T) {
 				},
 			},
 			nil,
+			0,
 			cpaconfig.ScalerRunType,
 		},
 		{
 			"Fail, unknown decision type",
 			nil,
-			errors.New("Unknown decision type 'unknown'"),
+			errors.New("unknown decision type 'unknown'"),
 			&fake.Evaluater{
-				GetEvaluationReactor: func(gatheredMetrics []*metric.Metric) (*cpaevaluate.Evaluation, error) {
-					return &cpaevaluate.Evaluation{
-						TargetReplicas: 0,
-					}, nil
+				EvaluateReactor: func(gatheredMetrics []*metrics.Metric, currentReplicas int32) (int32, error) {
+					return 0, nil
 				},
 			},
 			&fake.Store{
@@ -568,6 +557,7 @@ func TestGetEvaluation(t *testing.T) {
 				DecisionType: "unknown",
 			},
 			nil,
+			0,
 			cpaconfig.ScalerRunType,
 		},
 		{
@@ -577,10 +567,8 @@ func TestGetEvaluation(t *testing.T) {
 			},
 			nil,
 			&fake.Evaluater{
-				GetEvaluationReactor: func(gatheredMetrics []*metric.Metric) (*cpaevaluate.Evaluation, error) {
-					return &cpaevaluate.Evaluation{
-						TargetReplicas: 0,
-					}, nil
+				EvaluateReactor: func(gatheredMetrics []*metrics.Metric, currentReplicas int32) (int32, error) {
+					return 0, nil
 				},
 			},
 			&fake.Store{
@@ -635,6 +623,7 @@ func TestGetEvaluation(t *testing.T) {
 				DecisionType: config.DecisionMaximum,
 			},
 			nil,
+			0,
 			cpaconfig.ScalerRunType,
 		},
 		{
@@ -644,10 +633,8 @@ func TestGetEvaluation(t *testing.T) {
 			},
 			nil,
 			&fake.Evaluater{
-				GetEvaluationReactor: func(gatheredMetrics []*metric.Metric) (*cpaevaluate.Evaluation, error) {
-					return &cpaevaluate.Evaluation{
-						TargetReplicas: 2,
-					}, nil
+				EvaluateReactor: func(gatheredMetrics []*metrics.Metric, currentReplicas int32) (int32, error) {
+					return 2, nil
 				},
 			},
 			&fake.Store{
@@ -702,6 +689,7 @@ func TestGetEvaluation(t *testing.T) {
 				DecisionType: config.DecisionMinimum,
 			},
 			nil,
+			0,
 			cpaconfig.ScalerRunType,
 		},
 		{
@@ -711,10 +699,8 @@ func TestGetEvaluation(t *testing.T) {
 			},
 			nil,
 			&fake.Evaluater{
-				GetEvaluationReactor: func(gatheredMetrics []*metric.Metric) (*cpaevaluate.Evaluation, error) {
-					return &cpaevaluate.Evaluation{
-						TargetReplicas: 0,
-					}, nil
+				EvaluateReactor: func(gatheredMetrics []*metrics.Metric, currentReplicas int32) (int32, error) {
+					return 0, nil
 				},
 			},
 			&fake.Store{
@@ -769,6 +755,7 @@ func TestGetEvaluation(t *testing.T) {
 				DecisionType: config.DecisionMean,
 			},
 			nil,
+			0,
 			cpaconfig.ScalerRunType,
 		},
 		{
@@ -778,10 +765,8 @@ func TestGetEvaluation(t *testing.T) {
 			},
 			nil,
 			&fake.Evaluater{
-				GetEvaluationReactor: func(gatheredMetrics []*metric.Metric) (*cpaevaluate.Evaluation, error) {
-					return &cpaevaluate.Evaluation{
-						TargetReplicas: 0,
-					}, nil
+				EvaluateReactor: func(gatheredMetrics []*metrics.Metric, currentReplicas int32) (int32, error) {
+					return 0, nil
 				},
 			},
 			&fake.Store{
@@ -852,6 +837,7 @@ func TestGetEvaluation(t *testing.T) {
 				DecisionType: config.DecisionMedian,
 			},
 			nil,
+			0,
 			cpaconfig.ScalerRunType,
 		},
 		{
@@ -861,10 +847,8 @@ func TestGetEvaluation(t *testing.T) {
 			},
 			nil,
 			&fake.Evaluater{
-				GetEvaluationReactor: func(gatheredMetrics []*metric.Metric) (*cpaevaluate.Evaluation, error) {
-					return &cpaevaluate.Evaluation{
-						TargetReplicas: 0,
-					}, nil
+				EvaluateReactor: func(gatheredMetrics []*metrics.Metric, currentReplicas int32) (int32, error) {
+					return 0, nil
 				},
 			},
 			&fake.Store{
@@ -943,6 +927,7 @@ func TestGetEvaluation(t *testing.T) {
 				DecisionType: config.DecisionMedian,
 			},
 			nil,
+			0,
 			cpaconfig.ScalerRunType,
 		},
 		{
@@ -952,10 +937,8 @@ func TestGetEvaluation(t *testing.T) {
 			},
 			nil,
 			&fake.Evaluater{
-				GetEvaluationReactor: func(gatheredMetrics []*metric.Metric) (*cpaevaluate.Evaluation, error) {
-					return &cpaevaluate.Evaluation{
-						TargetReplicas: 4,
-					}, nil
+				EvaluateReactor: func(gatheredMetrics []*metrics.Metric, currentReplicas int32) (int32, error) {
+					return 4, nil
 				},
 			},
 			&fake.Store{
@@ -1002,6 +985,7 @@ func TestGetEvaluation(t *testing.T) {
 				DecisionType: config.DecisionMaximum,
 			},
 			nil,
+			0,
 			cpaconfig.ScalerRunType,
 		},
 	}
@@ -1012,7 +996,7 @@ func TestGetEvaluation(t *testing.T) {
 				Store:        test.store,
 				Predicters:   test.predicters,
 			}
-			result, err := evaluator.GetEvaluation(test.predictiveConfig, test.metrics, test.runType)
+			result, err := evaluator.GetEvaluation(test.predictiveConfig, test.metrics, test.currentReplicas, test.runType)
 			if !cmp.Equal(&err, &test.expectedErr, equateErrorMessage) {
 				t.Errorf("error mismatch (-want +got):\n%s", cmp.Diff(test.expectedErr, err, equateErrorMessage))
 				return

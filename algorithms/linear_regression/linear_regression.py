@@ -89,10 +89,10 @@ if stdin is None or stdin == "":
 try:
     algorithm_input = AlgorithmInput.from_json(stdin)
 except JSONDecodeError as ex:
-    print("Invalid JSON provided: {0}, exiting".format(str(ex)), file=sys.stderr)
+    print(f"Invalid JSON provided: {str(ex)}, exiting", file=sys.stderr)
     sys.exit(1)
 except KeyError as ex:
-    print("Invalid JSON provided: missing {0}, exiting".format(str(ex)), file=sys.stderr)
+    print(f"Invalid JSON provided: missing {str(ex)}, exiting", file=sys.stderr)
     sys.exit(1)
 
 current_time = datetime.utcnow()
@@ -101,7 +101,7 @@ if algorithm_input.current_time is not None:
     try:
         current_time = datetime.strptime(algorithm_input.current_time, "%Y-%m-%dT%H:%M:%SZ")
     except ValueError as ex:
-        print("Invalid datetime format: {0}".format(str(ex)), file=sys.stderr)
+        print(f"Invalid datetime format: {str(ex)}", file=sys.stderr)
         sys.exit(1)
 
 search_time = datetime.timestamp(current_time + timedelta(milliseconds=int(algorithm_input.look_ahead)))
@@ -115,7 +115,7 @@ for i, evaluation in enumerate(algorithm_input.evaluations):
     try:
         created = datetime.strptime(evaluation.created, "%Y-%m-%dT%H:%M:%SZ")
     except ValueError as ex:
-        print("Invalid datetime format: {0}".format(str(ex)), file=sys.stderr)
+        print(f"Invalid datetime format: {str(ex)}", file=sys.stderr)
         sys.exit(1)
 
     x.append(search_time - datetime.timestamp(created))

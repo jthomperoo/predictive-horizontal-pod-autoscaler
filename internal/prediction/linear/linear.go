@@ -1,5 +1,5 @@
 /*
-Copyright 2021 The Predictive Horizontal Pod Autoscaler Authors.
+Copyright 2022 The Predictive Horizontal Pod Autoscaler Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -55,11 +55,11 @@ type Predict struct {
 // GetPrediction uses a linear regression to predict what the replica count should be based on historical evaluations
 func (p *Predict) GetPrediction(model *config.Model, evaluations []*stored.Evaluation) (int32, error) {
 	if model.Linear == nil {
-		return 0, errors.New("No Linear configuration provided for model")
+		return 0, errors.New("no Linear configuration provided for model")
 	}
 
 	if len(evaluations) == 0 {
-		return 0, errors.New("No evaluations provided for Linear regression model")
+		return 0, errors.New("no evaluations provided for Linear regression model")
 	}
 
 	if len(evaluations) == 1 {
@@ -99,7 +99,7 @@ func (p *Predict) GetPrediction(model *config.Model, evaluations []*stored.Evalu
 // it will remove the oldest ones
 func (p *Predict) GetIDsToRemove(model *config.Model, evaluations []*stored.Evaluation) ([]int, error) {
 	if model.Linear == nil {
-		return nil, errors.New("No Linear configuration provided for model")
+		return nil, errors.New("no Linear configuration provided for model")
 	}
 
 	// Sort by date created

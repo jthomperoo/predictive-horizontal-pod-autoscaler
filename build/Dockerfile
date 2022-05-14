@@ -1,4 +1,4 @@
-# Copyright 2021 The Predictive Horizontal Pod Autoscaler Authors.
+# Copyright 2022 The Predictive Horizontal Pod Autoscaler Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ COPY . ./
 RUN make
 
 # CPA base image
-FROM custompodautoscaler/python-3-8:v2.3.0
+FROM custompodautoscaler/python-3-8:v2.6.0
 
 ENV USER_UID=1001 \
     USER_NAME=phpa

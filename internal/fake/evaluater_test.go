@@ -21,8 +21,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/jthomperoo/custom-pod-autoscaler/v2/evaluate"
-	"github.com/jthomperoo/horizontal-pod-autoscaler/metric"
+	"github.com/jthomperoo/k8shorizmetrics/metrics"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/fake"
 )
 
@@ -35,42 +34,41 @@ func TestEvaluater_GetEvaluation(t *testing.T) {
 	})
 
 	var tests = []struct {
-		description string
-		expected    *evaluate.Evaluation
-		expectedErr error
-		evaluater   fake.Evaluater
-		metrics     []*metric.Metric
+		description     string
+		expected        int32
+		expectedErr     error
+		evaluater       fake.Evaluater
+		metrics         []*metrics.Metric
+		currentReplicas int32
 	}{
 		{
 			"Return error",
-			nil,
+			0,
 			errors.New("evaluater error"),
 			fake.Evaluater{
-				GetEvaluationReactor: func(gatheredMetrics []*metric.Metric) (*evaluate.Evaluation, error) {
-					return nil, errors.New("evaluater error")
+				EvaluateReactor: func(gatheredMetrics []*metrics.Metric, currentReplicas int32) (int32, error) {
+					return 0, errors.New("evaluater error")
 				},
 			},
-			[]*metric.Metric{},
+			[]*metrics.Metric{},
+			0,
 		},
 		{
 			"Return evaluation",
-			&evaluate.Evaluation{
-				TargetReplicas: 5,
-			},
+			5,
 			nil,
 			fake.Evaluater{
-				GetEvaluationReactor: func(gatheredMetrics []*metric.Metric) (*evaluate.Evaluation, error) {
-					return &evaluate.Evaluation{
-						TargetReplicas: 5,
-					}, nil
+				EvaluateReactor: func(gatheredMetrics []*metrics.Metric, currentReplicas int32) (int32, error) {
+					return 5, nil
 				},
 			},
-			[]*metric.Metric{},
+			[]*metrics.Metric{},
+			0,
 		},
 	}
 	for _, test := range tests {
 		t.Run(test.description, func(t *testing.T) {
-			result, err := test.evaluater.GetEvaluation(test.metrics)
+			result, err := test.evaluater.Evaluate(test.metrics, test.currentReplicas)
 			if !cmp.Equal(&err, &test.expectedErr, equateErrorMessage) {
 				t.Errorf("error mismatch (-want +got):\n%s", cmp.Diff(test.expectedErr, err, equateErrorMessage))
 				return

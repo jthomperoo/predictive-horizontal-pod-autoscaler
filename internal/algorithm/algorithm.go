@@ -17,8 +17,6 @@ limitations under the License.
 package algorithm
 
 import (
-	"os/exec"
-
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/hook"
 )
 
@@ -30,8 +28,6 @@ const (
 type Runner interface {
 	RunAlgorithmWithValue(algorithmPath string, value string, timeout int) (string, error)
 }
-
-type command = func(name string, arg ...string) *exec.Cmd
 
 // Run is an implementation of an algorithm runner that uses CPA executers to run shell commands
 type Run struct {

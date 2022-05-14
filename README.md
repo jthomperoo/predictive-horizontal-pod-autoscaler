@@ -16,9 +16,8 @@
 This is a [Custom Pod Autoscaler](https://www.github.com/jthomperoo/custom-pod-autoscaler); aiming to have identical
 functionality to the Horizontal Pod Autoscaler, however with added predictive elements using statistical models.
 
-This uses the [Horizontal Pod Autoscaler Custom Pod
-Autoscaler](https://www.github.com/jthomperoo/horizontal-pod-autoscaler) extensively to provide most functionality for
-the Horizontal Pod Autoscaler parts.
+This extensively uses the the [jthomperoo/k8shorizmetrics](https://github.com/jthomperoo/k8shorizmetrics) library
+to gather metrics and to evaluate them as the Kubernetes Horizontal Pod Autoscaler does.
 
 # Why would I use it?
 
@@ -58,8 +57,8 @@ See the [`examples/` directory](./examples) for working code samples.
 
 Developing this project requires these dependencies:
 
-* [Go](https://golang.org/doc/install) >= `1.16`
-* [Golint](https://github.com/golang/lint) == `v0.0.0-20201208152925-83fdc39ff7b5`
+* [Go](https://golang.org/doc/install) >= `1.17`
+* [staticcheck](https://staticcheck.io/docs/getting-started/) == `v0.3.0 (2022.1)`
 * [Docker](https://docs.docker.com/install/)
 * [Python](https://www.python.org/downloads/) == `3.8.5`
 
@@ -88,11 +87,10 @@ Finally you can deploy a PHPA example (see the [`examples/` directory](./example
 
 ### Commands
 
-* `make vendor_modules` - generates a vendor folder.
 * `make` - builds the Predictive HPA binary.
 * `make docker` - builds the Predictive HPA image.
 * `make lint` - lints the code.
-* `make beautify` - beautifies the code, must be run to pass the CI.
-* `make unittest` - runs the unit tests.
+* `make format` - beautifies the code, must be run to pass the CI.
+* `make test` - runs the unit tests.
 * `make doc` - hosts the documentation locally, at `127.0.0.1:8000`.
-* `make view_coverage` - opens up any generated coverage reports in the browser.
+* `make coverage` - opens up any generated coverage reports in the browser.

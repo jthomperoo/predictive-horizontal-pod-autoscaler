@@ -1,5 +1,5 @@
 /*
-Copyright 2021 The Predictive Horizontal Pod Autoscaler Authors.
+Copyright 2022 The Predictive Horizontal Pod Autoscaler Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -53,7 +53,7 @@ func TestPredict_GetPrediction(t *testing.T) {
 		{
 			"Fail no HoltWinters configuration",
 			0,
-			errors.New("No HoltWinters configuration provided for model"),
+			errors.New("no HoltWinters configuration provided for model"),
 			&holtwinters.Predict{},
 			&config.Model{},
 			[]*stored.Evaluation{},
@@ -260,7 +260,7 @@ func TestPredict_GetPrediction(t *testing.T) {
 		{
 			"Fail no alpha value",
 			0,
-			errors.New("No alpha tuning value provided for Holt-Winters prediction"),
+			errors.New("no alpha tuning value provided for Holt-Winters prediction"),
 			&holtwinters.Predict{},
 			&config.Model{
 				HoltWinters: &config.HoltWinters{
@@ -319,7 +319,7 @@ func TestPredict_GetPrediction(t *testing.T) {
 		{
 			"Fail no beta value",
 			0,
-			errors.New("No beta tuning value provided for Holt-Winters prediction"),
+			errors.New("no beta tuning value provided for Holt-Winters prediction"),
 			&holtwinters.Predict{},
 			&config.Model{
 				HoltWinters: &config.HoltWinters{
@@ -378,7 +378,7 @@ func TestPredict_GetPrediction(t *testing.T) {
 		{
 			"Fail no gamma value",
 			0,
-			errors.New("No gamma tuning value provided for Holt-Winters prediction"),
+			errors.New("no gamma tuning value provided for Holt-Winters prediction"),
 			&holtwinters.Predict{},
 			&config.Model{
 				HoltWinters: &config.HoltWinters{
@@ -823,7 +823,7 @@ func TestModelPredict_GetIDsToRemove(t *testing.T) {
 		{
 			"Fail no HoltWinters configuration",
 			nil,
-			errors.New("No HoltWinters configuration provided for model"),
+			errors.New("no HoltWinters configuration provided for model"),
 			&config.Model{},
 			[]*stored.Evaluation{},
 		},
