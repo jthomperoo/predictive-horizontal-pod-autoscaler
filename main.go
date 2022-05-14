@@ -1,5 +1,5 @@
 /*
-Copyright 2021 The Predictive Horizontal Pod Autoscaler Authors.
+Copyright 2022 The Predictive Horizontal Pod Autoscaler Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"database/sql"
 	"encoding/json"
 	"flag"
@@ -39,17 +40,17 @@ import (
 	"strings"
 	"time"
 
-	argov1alpha1 "github.com/argoproj/argo-rollouts/pkg/apis/rollouts/v1alpha1"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/sqlite3"
 	_ "github.com/golang-migrate/migrate/v4/source/file" // Driver for loading evaluations from file system
 	cpametric "github.com/jthomperoo/custom-pod-autoscaler/v2/metric"
-	hpaevaluate "github.com/jthomperoo/horizontal-pod-autoscaler/evaluate"
-	"github.com/jthomperoo/horizontal-pod-autoscaler/metric"
-	"github.com/jthomperoo/horizontal-pod-autoscaler/podclient"
+	"github.com/jthomperoo/k8shorizmetrics"
+	"github.com/jthomperoo/k8shorizmetrics/metrics"
+	"github.com/jthomperoo/k8shorizmetrics/metricsclient"
+	"github.com/jthomperoo/k8shorizmetrics/podsclient"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/algorithm"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/config"
-	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/evaluate"
+	phpaevaluate "github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/evaluate"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/hook"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/hook/http"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/hook/shell"
@@ -58,19 +59,17 @@ import (
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/prediction/linear"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/stored"
 	_ "github.com/mattn/go-sqlite3" // Driver for sqlite3 database	appsv1 "k8s.io/api/apps/v1"
+	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/yaml"
-	cacheddiscovery "k8s.io/client-go/discovery/cached"
+	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
-	clientsetscheme "k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/restmapper"
-	"k8s.io/kubernetes/pkg/controller/podautoscaler/metrics"
-	resourceclient "k8s.io/metrics/pkg/client/clientset/versioned/typed/metrics/v1beta1"
-	customclient "k8s.io/metrics/pkg/client/custom_metrics"
-	externalclient "k8s.io/metrics/pkg/client/external_metrics"
+	k8sscale "k8s.io/client-go/scale"
 )
 
 const (
@@ -113,20 +112,11 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// Set up Kubernetes resource scheme
-	scheme := runtime.NewScheme()
-	schemeBuilder := runtime.NewSchemeBuilder(argov1alpha1.AddToScheme)
-	schemeBuilder.Register(clientsetscheme.AddToScheme)
-	err = schemeBuilder.AddToScheme(scheme)
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	switch *modePtr {
 	case "metric":
-		getMetrics(bytes.NewReader(stdin), predictiveConfig, scheme)
+		gather(bytes.NewReader(stdin), predictiveConfig)
 	case "evaluate":
-		getEvaluation(bytes.NewReader(stdin), predictiveConfig, scheme)
+		evaluate(bytes.NewReader(stdin), predictiveConfig)
 	case "setup":
 		setup(predictiveConfig)
 	default:
@@ -167,7 +157,62 @@ func setup(predictiveConfig *config.Config) {
 	}
 }
 
-func getEvaluation(stdin io.Reader, predictiveConfig *config.Config, scheme *runtime.Scheme) {
+func gather(stdin io.Reader, predictiveConfig *config.Config) {
+	var spec MetricSpec
+	err := yaml.NewYAMLOrJSONDecoder(stdin, 10).Decode(&spec)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if len(predictiveConfig.Metrics) == 0 {
+		log.Fatal("Metric specs not supplied")
+	}
+
+	clusterConfig, clientset, err := getKubernetesClients()
+	if err != nil {
+		log.Fatal(err)
+		os.Exit(1)
+	}
+
+	scale, err := getScaleSubResource(clientset, &spec.UnstructuredResource)
+	if err != nil {
+		log.Fatal(err)
+		os.Exit(1)
+	}
+
+	metricsclient := metricsclient.NewClient(clusterConfig, clientset.Discovery())
+	podsclient := &podsclient.OnDemandPodLister{
+		Clientset: clientset,
+	}
+	cpuInitializationPeriod := time.Duration(predictiveConfig.CPUInitializationPeriod) * time.Second
+	initialReadinessDelay := time.Duration(predictiveConfig.InitialReadinessDelay) * time.Second
+
+	// Create metric gatherer, with required clients and configuration
+	gatherer := k8shorizmetrics.NewGatherer(metricsclient, podsclient, cpuInitializationPeriod, initialReadinessDelay)
+
+	selector, err := labels.Parse(scale.Status.Selector)
+	if err != nil {
+		log.Fatal(err)
+		os.Exit(1)
+	}
+
+	// Get metrics for deployment
+	metrics, err := gatherer.Gather(predictiveConfig.Metrics, scale.GetNamespace(), selector)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Marshal metrics into JSON
+	jsonMetrics, err := json.Marshal(metrics)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Write serialised metrics to stdout
+	fmt.Print(string(jsonMetrics))
+}
+
+func evaluate(stdin io.Reader, predictiveConfig *config.Config) {
 	// Open DB connection
 	db, err := sql.Open("sqlite3", predictiveConfig.DBPath)
 	if err != nil {
@@ -181,21 +226,19 @@ func getEvaluation(stdin io.Reader, predictiveConfig *config.Config, scheme *run
 		log.Fatal(err)
 	}
 
-	// Create object from version and kind of piped value
-	resourceGVK := spec.UnstructuredResource.GroupVersionKind()
-	resourceRuntime, err := scheme.New(resourceGVK)
+	_, clientset, err := getKubernetesClients()
 	if err != nil {
 		log.Fatal(err)
+		os.Exit(1)
 	}
 
-	// Parse the unstructured k8s resource into the object created, then convert to generic metav1.Object
-	err = runtime.DefaultUnstructuredConverter.FromUnstructured(spec.UnstructuredResource.Object, resourceRuntime)
+	scale, err := getScaleSubResource(clientset, &spec.UnstructuredResource)
 	if err != nil {
 		log.Fatal(err)
+		os.Exit(1)
 	}
-	spec.Resource = resourceRuntime.(metav1.Object)
 
-	var combinedMetrics []*metric.Metric
+	var combinedMetrics []*metrics.Metric
 	err = yaml.NewYAMLOrJSONDecoder(strings.NewReader(spec.Metrics[0].Value), 10).Decode(&combinedMetrics)
 	if err != nil {
 		log.Fatal(err)
@@ -219,9 +262,12 @@ func getEvaluation(stdin io.Reader, predictiveConfig *config.Config, scheme *run
 		Executer: shellExec,
 	}
 
+	// K8s evaluator
+	k8sevaluator := k8shorizmetrics.NewEvaluator(predictiveConfig.Tolerance)
+
 	// Set up evaluator
-	evaluator := &evaluate.PredictiveEvaluate{
-		HPAEvaluator: hpaevaluate.NewEvaluate(predictiveConfig.Tolerance),
+	evaluator := &phpaevaluate.PredictiveEvaluate{
+		HPAEvaluator: k8sevaluator,
 		Store: &stored.LocalStore{
 			DB: db,
 		},
@@ -237,7 +283,7 @@ func getEvaluation(stdin io.Reader, predictiveConfig *config.Config, scheme *run
 	}
 
 	// Get evaluation
-	result, err := evaluator.GetEvaluation(predictiveConfig, combinedMetrics, spec.RunType)
+	result, err := evaluator.GetEvaluation(predictiveConfig, combinedMetrics, scale.Spec.Replicas, spec.RunType)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -251,70 +297,50 @@ func getEvaluation(stdin io.Reader, predictiveConfig *config.Config, scheme *run
 	fmt.Print(string(jsonEvaluation))
 }
 
-func getMetrics(stdin io.Reader, predictiveConfig *config.Config, scheme *runtime.Scheme) {
-	var spec MetricSpec
-	err := yaml.NewYAMLOrJSONDecoder(stdin, 10).Decode(&spec)
+func getScaleSubResource(clientset *kubernetes.Clientset, resource *unstructured.Unstructured) (*autoscalingv1.Scale, error) {
+	groupResources, err := restmapper.GetAPIGroupResources(clientset.Discovery())
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
-	// Create object from version and kind of piped value
-	resourceGVK := spec.UnstructuredResource.GroupVersionKind()
-	resourceRuntime, err := scheme.New(resourceGVK)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Parse the unstructured k8s resource into the object created, then convert to generic metav1.Object
-	err = runtime.DefaultUnstructuredConverter.FromUnstructured(spec.UnstructuredResource.Object, resourceRuntime)
-	if err != nil {
-		log.Fatal(err)
-	}
-	spec.Resource = resourceRuntime.(metav1.Object)
-
-	if len(predictiveConfig.Metrics) == 0 {
-		log.Fatal("Metric specs not supplied")
-	}
-
-	// Create the in-cluster Kubernetes config
-	clusterConfig, err := rest.InClusterConfig()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Create the Kubernetes clientset
-	clientset, err := kubernetes.NewForConfig(clusterConfig)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Create metric gatherer, with required clients and configuration
-	gatherer := metric.NewGather(metrics.NewRESTMetricsClient(
-		resourceclient.NewForConfigOrDie(clusterConfig),
-		customclient.NewForConfig(
-			clusterConfig,
-			restmapper.NewDeferredDiscoveryRESTMapper(cacheddiscovery.NewMemCacheClient(clientset.Discovery())),
-			customclient.NewAvailableAPIsGetter(clientset.Discovery()),
+	scaleClient := k8sscale.New(
+		clientset.RESTClient(),
+		restmapper.NewDiscoveryRESTMapper(groupResources),
+		dynamic.LegacyAPIPathResolverFunc,
+		k8sscale.NewDiscoveryScaleKindResolver(
+			clientset.Discovery(),
 		),
-		externalclient.NewForConfigOrDie(clusterConfig),
-	),
-		&podclient.OnDemandPodLister{Clientset: clientset},
-		time.Duration(predictiveConfig.CPUInitializationPeriod)*time.Second,
-		time.Duration(predictiveConfig.InitialReadinessDelay)*time.Second,
 	)
 
-	// Get metrics for deployment
-	metrics, err := gatherer.GetMetrics(spec.Resource, predictiveConfig.Metrics, spec.Resource.GetNamespace())
+	resourceGV, err := schema.ParseGroupVersion(resource.GetAPIVersion())
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
-	// Marshal metrics into JSON
-	jsonMetrics, err := json.Marshal(metrics)
-	if err != nil {
-		log.Fatal(err)
+	targetGR := schema.GroupResource{
+		Group:    resourceGV.Group,
+		Resource: resource.GetKind(),
 	}
 
-	// Write serialised metrics to stdout
-	fmt.Print(string(jsonMetrics))
+	scale, err := scaleClient.Scales(resource.GetNamespace()).Get(context.Background(), targetGR, resource.GetName(), metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	return scale, nil
+}
+
+func getKubernetesClients() (*rest.Config, *kubernetes.Clientset, error) {
+	clusterConfig, err := rest.InClusterConfig()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	clientset, err := kubernetes.NewForConfig(clusterConfig)
+	if err != nil {
+		return nil, nil, err
+
+	}
+
+	return clusterConfig, clientset, nil
 }

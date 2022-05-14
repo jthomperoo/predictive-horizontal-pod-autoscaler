@@ -1,4 +1,4 @@
-# Copyright 2021 The Predictive Horizontal Pod Autoscaler Authors.
+# Copyright 2022 The Predictive Horizontal Pod Autoscaler Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # Build stage, must be done in Docker for cross compatiblity because CGO is required for go-sqlite3
-FROM golang:1.16 AS build
+FROM golang:1.17 AS build
 
 WORKDIR /app
 
@@ -22,7 +22,7 @@ COPY . ./
 RUN make
 
 # CPA base image
-FROM custompodautoscaler/python-3-8:v2.3.0
+FROM custompodautoscaler/python-3-8:v2.7.0
 
 ENV USER_UID=1001 \
     USER_NAME=phpa

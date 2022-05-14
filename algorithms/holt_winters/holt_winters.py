@@ -78,10 +78,10 @@ if stdin is None or stdin == "":
 try:
     algorithm_input = AlgorithmInput.from_json(stdin)
 except JSONDecodeError as ex:
-    print("Invalid JSON provided: {0}, exiting".format(str(ex)), file=sys.stderr)
+    print(f"Invalid JSON provided: {str(ex)}, exiting", file=sys.stderr)
     sys.exit(1)
 except KeyError as ex:
-    print("Invalid JSON provided: missing {0}, exiting".format(str(ex)), file=sys.stderr)
+    print(f"Invalid JSON provided: missing {str(ex)}, exiting", file=sys.stderr)
     sys.exit(1)
 
 if len(algorithm_input.series) < 10 + 2 * (algorithm_input.seasonal_periods // 2):

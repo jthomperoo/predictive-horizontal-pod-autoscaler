@@ -1,5 +1,5 @@
 /*
-Copyright 2021 The Predictive Horizontal Pod Autoscaler Authors.
+Copyright 2022 The Predictive Horizontal Pod Autoscaler Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -72,7 +72,7 @@ func (e *CombinedExecute) ExecuteWithValue(definition *Definition, value string)
 			return gathered, nil
 		}
 	}
-	return "", fmt.Errorf("Unknown execution method: '%s'", definition.Type)
+	return "", fmt.Errorf("unknown execution method: '%s'", definition.Type)
 }
 
 // GetType returns the CombinedExecute type

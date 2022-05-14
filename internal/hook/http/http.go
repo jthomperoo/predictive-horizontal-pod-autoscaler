@@ -1,5 +1,5 @@
 /*
-Copyright 2021 The Predictive Horizontal Pod Autoscaler Authors.
+Copyright 2022 The Predictive Horizontal Pod Autoscaler Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -55,7 +55,7 @@ type Execute struct {
 // parameter, configurable to be either in the body or query string
 func (e *Execute) ExecuteWithValue(definition *hook.Definition, value string) (string, error) {
 	if definition.HTTP == nil {
-		return "", fmt.Errorf("Missing required 'http' configuration on hook definition")
+		return "", fmt.Errorf("missing required 'http' configuration on hook definition")
 	}
 
 	// Set up request using hook definition and URL provided
@@ -75,7 +75,7 @@ func (e *Execute) ExecuteWithValue(definition *hook.Definition, value string) (s
 		query.Add(QueryParameterKey, value)
 		req.URL.RawQuery = query.Encode()
 	default:
-		return "", fmt.Errorf("Unknown parameter mode '%s'", definition.HTTP.ParameterMode)
+		return "", fmt.Errorf("unknown parameter mode '%s'", definition.HTTP.ParameterMode)
 	}
 
 	// Add headers
@@ -109,7 +109,7 @@ func (e *Execute) ExecuteWithValue(definition *hook.Definition, value string) (s
 	}
 
 	if !success {
-		return "", fmt.Errorf("HTTP request failed, status: [%d], response: '%s'", resp.StatusCode, string(body))
+		return "", fmt.Errorf("http request failed, status: [%d], response: '%s'", resp.StatusCode, string(body))
 	}
 
 	return string(body), nil

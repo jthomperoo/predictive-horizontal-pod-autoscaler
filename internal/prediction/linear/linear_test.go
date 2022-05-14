@@ -1,5 +1,5 @@
 /*
-Copyright 2021 The Predictive Horizontal Pod Autoscaler Authors.
+Copyright 2022 The Predictive Horizontal Pod Autoscaler Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -47,7 +47,7 @@ func TestPredict_GetPrediction(t *testing.T) {
 		{
 			"Fail no Linear configuration",
 			0,
-			errors.New("No Linear configuration provided for model"),
+			errors.New("no Linear configuration provided for model"),
 			&linear.Predict{},
 			&config.Model{},
 			[]*stored.Evaluation{},
@@ -55,7 +55,7 @@ func TestPredict_GetPrediction(t *testing.T) {
 		{
 			"Fail no evaluations",
 			0,
-			errors.New("No evaluations provided for Linear regression model"),
+			errors.New("no evaluations provided for Linear regression model"),
 			&linear.Predict{},
 			&config.Model{
 				Type: linear.Type,
@@ -201,7 +201,7 @@ func TestModelPredict_GetIDsToRemove(t *testing.T) {
 		{
 			"Fail no Linear configuration",
 			nil,
-			errors.New("No Linear configuration provided for model"),
+			errors.New("no Linear configuration provided for model"),
 			&config.Model{},
 			[]*stored.Evaluation{},
 		},

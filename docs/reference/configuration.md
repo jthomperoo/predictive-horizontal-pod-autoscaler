@@ -4,7 +4,8 @@ Beyond specifying models, other configuration options can be set in the `predict
 
 ## Providing Predictive Configuration
 
-Predictive Configuration is provided through environment variables, which can be supplied through the Custom Pod Autoscaler YAML shorthand:
+Predictive Configuration is provided through environment variables, which can be supplied through the Custom Pod
+Autoscaler YAML shorthand:
 
 ```yaml
 apiVersion: custompodautoscaler.com/v1
@@ -119,7 +120,8 @@ cpuInitializationPeriod: 150
 ```
 Default value: `300` (5 minutes).
 Set in seconds.
-Equivalent to `--horizontal-pod-autoscaler-cpu-initialization-period`; the period after pod start when CPU samples might be skipped.
+Equivalent to `--horizontal-pod-autoscaler-cpu-initialization-period`; the period after pod start when CPU samples
+might be skipped.
 
 ## initialReadinessDelay
 
@@ -129,7 +131,8 @@ initialReadinessDelay: 45
 ```
 Default value: `30` (30 seconds).
 Set in seconds.
-Equivalent to `--horizontal-pod-autoscaler-initial-readiness-delay`; the period after pod start during which readiness changes will be treated as initial readiness.
+Equivalent to `--horizontal-pod-autoscaler-initial-readiness-delay`; the period after pod start during which readiness
+changes will be treated as initial readiness.
 
 ## tolerance
 
@@ -138,4 +141,5 @@ Example:
 tolerance: 0.25
 ```
 Default value: `0.1`.
-Equivalent to `--horizontal-pod-autoscaler-tolerance`; the minimum change (from 1.0) in the desired-to-actual metrics ratio for the horizontal pod autoscaler to consider scaling.
+Equivalent to `--horizontal-pod-autoscaler-tolerance`; the minimum change (from 1.0) in the desired-to-actual metrics
+ratio for the horizontal pod autoscaler to consider scaling.

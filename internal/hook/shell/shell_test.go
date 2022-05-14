@@ -1,6 +1,3 @@
-//go:build unit
-// +build unit
-
 /*
 Copyright 2021 The Predictive Horizontal Pod Autoscaler Authors.
 
@@ -98,7 +95,7 @@ func TestMain(m *testing.M) {
 	tests = []test{
 		{
 			"Missing shell method configuration",
-			errors.New(`Missing required 'shell' configuration on hook definition`),
+			errors.New(`missing required 'shell' configuration on hook definition`),
 			"",
 			&hook.Definition{
 				Type: "shell",
@@ -122,7 +119,7 @@ func TestMain(m *testing.M) {
 			fakeExecCommand("success", func(t *testing.T) {
 				stdinb, err := ioutil.ReadAll(os.Stdin)
 				if err != nil {
-					fmt.Fprintf(os.Stderr, err.Error())
+					fmt.Fprint(os.Stderr, err.Error())
 					os.Exit(1)
 				}
 
@@ -168,7 +165,7 @@ func TestMain(m *testing.M) {
 			fakeExecCommand("multiple-success", func(t *testing.T) {
 				stdinb, err := ioutil.ReadAll(os.Stdin)
 				if err != nil {
-					fmt.Fprintf(os.Stderr, err.Error())
+					fmt.Fprint(os.Stderr, err.Error())
 					os.Exit(1)
 				}
 
@@ -218,7 +215,7 @@ func TestMain(m *testing.M) {
 		},
 		{
 			"Failed shell command timeout",
-			errors.New("Entrypoint '/bin/sh', command '[command]' timed out"),
+			errors.New("entrypoint '/bin/sh', command '[command]' timed out"),
 			"",
 			&hook.Definition{
 				Type:    shell.Type,
@@ -237,7 +234,7 @@ func TestMain(m *testing.M) {
 		},
 		{
 			"Failed shell command timeout, multiple args",
-			errors.New("Entrypoint '/bin/sh', command '[command arg1]' timed out"),
+			errors.New("entrypoint '/bin/sh', command '[command arg1]' timed out"),
 			"",
 			&hook.Definition{
 				Type:    shell.Type,

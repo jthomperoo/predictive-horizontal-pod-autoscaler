@@ -27,7 +27,7 @@ type Execute struct {
 // If the timeout is reached, an error is returned.
 func (e *Execute) ExecuteWithValue(definition *hook.Definition, value string) (string, error) {
 	if definition.Shell == nil {
-		return "", fmt.Errorf("Missing required 'shell' configuration on hook definition")
+		return "", fmt.Errorf("missing required 'shell' configuration on hook definition")
 	}
 	// Build command string with value piped into it
 	cmd := e.Command(definition.Shell.Entrypoint, definition.Shell.Command...)
@@ -59,7 +59,7 @@ func (e *Execute) ExecuteWithValue(definition *hook.Definition, value string) (s
 	select {
 	case <-timeoutListener:
 		cmd.Process.Kill()
-		return "", fmt.Errorf("Entrypoint '%s', command '%s' timed out", definition.Shell.Entrypoint, definition.Shell.Command)
+		return "", fmt.Errorf("entrypoint '%s', command '%s' timed out", definition.Shell.Entrypoint, definition.Shell.Command)
 	case err = <-done:
 		if err != nil {
 			return "", fmt.Errorf("%v: %s", err, errb.String())

@@ -17,16 +17,15 @@ limitations under the License.
 package fake
 
 import (
-	"github.com/jthomperoo/custom-pod-autoscaler/v2/evaluate"
-	"github.com/jthomperoo/horizontal-pod-autoscaler/metric"
+	"github.com/jthomperoo/k8shorizmetrics/metrics"
 )
 
 // Evaluater (fake) provides a way to insert functionality into a Evaluater
 type Evaluater struct {
-	GetEvaluationReactor func(gatheredMetrics []*metric.Metric) (*evaluate.Evaluation, error)
+	EvaluateReactor func(gatheredMetrics []*metrics.Metric, currentReplicas int32) (int32, error)
 }
 
 // GetEvaluation calls the fake Evaluater function
-func (f *Evaluater) GetEvaluation(gatheredMetrics []*metric.Metric) (*evaluate.Evaluation, error) {
-	return f.GetEvaluationReactor(gatheredMetrics)
+func (f *Evaluater) Evaluate(gatheredMetrics []*metrics.Metric, currentReplicas int32) (int32, error) {
+	return f.EvaluateReactor(gatheredMetrics, currentReplicas)
 }

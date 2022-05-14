@@ -1,5 +1,5 @@
 /*
-Copyright 2021 The Predictive Horizontal Pod Autoscaler Authors.
+Copyright 2022 The Predictive Horizontal Pod Autoscaler Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -44,7 +44,7 @@ func (m *ModelPredict) GetPrediction(model *config.Model, evaluations []*stored.
 			return predicter.GetPrediction(model, evaluations)
 		}
 	}
-	return 0, fmt.Errorf("Unknown model type '%s'", model.Type)
+	return 0, fmt.Errorf("unknown model type '%s'", model.Type)
 }
 
 // GetIDsToRemove finds the appropriate logic for the model and gets a list of stored IDs to remove
@@ -54,7 +54,7 @@ func (m *ModelPredict) GetIDsToRemove(model *config.Model, evaluations []*stored
 			return predicter.GetIDsToRemove(model, evaluations)
 		}
 	}
-	return nil, fmt.Errorf("Unknown model type '%s'", model.Type)
+	return nil, fmt.Errorf("unknown model type '%s'", model.Type)
 }
 
 // GetType returns the type of the ModelPredict, "Model"

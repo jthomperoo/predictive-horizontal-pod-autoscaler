@@ -1,5 +1,5 @@
 /*
-Copyright 2021 The Predictive Horizontal Pod Autoscaler Authors.
+Copyright 2022 The Predictive Horizontal Pod Autoscaler Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -46,7 +46,7 @@ func TestModelPredict_GetPrediction(t *testing.T) {
 		{
 			"Unknown model type",
 			0,
-			errors.New(`Unknown model type 'invalid'`),
+			errors.New(`unknown model type 'invalid'`),
 			[]prediction.Predicter{},
 			&config.Model{
 				Type: "invalid",
@@ -173,7 +173,7 @@ func TestModelPredict_GetIDsToRemove(t *testing.T) {
 		{
 			"Unknown model type",
 			nil,
-			errors.New(`Unknown model type 'invalid'`),
+			errors.New(`unknown model type 'invalid'`),
 			[]prediction.Predicter{},
 			&config.Model{
 				Type: "invalid",

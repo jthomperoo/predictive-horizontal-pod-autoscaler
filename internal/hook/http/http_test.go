@@ -1,8 +1,5 @@
-//go:build unit
-// +build unit
-
 /*
-Copyright 2021 The Predictive Horizontal Pod Autoscaler Authors.
+Copyright 2022 The Predictive Horizontal Pod Autoscaler Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -73,7 +70,7 @@ func TestExecute_ExecuteWithValue(t *testing.T) {
 		{
 			"Fail, missing HTTP method configuration",
 			"",
-			errors.New(`Missing required 'http' configuration on hook definition`),
+			errors.New(`missing required 'http' configuration on hook definition`),
 			&hook.Definition{
 				Type: "http",
 			},
@@ -97,7 +94,7 @@ func TestExecute_ExecuteWithValue(t *testing.T) {
 		{
 			"Fail, unknown parameter mode",
 			"",
-			errors.New(`Unknown parameter mode 'unknown'`),
+			errors.New(`unknown parameter mode 'unknown'`),
 			&hook.Definition{
 				Type: "http",
 				HTTP: &hook.HTTP{
@@ -194,7 +191,7 @@ func TestExecute_ExecuteWithValue(t *testing.T) {
 		{
 			"Fail, bad response code",
 			"",
-			errors.New(`HTTP request failed, status: [400], response: 'bad request!'`),
+			errors.New(`http request failed, status: [400], response: 'bad request!'`),
 			&hook.Definition{
 				Type: "http",
 				HTTP: &hook.HTTP{

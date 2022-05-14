@@ -1,5 +1,5 @@
 /*
-Copyright 2021 The Predictive Horizontal Pod Autoscaler Authors.
+Copyright 2022 The Predictive Horizontal Pod Autoscaler Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -122,13 +122,13 @@ func (p *Predict) GetPrediction(model *config.Model, evaluations []*stored.Evalu
 	}
 
 	if alpha == nil {
-		return 0, errors.New("No alpha tuning value provided for Holt-Winters prediction")
+		return 0, errors.New("no alpha tuning value provided for Holt-Winters prediction")
 	}
 	if beta == nil {
-		return 0, errors.New("No beta tuning value provided for Holt-Winters prediction")
+		return 0, errors.New("no beta tuning value provided for Holt-Winters prediction")
 	}
 	if gamma == nil {
-		return 0, errors.New("No gamma tuning value provided for Holt-Winters prediction")
+		return 0, errors.New("no gamma tuning value provided for Holt-Winters prediction")
 	}
 
 	// Collect data for historical series
@@ -178,7 +178,7 @@ func (p *Predict) GetPrediction(model *config.Model, evaluations []*stored.Evalu
 // it will remove the oldest seasons
 func (p *Predict) GetIDsToRemove(model *config.Model, evaluations []*stored.Evaluation) ([]int, error) {
 	if model.HoltWinters == nil {
-		return nil, errors.New("No HoltWinters configuration provided for model")
+		return nil, errors.New("no HoltWinters configuration provided for model")
 	}
 
 	// Sort by date created
@@ -205,11 +205,11 @@ func (p *Predict) GetType() string {
 
 func (p *Predict) validate(model *config.Model) error {
 	if model.HoltWinters == nil {
-		return errors.New("No HoltWinters configuration provided for model")
+		return errors.New("no HoltWinters configuration provided for model")
 	}
 
 	if model.HoltWinters.Trend == "" {
-		return errors.New("No required 'trend' value provided for model")
+		return errors.New("no required 'trend' value provided for model")
 	}
 
 	return nil

@@ -1,5 +1,5 @@
 /*
-Copyright 2021 The Predictive Horizontal Pod Autoscaler Authors.
+Copyright 2022 The Predictive Horizontal Pod Autoscaler Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,34 +19,36 @@ package evaluate
 import (
 	"database/sql"
 	"fmt"
-	"math"
 	"sort"
 
 	cpaconfig "github.com/jthomperoo/custom-pod-autoscaler/v2/config"
 	cpaevaluate "github.com/jthomperoo/custom-pod-autoscaler/v2/evaluate"
-	hpaevaluate "github.com/jthomperoo/horizontal-pod-autoscaler/evaluate"
-	"github.com/jthomperoo/horizontal-pod-autoscaler/metric"
+	"github.com/jthomperoo/k8shorizmetrics/metrics"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/config"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/prediction"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/stored"
 )
 
+type HPAEvaluator interface {
+	Evaluate(gatheredMetrics []*metrics.Metric, currentReplicas int32) (int32, error)
+}
+
 // PredictiveEvaluate provides a way to make predictive evaluations
 type PredictiveEvaluate struct {
-	HPAEvaluator hpaevaluate.Evaluater
+	HPAEvaluator HPAEvaluator
 	Store        stored.Storer
 	Predicters   []prediction.Predicter
 }
 
 // GetEvaluation takes a predictive horizontal pod autoscaler configuration and gathered metrics piped in through stdin and
 // evaluates using these, returning a value of how many replicas a resource should have
-func (p *PredictiveEvaluate) GetEvaluation(predictiveConfig *config.Config, metrics []*metric.Metric, runType string) (*cpaevaluate.Evaluation, error) {
-	evaluation, err := p.HPAEvaluator.GetEvaluation(metrics)
+func (p *PredictiveEvaluate) GetEvaluation(predictiveConfig *config.Config, metrics []*metrics.Metric, currentReplicas int32, runType string) (*cpaevaluate.Evaluation, error) {
+	targetReplicas, err := p.HPAEvaluator.Evaluate(metrics, currentReplicas)
 	if err != nil {
 		return nil, err
 	}
 
-	predictions := []int32{evaluation.TargetReplicas}
+	predictions := []int32{targetReplicas}
 
 	// Set up predicter with available models
 	predicter := prediction.ModelPredict{
@@ -90,7 +92,9 @@ func (p *PredictiveEvaluate) GetEvaluation(predictiveConfig *config.Config, metr
 				return nil, err
 			}
 			// Add new value
-			err = p.Store.AddEvaluation(model.Name, evaluation)
+			err = p.Store.AddEvaluation(model.Name, &cpaevaluate.Evaluation{
+				TargetReplicas: targetReplicas,
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -128,7 +132,7 @@ func (p *PredictiveEvaluate) GetEvaluation(predictiveConfig *config.Config, metr
 	sort.Slice(predictions, func(i, j int) bool { return predictions[i] < predictions[j] })
 
 	// Decide which prediction to use
-	targetPrediction := evaluation.TargetReplicas
+	var targetPrediction int32
 	switch predictiveConfig.DecisionType {
 	case config.DecisionMaximum:
 		max := int32(0)
@@ -138,7 +142,6 @@ func (p *PredictiveEvaluate) GetEvaluation(predictiveConfig *config.Config, metr
 			}
 		}
 		targetPrediction = max
-		break
 	case config.DecisionMinimum:
 		min := int32(0)
 		for i, prediction := range predictions {
@@ -147,14 +150,12 @@ func (p *PredictiveEvaluate) GetEvaluation(predictiveConfig *config.Config, metr
 			}
 		}
 		targetPrediction = min
-		break
 	case config.DecisionMean:
 		total := int32(0)
 		for _, prediction := range predictions {
 			total += prediction
 		}
-		targetPrediction = int32(math.Ceil(float64(int(total) / len(predictions))))
-		break
+		targetPrediction = int32(float64(int(total) / len(predictions)))
 	case config.DecisionMedian:
 		halfIndex := len(predictions) / 2
 		if len(predictions)%2 == 0 {
@@ -164,9 +165,8 @@ func (p *PredictiveEvaluate) GetEvaluation(predictiveConfig *config.Config, metr
 			// Odd
 			targetPrediction = predictions[halfIndex]
 		}
-		break
 	default:
-		return nil, fmt.Errorf("Unknown decision type '%s'", predictiveConfig.DecisionType)
+		return nil, fmt.Errorf("unknown decision type '%s'", predictiveConfig.DecisionType)
 	}
 
 	return &cpaevaluate.Evaluation{
