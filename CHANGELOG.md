@@ -5,6 +5,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Changed
+- BREAKING CHANGE: Major rewrite converting this project from a Custom Pod Autoscaler to have its own dedicated CRD
+and operator.
+  - Configuration and deployment has changed completely, no longer need to install the Custom Pod Autoscaler Operator,
+  instead you need to install the Predictive Horizontal Pod Autoscaler as an operator.
+  - No longer deployed as `CustomPodAutoscaler` custom resources, now deployed as `PredictiveHorizontalPodAutoscaler`
+  custom resources.
+- BREAKING CHANGES: Several configuration options renamed for clarity.
+  - `LinearModel -> storedValues` renamed to `LinearModel -> historySize`
+  - `Model -> perInterval` renamed to `Model -> perSyncPeriod`
+### Removed
+- BREAKING CHANGES: Removed some no longer relevant configuration options.
+  - `DBPath`
+  - `MigrationPath`
 
 ## [v0.10.0] - 2022-05-14
 ### Changed

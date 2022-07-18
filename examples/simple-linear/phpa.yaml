@@ -1,42 +1,25 @@
-apiVersion: custompodautoscaler.com/v1
-kind: CustomPodAutoscaler
+apiVersion: jamiethompson.me/v1alpha1
+kind: PredictiveHorizontalPodAutoscaler
 metadata:
-  name: simple-linear-example
+  name: simple-linear
 spec:
-  template:
-    spec:
-      containers:
-      - name: simple-linear-example
-        image: jthomperoo/predictive-horizontal-pod-autoscaler:latest
-        imagePullPolicy: IfNotPresent
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
     name: php-apache
-  roleRequiresMetricsServer: true
-  config:
-    - name: minReplicas
-      value: "1"
-    - name: maxReplicas
-      value: "10"
-    - name: predictiveConfig
-      value: |
-        models:
-        - type: Linear
-          name: LinearPrediction
-          perInterval: 1
-          linear:
-            lookAhead: 10000
-            storedValues: 6
-        decisionType: "maximum"
-        metrics:
-        - type: Resource
-          resource:
-            name: cpu
-            target:
-              averageUtilization: 50
-              type: Utilization
-    - name: interval
-      value: "10000"
-    - name: downscaleStabilization
-      value: "0"
+  minReplicas: 1
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          averageUtilization: 50
+          type: Utilization
+  models:
+    - type: Linear
+      name: simple-linear
+      linear:
+        lookAhead: 10000
+        historySize: 6
+  downscaleStabilization: 0

@@ -20,14 +20,13 @@ package prediction
 import (
 	"fmt"
 
-	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/config"
-	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/stored"
+	jamiethompsonmev1alpha1 "github.com/jthomperoo/predictive-horizontal-pod-autoscaler/api/v1alpha1"
 )
 
 // Predicter is an interface providing methods for making a prediction based on a model, a time to predict and values
 type Predicter interface {
-	GetPrediction(model *config.Model, evaluations []*stored.Evaluation) (int32, error)
-	GetIDsToRemove(model *config.Model, evaluations []*stored.Evaluation) ([]int, error)
+	GetPrediction(model *jamiethompsonmev1alpha1.Model, replicaHistory []jamiethompsonmev1alpha1.TimestampedReplicas) (int32, error)
+	PruneHistory(model *jamiethompsonmev1alpha1.Model, replicaHistory []jamiethompsonmev1alpha1.TimestampedReplicas) ([]jamiethompsonmev1alpha1.TimestampedReplicas, error)
 	GetType() string
 }
 
@@ -38,20 +37,20 @@ type ModelPredict struct {
 }
 
 // GetPrediction generates a prediction for any model that the ModelPredict has been set up to use
-func (m *ModelPredict) GetPrediction(model *config.Model, evaluations []*stored.Evaluation) (int32, error) {
+func (m *ModelPredict) GetPrediction(model *jamiethompsonmev1alpha1.Model, replicaHistory []jamiethompsonmev1alpha1.TimestampedReplicas) (int32, error) {
 	for _, predicter := range m.Predicters {
 		if predicter.GetType() == model.Type {
-			return predicter.GetPrediction(model, evaluations)
+			return predicter.GetPrediction(model, replicaHistory)
 		}
 	}
 	return 0, fmt.Errorf("unknown model type '%s'", model.Type)
 }
 
 // GetIDsToRemove finds the appropriate logic for the model and gets a list of stored IDs to remove
-func (m *ModelPredict) GetIDsToRemove(model *config.Model, evaluations []*stored.Evaluation) ([]int, error) {
+func (m *ModelPredict) PruneHistory(model *jamiethompsonmev1alpha1.Model, replicaHistory []jamiethompsonmev1alpha1.TimestampedReplicas) ([]jamiethompsonmev1alpha1.TimestampedReplicas, error) {
 	for _, predicter := range m.Predicters {
 		if predicter.GetType() == model.Type {
-			return predicter.GetIDsToRemove(model, evaluations)
+			return predicter.PruneHistory(model, replicaHistory)
 		}
 	}
 	return nil, fmt.Errorf("unknown model type '%s'", model.Type)

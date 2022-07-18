@@ -1,4 +1,4 @@
-# Copyright 2021 The Predictive Horizontal Pod Autoscaler Authors.
+# Copyright 2022 The Predictive Horizontal Pod Autoscaler Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -27,10 +27,10 @@ from typing import List, Optional
 import statsmodels.api as sm
 from dataclasses_json import dataclass_json, LetterCase
 
-# Takes in list of stored evaluations and the look ahead value:
+# Takes in a replica history and the look ahead value:
 # {
 #   "lookAhead": 3,
-#   "evaluations": [
+#   "replicaHistory": [
 #       {
 #           "id": 0,
 #           "created": "2020-02-01T00:55:33Z",
@@ -51,22 +51,12 @@ from dataclasses_json import dataclass_json, LetterCase
 
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass
-class EvaluationValue:
-    """
-    JSON data representation of an evaluation value, contains the scaling target replicas
-    """
-    target_replicas: int
-
-
-@dataclass_json(letter_case=LetterCase.CAMEL)
-@dataclass
-class Evaluation:
+class TimestampedReplica:
     """
     JSON data representation of a timestamped evaluation
     """
-    id: int
-    created: str
-    val: EvaluationValue
+    time: str
+    replicas: int
 
 
 @dataclass_json(letter_case=LetterCase.CAMEL)
@@ -76,7 +66,7 @@ class AlgorithmInput:
     JSON data representation of the data this algorithm requires to be provided to it.
     """
     look_ahead: int
-    evaluations: List[Evaluation]
+    replica_history: List[TimestampedReplica]
     current_time: Optional[str] = None
 
 
@@ -111,15 +101,15 @@ y = []
 
 # Build up data for linear model, in order to not deal with huge values and get rounding errors, use the difference
 # between the time being searched for and the metric recorded time in seconds
-for i, evaluation in enumerate(algorithm_input.evaluations):
+for i, timestamped_replica in enumerate(algorithm_input.replica_history):
     try:
-        created = datetime.strptime(evaluation.created, "%Y-%m-%dT%H:%M:%SZ")
+        created = datetime.strptime(timestamped_replica.time, "%Y-%m-%dT%H:%M:%SZ")
     except ValueError as ex:
         print(f"Invalid datetime format: {str(ex)}", file=sys.stderr)
         sys.exit(1)
 
     x.append(search_time - datetime.timestamp(created))
-    y.append(evaluation.val.target_replicas)
+    y.append(timestamped_replica.replicas)
 
 # Add constant for OLS, constant is 1.0
 x = sm.add_constant(x)

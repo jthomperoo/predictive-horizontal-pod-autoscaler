@@ -22,23 +22,18 @@ import (
 	"sort"
 	"strconv"
 
-	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/algorithm"
-	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/config"
-	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/stored"
+	jamiethompsonmev1alpha1 "github.com/jthomperoo/predictive-horizontal-pod-autoscaler/api/v1alpha1"
 )
 
 const (
 	defaultTimeout = 30000
 )
 
-// Type linear is the type of the linear predicter
-const Type = "Linear"
-
-const algorithmPath = "/app/algorithms/linear_regression/linear_regression.py"
+const algorithmPath = "algorithms/linear_regression/linear_regression.py"
 
 type linearRegressionParameters struct {
-	LookAhead   int                  `json:"lookAhead"`
-	Evaluations []*stored.Evaluation `json:"evaluations"`
+	LookAhead      int                                           `json:"lookAhead"`
+	ReplicaHistory []jamiethompsonmev1alpha1.TimestampedReplicas `json:"replicaHistory"`
 }
 
 // Config represents a linear regression prediction model configuration
@@ -47,30 +42,35 @@ type Config struct {
 	LookAhead    int `yaml:"lookAhead"`
 }
 
+// Runner defines an algorithm runner, allowing algorithms to be run
+type AlgorithmRunner interface {
+	RunAlgorithmWithValue(algorithmPath string, value string, timeout int) (string, error)
+}
+
 // Predict provides logic for using Linear Regression to make a prediction
 type Predict struct {
-	Runner algorithm.Runner
+	Runner AlgorithmRunner
 }
 
 // GetPrediction uses a linear regression to predict what the replica count should be based on historical evaluations
-func (p *Predict) GetPrediction(model *config.Model, evaluations []*stored.Evaluation) (int32, error) {
+func (p *Predict) GetPrediction(model *jamiethompsonmev1alpha1.Model, replicaHistory []jamiethompsonmev1alpha1.TimestampedReplicas) (int32, error) {
 	if model.Linear == nil {
 		return 0, errors.New("no Linear configuration provided for model")
 	}
 
-	if len(evaluations) == 0 {
+	if len(replicaHistory) == 0 {
 		return 0, errors.New("no evaluations provided for Linear regression model")
 	}
 
-	if len(evaluations) == 1 {
+	if len(replicaHistory) == 1 {
 		// If only 1 evaluation is provided do not try and calculate using the linear regression model, just return
 		// the target replicas from the only evaluation
-		return evaluations[0].Evaluation.TargetReplicas, nil
+		return replicaHistory[0].Replicas, nil
 	}
 
 	parameters, err := json.Marshal(linearRegressionParameters{
-		LookAhead:   model.Linear.LookAhead,
-		Evaluations: evaluations,
+		LookAhead:      model.Linear.LookAhead,
+		ReplicaHistory: replicaHistory,
 	})
 	if err != nil {
 		// Should not occur, panic
@@ -95,29 +95,29 @@ func (p *Predict) GetPrediction(model *config.Model, evaluations []*stored.Evalu
 	return int32(prediction), nil
 }
 
-// GetIDsToRemove provides the list of stored evaluation IDs to remove, if there are too many stored values
-// it will remove the oldest ones
-func (p *Predict) GetIDsToRemove(model *config.Model, evaluations []*stored.Evaluation) ([]int, error) {
+func (p *Predict) PruneHistory(model *jamiethompsonmev1alpha1.Model, replicaHistory []jamiethompsonmev1alpha1.TimestampedReplicas) ([]jamiethompsonmev1alpha1.TimestampedReplicas, error) {
 	if model.Linear == nil {
 		return nil, errors.New("no Linear configuration provided for model")
 	}
 
-	// Sort by date created
-	sort.Slice(evaluations, func(i, j int) bool {
-		return evaluations[i].Created.Before(evaluations[j].Created)
-	})
-	var markedForRemove []int
-	// Remove any expired values
-	if len(evaluations) > model.Linear.StoredValues {
-		// Remove oldest to fit into requirements
-		for i := 0; i < len(evaluations)-model.Linear.StoredValues; i++ {
-			markedForRemove = append(markedForRemove, evaluations[i].ID)
-		}
+	if len(replicaHistory) < model.Linear.HistorySize {
+		return replicaHistory, nil
 	}
-	return markedForRemove, nil
+
+	// Sort by date created, newest first
+	sort.Slice(replicaHistory, func(i, j int) bool {
+		return !replicaHistory[i].Time.Before(replicaHistory[j].Time)
+	})
+
+	// Remove oldest to fit into requirements, have to loop from the end to allow deletion without affecting indices
+	for i := len(replicaHistory) - 1; i >= model.Linear.HistorySize; i-- {
+		replicaHistory = append(replicaHistory[:i], replicaHistory[i+1:]...)
+	}
+
+	return replicaHistory, nil
 }
 
 // GetType returns the type of the Prediction model
 func (p *Predict) GetType() string {
-	return Type
+	return jamiethompsonmev1alpha1.TypeLinear
 }

@@ -1,0 +1,55 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  creationTimestamp: null
+  name: predictive-horizontal-pod-autoscaler
+rules:
+- apiGroups:
+  - apps
+  resources:
+  - deployments/scale
+  - replicaset/scale
+  - statefulset/scale
+  verbs:
+  - get
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - get
+- apiGroups:
+  - ""
+  resources:
+  - replicationcontrollers/scale
+  verbs:
+  - get
+  - update
+- apiGroups:
+  - jamiethompson.me
+  resources:
+  - predictivehorizontalpodautoscalers
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - jamiethompson.me
+  resources:
+  - predictivehorizontalpodautoscalers/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - jamiethompson.me
+  resources:
+  - predictivehorizontalpodautoscalers/status
+  verbs:
+  - get
+  - patch
+  - update
