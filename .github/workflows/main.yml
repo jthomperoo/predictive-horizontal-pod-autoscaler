@@ -9,15 +9,24 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     steps:
+
     - name: Set up Go 1.18
       uses: actions/setup-go@v1
       with:
         go-version: 1.18
+
     - uses: actions/setup-python@v4
       with:
         python-version: '3.8.x'
+
+    - uses: azure/setup-helm@v1
+      with:
+        version: 'v3.9.0'
+      id: helm
+
     - name: Check out code into the Go module directory
       uses: actions/checkout@v1
+
     - name: Lint, test and build
       run: |
 
@@ -41,6 +50,7 @@ jobs:
         fi
 
         make docker VERSION=${VERSION}
+
     - name: Deploy
       env:
         DOCKER_USER: ${{ secrets.DOCKER_USER }}
@@ -62,3 +72,26 @@ jobs:
           docker tag jthomperoo/predictive-horizontal-pod-autoscaler:${VERSION} jthomperoo/predictive-horizontal-pod-autoscaler:latest
           docker push jthomperoo/predictive-horizontal-pod-autoscaler:latest
         fi
+
+    - name: Bundle YAML config
+      if: github.event_name == 'release' && github.repository == 'jthomperoo/predictive-horizontal-pod-autoscaler'
+      run: |
+
+        # Variables to sub into k8s templates
+        if [ ${{ github.event_name }} == "release" ]; then
+          VERSION="${{ github.ref_name }}"
+        else
+          VERSION="${{ github.sha }}"
+        fi
+
+        export VERSION="${VERSION}"
+        sed -i "/version: 0.0.0/c\version: ${VERSION}" helm/Chart.yaml
+        helm package helm/
+
+    - name: Deploy helm package
+      if: github.event_name == 'release' && github.repository == 'jthomperoo/predictive-horizontal-pod-autoscaler'
+      uses: Shopify/upload-to-release@1.0.0
+      with:
+        name: predictive-horizontal-pod-autoscaler-${{ github.ref_name }}.tgz
+        path: predictive-horizontal-pod-autoscaler-${{ github.ref_name }}.tgz
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
