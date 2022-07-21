@@ -29,7 +29,7 @@ COPY . .
 # Build
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -o manager main.go
 
-FROM registry.access.redhat.com/ubi8/python-38:1-100
+FROM python:3.8-slim-buster
 WORKDIR /app
 
 # Install Python dependencies

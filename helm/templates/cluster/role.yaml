@@ -13,20 +13,49 @@ rules:
   - statefulset/scale
   verbs:
   - get
+  - patch
   - update
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
 - apiGroups:
   - ""
   resources:
   - pods
   verbs:
   - get
+  - list
 - apiGroups:
   - ""
   resources:
   - replicationcontrollers/scale
   verbs:
   - get
+  - patch
   - update
+- apiGroups:
+  - custom.metrics.k8s.io
+  resources:
+  - '*'
+  verbs:
+  - get
+  - list
+- apiGroups:
+  - external.metrics.k8s.io
+  resources:
+  - '*'
+  verbs:
+  - get
+  - list
 - apiGroups:
   - jamiethompson.me
   resources:
@@ -53,3 +82,10 @@ rules:
   - get
   - patch
   - update
+- apiGroups:
+  - metrics.k8s.io
+  resources:
+  - '*'
+  verbs:
+  - get
+  - list

@@ -71,9 +71,13 @@ type PredictiveHorizontalPodAutoscalerReconciler struct {
 //+kubebuilder:rbac:groups=jamiethompson.me,resources=predictivehorizontalpodautoscalers,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=jamiethompson.me,resources=predictivehorizontalpodautoscalers/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=jamiethompson.me,resources=predictivehorizontalpodautoscalers/finalizers,verbs=update
-//+kubebuilder:rbac:groups=core,resources=pods,verbs=get
-//+kubebuilder:rbac:groups=core,resources=replicationcontrollers/scale,verbs=get;update
-//+kubebuilder:rbac:groups=apps,resources=deployments/scale;replicaset/scale;statefulset/scale,verbs=get;update
+//+kubebuilder:rbac:groups=core,resources=pods,verbs=get;list
+//+kubebuilder:rbac:groups=core,resources=replicationcontrollers/scale,verbs=get;update;patch
+//+kubebuilder:rbac:groups=core,resources=configmaps,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=apps,resources=deployments/scale;replicaset/scale;statefulset/scale,verbs=get;update;patch
+//+kubebuilder:rbac:groups=metrics.k8s.io,resources=*,verbs=get;list
+//+kubebuilder:rbac:groups=custom.metrics.k8s.io,resources=*,verbs=get;list
+//+kubebuilder:rbac:groups=external.metrics.k8s.io,resources=*,verbs=get;list
 
 func (r *PredictiveHorizontalPodAutoscalerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
