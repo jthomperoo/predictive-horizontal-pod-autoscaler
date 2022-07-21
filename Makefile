@@ -2,7 +2,7 @@ REGISTRY = jthomperoo
 NAME = predictive-horizontal-pod-autoscaler
 VERSION = latest
 
-LOCAL_HELM_CHART_NAME=predictive-horizontal-pod-autoscaler
+LOCAL_HELM_CHART_NAME=predictive-horizontal-pod-autoscaler-operator
 
 run: deploy py_dependencies
 	go run github.com/cosmtrek/air

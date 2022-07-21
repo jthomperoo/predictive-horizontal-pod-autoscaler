@@ -23,6 +23,7 @@ import (
 	"strconv"
 
 	jamiethompsonmev1alpha1 "github.com/jthomperoo/predictive-horizontal-pod-autoscaler/api/v1alpha1"
+	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/hook"
 )
 
 const algorithmPath = "algorithms/holt_winters/holt_winters.py"
@@ -38,7 +39,8 @@ type AlgorithmRunner interface {
 
 // Predict provides logic for using Holt Winters to make a prediction
 type Predict struct {
-	Runner AlgorithmRunner
+	HookExecute hook.Executer
+	Runner      AlgorithmRunner
 }
 
 type holtWintersParametersParameters struct {
@@ -56,16 +58,16 @@ type holtWintersParametersParameters struct {
 	InitialSeasonal      *float64  `json:"initialSeasonal,omitempty"`
 }
 
-// type runTimeTuningFetchHookRequest struct {
-// 	Model          jamiethompsonmev1alpha1.Model                 `json:"model"`
-// 	ReplicaHistory []jamiethompsonmev1alpha1.TimestampedReplicas `json:"evaluations"`
-// }
+type runTimeTuningFetchHookRequest struct {
+	Model          jamiethompsonmev1alpha1.Model                 `json:"model"`
+	ReplicaHistory []jamiethompsonmev1alpha1.TimestampedReplicas `json:"replicaHistory"`
+}
 
-// type runTimeTuningFetchHookResult struct {
-// 	Alpha *float64 `json:"alpha"`
-// 	Beta  *float64 `json:"beta"`
-// 	Gamma *float64 `json:"gamma"`
-// }
+type runTimeTuningFetchHookResult struct {
+	Alpha *float64 `json:"alpha"`
+	Beta  *float64 `json:"beta"`
+	Gamma *float64 `json:"gamma"`
+}
 
 // GetPrediction uses holt winters to predict what the replica count should be based on historical evaluations
 func (p *Predict) GetPrediction(model *jamiethompsonmev1alpha1.Model, replicaHistory []jamiethompsonmev1alpha1.TimestampedReplicas) (int32, error) {
@@ -83,42 +85,41 @@ func (p *Predict) GetPrediction(model *jamiethompsonmev1alpha1.Model, replicaHis
 	beta := model.HoltWinters.Beta
 	gamma := model.HoltWinters.Gamma
 
-	// TODO: re-enable this
-	// if model.HoltWinters.RuntimeTuningFetchHook != nil {
+	if model.HoltWinters.RuntimeTuningFetchHook != nil {
 
-	// 	// Convert request into JSON string
-	// 	request, err := json.Marshal(&runTimeTuningFetchHookRequest{
-	// 		Model:          *model,
-	// 		ReplicaHistory: replicaHistory,
-	// 	})
-	// 	if err != nil {
-	// 		// Should not occur
-	// 		panic(err)
-	// 	}
+		// Convert request into JSON string
+		request, err := json.Marshal(&runTimeTuningFetchHookRequest{
+			Model:          *model,
+			ReplicaHistory: replicaHistory,
+		})
+		if err != nil {
+			// Should not occur
+			panic(err)
+		}
 
-	// 	// Request runtime tuning values
-	// 	hookResult, err := p.Runner.RunAlgorithmWithValue(model.HoltWinters.RuntimeTuningFetchHook, string(request))
-	// 	if err != nil {
-	// 		return 0, err
-	// 	}
+		// Request runtime tuning values
+		hookResult, err := p.HookExecute.ExecuteWithValue(model.HoltWinters.RuntimeTuningFetchHook, string(request))
+		if err != nil {
+			return 0, err
+		}
 
-	// 	// Parse result
-	// 	var result runTimeTuningFetchHookResult
-	// 	err = json.Unmarshal([]byte(hookResult), &result)
-	// 	if err != nil {
-	// 		return 0, err
-	// 	}
+		// Parse result
+		var result runTimeTuningFetchHookResult
+		err = json.Unmarshal([]byte(hookResult), &result)
+		if err != nil {
+			return 0, err
+		}
 
-	// 	if result.Alpha != nil {
-	// 		alpha = result.Alpha
-	// 	}
-	// 	if result.Beta != nil {
-	// 		beta = result.Beta
-	// 	}
-	// 	if result.Gamma != nil {
-	// 		gamma = result.Gamma
-	// 	}
-	// }
+		if result.Alpha != nil {
+			alpha = result.Alpha
+		}
+		if result.Beta != nil {
+			beta = result.Beta
+		}
+		if result.Gamma != nil {
+			gamma = result.Gamma
+		}
+	}
 
 	if alpha == nil {
 		return 0, errors.New("no alpha tuning value provided for Holt-Winters prediction")

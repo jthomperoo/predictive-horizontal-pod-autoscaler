@@ -45,6 +45,7 @@ import (
 	jamiethompsonmev1alpha1 "github.com/jthomperoo/predictive-horizontal-pod-autoscaler/api/v1alpha1"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/algorithm"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/controllers"
+	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/hook/http"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/prediction"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/prediction/holtwinters"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/prediction/linear"
@@ -127,6 +128,7 @@ func main() {
 	pyRunner := &algorithm.Python{
 		Command: exec.Command,
 	}
+	httpExec := &http.Execute{}
 
 	if err = (&controllers.PredictiveHorizontalPodAutoscalerReconciler{
 		Client:      mgr.GetClient(),
@@ -140,7 +142,8 @@ func main() {
 					Runner: pyRunner,
 				},
 				&holtwinters.Predict{
-					Runner: pyRunner,
+					HookExecute: httpExec,
+					Runner:      pyRunner,
 				},
 			},
 		},

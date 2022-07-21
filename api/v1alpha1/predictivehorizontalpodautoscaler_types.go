@@ -37,6 +37,22 @@ const (
 	TypeLinear      = "Linear"
 )
 
+// Definition describes a hook for passing data/triggering logic, such as through a shell command
+type Definition struct {
+	Type    string    `json:"type"`
+	Timeout int       `json:"timeout"`
+	HTTP    *HTTPHook `json:"http"`
+}
+
+// HTTPHook describes configuration options for an HTTP request hook
+type HTTPHook struct {
+	Method        string            `json:"method"`
+	URL           string            `json:"url"`
+	Headers       map[string]string `json:"headers,omitempty"`
+	SuccessCodes  []int             `json:"successCodes"`
+	ParameterMode string            `json:"parameterMode"`
+}
+
 // Linear represents a linear regression prediction model configuration
 type Linear struct {
 	// historySize is how many timestamped replica counts should be stored for this linear regression, with older
@@ -78,7 +94,9 @@ type HoltWinters struct {
 
 	// +optional
 	InitialSeasonal *float64 `json:"initialSeasonal"`
-	// RuntimeTuningFetchHook *hook.Definition `json:"runtimeTuningFetchHook"`
+
+	// +optional
+	RuntimeTuningFetchHook *Definition `json:"runtimeTuningFetchHook"`
 }
 
 // Model represents a prediction model to use, e.g. a linear regression

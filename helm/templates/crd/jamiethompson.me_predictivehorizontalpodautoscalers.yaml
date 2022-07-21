@@ -617,6 +617,43 @@ spec:
                           type: number
                         initializationMethod:
                           type: string
+                        runtimeTuningFetchHook:
+                          description: Definition describes a hook for passing data/triggering
+                            logic, such as through a shell command
+                          properties:
+                            http:
+                              description: HTTPHook describes configuration options
+                                for an HTTP request hook
+                              properties:
+                                headers:
+                                  additionalProperties:
+                                    type: string
+                                  type: object
+                                method:
+                                  type: string
+                                parameterMode:
+                                  type: string
+                                successCodes:
+                                  items:
+                                    type: integer
+                                  type: array
+                                url:
+                                  type: string
+                              required:
+                              - method
+                              - parameterMode
+                              - successCodes
+                              - url
+                              type: object
+                            timeout:
+                              type: integer
+                            type:
+                              type: string
+                          required:
+                          - http
+                          - timeout
+                          - type
+                          type: object
                         seasonal:
                           type: string
                         seasonalPeriods:

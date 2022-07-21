@@ -36,6 +36,7 @@ jobs:
 
         # Lint and test
         pip install -r requirements-dev.txt
+        make generate
         make lint
         make format
 

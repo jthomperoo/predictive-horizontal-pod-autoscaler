@@ -4,6 +4,7 @@ go 1.18
 
 require (
 	github.com/cosmtrek/air v1.40.4
+	github.com/google/go-cmp v0.5.5
 	github.com/jthomperoo/k8shorizmetrics v1.0.1-0.20220717205713-fa28a589e16a
 	honnef.co/go/tools v0.3.2
 	k8s.io/api v0.24.2
@@ -41,7 +42,6 @@ require (
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/gnostic v0.5.7-v3refs // indirect
-	github.com/google/go-cmp v0.5.5 // indirect
 	github.com/google/gofuzz v1.1.0 // indirect
 	github.com/google/uuid v1.1.2 // indirect
 	github.com/imdario/mergo v0.3.12 // indirect
