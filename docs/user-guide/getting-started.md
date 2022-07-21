@@ -13,6 +13,7 @@ This guide requires the following tools installed:
 - [kubectl](https://kubernetes.io/docs/tasks/tools/#kubectl) == `v1.X`
 - [helm](https://helm.sh/docs/intro/install/) == `v3.X`
 - [k3d](https://k3d.io/#installation) == `v4.X`
+- [jq](https://stedolan.github.io/jq/) >= `1.6`
 
 ## Set up the cluster
 
@@ -26,28 +27,41 @@ To provision a new cluster using k3d run the following command:
 k3d cluster create phpa-test-cluster
 ```
 
-## Install the Custom Pod Autoscaler Operator
+## Install the Predictive Horizontal Pod Autoscaler Operator onto your cluster
 
-The PHPA requires the [Custom Pod Autoscaler Operator
-(CPAO)](https://github.com/jthomperoo/custom-pod-autoscaler-operator) to handle management of autoscalers.
+Installing PHPAs requires you to have installed the PHPA operator first onto your cluster.
 
-In this guide we are using `v1.1.1` of the CPAO, but check out the [installation
-guide](https://github.com/jthomperoo/custom-pod-autoscaler-operator/blob/master/INSTALL.md) for more up to date
-instructions for later releases.
+In this guide we are using `v0.11.0` of the PHPA operator, but check out the [installation
+guide](./installation.md) for more up to date instructions for later releases.
 
-Run the following commands to install `v1.1.1` of the CPAO:
+Run the following commands to install the PHPA operator:
 
 ```bash
-VERSION=v1.1.1
-HELM_CHART=custom-pod-autoscaler-operator
-helm install ${HELM_CHART} https://github.com/jthomperoo/custom-pod-autoscaler-operator/releases/download/${VERSION}/custom-pod-autoscaler-operator-${VERSION}.tgz
+VERSION=v0.11.0
+HELM_CHART=predictive-horizontal-pod-autoscaler-operator
+helm install ${HELM_CHART} https://github.com/jthomperoo/predictive-horizontal-pod-autoscaler/releases/download/${VERSION}/predictive-horizontal-pod-autoscaler-${VERSION}.tgz
 ```
 
-You can check the CPAO has been deployed properly by running:
+You can check the PHPA operator has been deployed properly by running:
 
 ```bash
-kubectl get pods
+helm status predictive-horizontal-pod-autoscaler-operator
 ```
+
+You should get a response like this:
+
+```bash
+NAME: predictive-horizontal-pod-autoscaler-operator
+LAST DEPLOYED: Thu Jul 21 20:29:06 2022
+NAMESPACE: default
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None
+NOTES:
+Thanks for installing predictive-horizontal-pod-autoscaler.
+```
+
+If you get a response that says release not found then the install has not worked correctly.
 
 ## Create a deployment to autoscale
 
@@ -130,48 +144,34 @@ Now we need to set up the autoscaler. This autoscaler will be configured to watc
 apply a linear regression to predict ahead of time what the replica count should be.
 
 ```yaml
-apiVersion: custompodautoscaler.com/v1
-kind: CustomPodAutoscaler
+apiVersion: jamiethompson.me/v1alpha1
+kind: PredictiveHorizontalPodAutoscaler
 metadata:
-  name: simple-linear-example
+  name: simple-linear
 spec:
-  template:
-    spec:
-      containers:
-      - name: simple-linear-example
-        image: jthomperoo/predictive-horizontal-pod-autoscaler:latest
-        imagePullPolicy: Always
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
     name: php-apache
-  roleRequiresMetricsServer: true
-  config:
-    - name: minReplicas
-      value: "1"
-    - name: maxReplicas
-      value: "10"
-    - name: predictiveConfig
-      value: |
-        models:
-        - type: Linear
-          name: LinearPrediction
-          perInterval: 1
-          linear:
-            lookAhead: 10000
-            storedValues: 6
-        decisionType: "maximum"
-        metrics:
-        - type: Resource
-          resource:
-            name: cpu
-            target:
-              averageUtilization: 50
-              type: Utilization
-    - name: interval
-      value: "10000"
-    - name: downscaleStabilization
-      value: "0"
+  minReplicas: 1
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          averageUtilization: 50
+          type: Utilization
+  models:
+    - type: Linear
+      name: simple-linear
+      perSyncPeriod: 1
+      linear:
+        lookAhead: 10000
+        historySize: 6
+  decisionType: "maximum"
+  syncPeriod: 10000
+  downscaleStabilization: 0
 ```
 
 This autoscaler works by using the same logic that the Horizontal Pod Autoscaler uses to calculate the number of
@@ -207,60 +207,60 @@ scaleTargetRef:
 - The minimum and maximum replicas that the deployment can be autoscaled to are set to the range `0-10`:
 
 ```yaml
-- name: minReplicas
-  value: "1"
-- name: maxReplicas
-  value: "10"
+minReplicas: 1
+maxReplicas: 10
 ```
 
 - The frequency that the autoscaler calculates a new target replica value is set to 10 seconds (`10000 ms`).
 
 ```yaml
-- name: interval
-  value: "10000"
+syncPeriod: 10000
 ```
 
 - The *downscale stabilization* value for the autoscaler is set to `0`, meaning it will only use the latest autoscaling
-target and will not pick the highest across a window of time. For more information around this check out the [Custom Pod
-Autoscaler wiki](https://custom-pod-autoscaler.readthedocs.io/en/stable/user-guide/cooldown/).
+target and will not pick the highest across a window of time.
 
 ```yaml
-- name: downscaleStabilization
-  value: "0"
+downscaleStabilization: 0
 ```
 
-- The actual autoscaling decisions are defined in the *predictive config*.
-  - The *model* is configured as a linear regression model.
-    - The linear regression is set to run every time the autoscaler is run (every interval), in this example it is
-    every 10 seconds (`perInterval: 1`).
-    - The linear regression is predicting 10 seconds into the future (`lookAhead: 10000`).
-    - The linear regression uses a maximum of `6` previous target values for predicting (`storedValues: 6`).
-  - The `decisionType` is set to be `maximum`, meaning that the target replicas will be set to whichever is higher
+- A single *model* is configured as a linear regression model.
+  - The linear regression is set to run every time the autoscaler is run (every sync period), in this example it is
+    every 10 seconds (`perSyncPeriod: 1`).
+  - The linear regression is predicting 10 seconds into the future (`lookAhead: 10000`).
+  - The linear regression uses a maximum of `6` previous target values for predicting (`storedValues: 6`).
+
+```yaml
+models:
+  - type: Linear
+    name: simple-linear
+    perSyncPeriod: 1
+    linear:
+      lookAhead: 10000
+      historySize: 6
+```
+
+- The `decisionType` is set to be `maximum`, meaning that the target replicas will be set to whichever is higher
   between the calculated HPA value and the predicted model value.
-  - The *metrics* defines the normal Horizontal Pod Autoscaler rules to apply for autoscaling, the results of which
+
+```yaml
+decisionType: "maximum"
+```
+
+- The *metrics* defines the normal Horizontal Pod Autoscaler rules to apply for autoscaling, the results of which
   will have the models applied to for prediction.
     - The metric targeted is the CPU resource of the deployment.
     - The targeted value is that CPU utilization across the test application's containers should be `50%`, if it goes
     too far above this there are not enough pods, and if it goes too far below this there are too many pods.
 
 ```yaml
-- name: predictiveConfig
-  value: |
-    models:
-    - type: Linear
-      name: LinearPrediction
-      perInterval: 1
-      linear:
-        lookAhead: 10000
-        storedValues: 6
-    decisionType: "maximum"
-    metrics:
-    - type: Resource
-      resource:
-        name: cpu
-        target:
-          averageUtilization: 50
-          type: Utilization
+metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        averageUtilization: 50
+        type: Utilization
 ```
 
 Now deploy the autoscaler to the K8s cluster by running:
@@ -272,7 +272,7 @@ kubectl apply -f phpa.yaml
 You can check the autoscaler has been deployed by running:
 
 ```bash
-kubectl get pods
+kubectl get phpa simple-linear
 ```
 
 ## Apply load and monitor the autoscaling process
@@ -280,15 +280,20 @@ kubectl get pods
 You can monitor the autoscaling process by running:
 
 ```bash
-kubectl logs simple-linear-example --follow
+kubectl logs -l name=predictive-horizontal-pod-autoscaler -f
 ```
+
+This is looking at the operators logs, these are the brains of the autoscaling program and will report how all
+autoscaling decisions are done.
 
 You can see the targets calculated by the HPA logic before the linear regression has been applied to them by querying
-the autoscaler's internal database:
+the autoscaler's config map:
 
 ```bash
-kubectl exec -it simple-linear-example -- sqlite3 /store/predictive-horizontal-pod-autoscaler.db 'SELECT * FROM evaluation;'
+kubectl get configmap predictive-horizontal-pod-autoscaler-simple-linear-data -o=json | jq -r '.data.data | fromjson | .modelHistories["simple-linear"].replicaHistory[] | .time,.replicas'
 ```
+
+This prints out all of the timestamped replica counts that the PHPA will use for its prediction.
 
 You can increase the load by starting a new container, and looping to send a bunch of HTTP requests to our test
 application:
@@ -313,7 +318,7 @@ values and the target values predicted by the linear regression.
 Once you have finished testing the autoscaler, you can clean up any K8s resources by running:
 
 ```bash
-HELM_CHART=custom-pod-autoscaler-operator
+HELM_CHART=predictive-horizontal-pod-autoscaler-operator
 kubectl delete -f deployment.yaml
 kubectl delete -f phpa.yaml
 helm uninstall ${HELM_CHART}

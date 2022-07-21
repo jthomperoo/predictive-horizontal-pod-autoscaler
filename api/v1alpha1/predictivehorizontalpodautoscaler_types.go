@@ -158,7 +158,7 @@ type PredictiveHorizontalPodAutoscalerSpec struct {
 	MinReplicas *int32 `json:"minReplicas"`
 
 	// maxReplicas is the upper limit for the number of replicas to which the autoscaler can scale up.
-	// It cannot be less that minReplicas.
+	// It cannot be less than minReplicas.
 	// +kubebuilder:validation:Minimum=1
 	MaxReplicas int32 `json:"maxReplicas"`
 
@@ -253,8 +253,7 @@ type PredictiveHorizontalPodAutoscalerStatus struct {
 // +kubebuilder:printcolumn:name="Min Pods",type="integer",JSONPath=`.spec.minReplicas`,description="The minimum number of replicas of pods that the resource being managed by the autoscaler can have"
 // +kubebuilder:printcolumn:name="Max Pods",type="integer",JSONPath=`.spec.maxReplicas`,description="The maximum number of replicas of pods that the resource being managed by the autoscaler can have"
 // +kubebuilder:printcolumn:name="Replicas",type="integer",JSONPath=`.status.desiredReplicas`,description="The desired number of replicas of pods managed by this autoscaler as last calculated by the autoscaler"
-// +kubebuilder:printcolumn:name="Last Scale Time",type="date",JSONPath=`.status.lastScaleTime`,description="The last time the CustomPodAutoscaler scaled the number of pods"
-// +groupName=custompodautoscaler.com
+// +kubebuilder:printcolumn:name="Last Scale Time",type="date",JSONPath=`.status.lastScaleTime`,description="The last time the PredictiveHorizontalPodAutoscaler scaled the number of pods"
 // PredictiveHorizontalPodAutoscaler is the Schema for the predictivehorizontalpodautoscalers API
 type PredictiveHorizontalPodAutoscaler struct {
 	metav1.TypeMeta   `json:",inline"`

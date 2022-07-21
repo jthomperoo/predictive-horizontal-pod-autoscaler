@@ -2,70 +2,12 @@
 
 Hooks specify how user logic should be called by the Predictive Horizontal Pod Autoscaler.
 
-## shell
-
-The shell hook allows specifying a shell command, run through `/bin/sh`. Any relevant information will be provided to
-the command specified by piping the information in through standard in. Data is returned by writing to standard out.
-An error is signified by exiting with a non-zero exit code; if an error occurs the autoscaler will capture all standard
-error and out and log it.
-
-### Example
-
-This is an example configuration of the shell hook for runtime tuning fetching with Holt Winters:
-```yaml
-holtWinters:
-  runtimeTuningFetchHook:
-    type: "shell"
-    timeout: 2500
-    shell:
-      entrypoint: "python"
-      command:
-        - "/metric.py"
-```
-Breaking this example down:
-
-- `type` = the type of the hook, for this example it is a `shell` hook.
-- `timeout` = the maximum time the hook can take in milliseconds, for this example it is `2500` (2.5 seconds), if it
-takes longer than this it will count the hook as failing.
-- `shell` = the shell hook to execute.
-  - `entrypoint` = the entrypoint of the shell command, e.g. `/bin/bash`, defaults to `/bin/sh`.
-  - `command` = the command to execute.
-
-### Always Fail Example
-
-This is a metric configuration that will always fail:
-```yaml
-runtimeTuningFetchHook:
-  type: "shell"
-  timeout: 2500
-  shell:
-    entrypoint: "/bin/sh"
-    command:
-      - "-c"
-      - "exit 1"
-```
-
-### Always Return 5 Example
-
-This is a metric configuration that will return `5` as a metric.
-```yaml
-runtimeTuningFetchHook:
-  type: "shell"
-  timeout: 2500
-  shell:
-    entrypoint: "/bin/sh"
-    command:
-      - "-c"
-      - "echo '5'"
-```
-
 ## http
 
-The http hook allows defining an HTTP request for the autoscaler to make. Any
-relevant information will be provided to the target of the request by HTTP
-parameters - either `query` or `body` parameters. An error is signified by a
-status code that is not defined to be successful in the configuration; if this
-kind of error occurs the autoscaler will capture the response body and log it.
+The http hook allows defining an HTTP request for the autoscaler to make. Any relevant information will be provided to
+the target of the request by HTTP parameters - either `query` or `body` parameters. An error is signified by a status
+code that is not defined to be successful in the configuration; if this kind of error occurs the autoscaler will
+capture the response body and log it.
 
 ### Example
 
@@ -78,7 +20,7 @@ holtWinters:
     timeout: 2500
     http:
       method: "GET"
-      url: "https://www.custompodautoscaler.com"
+      url: "https://www.jamiethompson.me"
       successCodes:
         - 200
       headers:
@@ -115,7 +57,7 @@ runtimeTuningFetchHook:
   timeout: 2500
   http:
     method: "POST"
-    url: "https://www.custompodautoscaler.com"
+    url: "https://www.jamiethompson.me"
     successCodes:
       - 200
       - 202

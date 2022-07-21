@@ -6,14 +6,14 @@ All models share these three options:
 
 - **type** - The type of the model, for example 'Linear'.
 - **name** - The name of the model, must be unique and not shared by multiple models.
-- **perInterval** - The frequency that the model is used to recalculate and store values - tied to the interval as a
-base unit, with a value of `1` resulting in the model being recalculated every interval, a value of `2` meaning
-recalculated every other interval, `3` waits for two intervals after every calculation and so on.
+- **perSyncPeriod** - The frequency that the model is used to recalculate and store values - tied to the sync period as
+a base unit, with a value of `1` resulting in the model being recalculated every sync period, a value of `2` meaning
+recalculated every other sync period, `3` waits for two sync periods after every calculation and so on.
 - **calculationTimeout** - The timeout for calculating using an algorithm, if this timeout is exceeded the calculation
 is skipped. Defaults set based on the algorithm used, see below.
 
-All models use `interval` as a base unit, so if the interval is defined as `10000` (10 seconds), the models will base
-their timings and calculations as multiples of 10 seconds.
+All models use `syncPeriod` as a base unit, so if the sync period is defined as `10000` (10 seconds), the models will
+base their timings and calculations as multiples of 10 seconds.
 
 ## Linear Regression
 
@@ -21,24 +21,20 @@ The linear regression model uses a default calculation timeout of `30000` (30 se
 
 Example:
 ```yaml
-- name: predictiveConfig
-  value: |
-    models:
-    - type: Linear
-      name: LinearPrediction
-      perInterval: 1
-      calculationTimeout: 25000
-      linear:
-        lookAhead: 10000
-        storedValues: 6
-      decisionType: "maximum"
+models:
+  - type: Linear
+    name: simple-linear
+    perSyncPeriod: 1
+    calculationTimeout: 25000
+    linear:
+      lookAhead: 10000
+      historySize: 6
 ```
 The **linear** component of the configuration handles configuration of the Linear regression options:
 
 - **lookAhead** - sets up the model to try to predict `10 seconds` ahead of time (time in milliseconds).
-- **storedValues** - sets up the model to store the past `6` evaluations and to use these for predictions. If there
+- **historySize** - sets up the model to store the past `6` evaluations and to use these for predictions. If there
 are `> 6` evaluations, the oldest will be removed.
-- **calculationTimeout** - sets the timeout for calculating the linear regression to be 25 seconds.
 
 For a more detailed example, [see the example in
 `/examples/simple-linear`](https://github.com/jthomperoo/predictive-horizontal-pod-autoscaler/tree/master/examples/simple-linear).
@@ -49,21 +45,18 @@ The Holt-Winters time series model uses a default calculation timeout of `30000`
 
 Example:
 ```yaml
-- name: predictiveConfig
-  value: |
-    models:
-    - type: HoltWinters
-      name: HoltWintersPrediction
-      perInterval: 1
-      holtWinters:
-        alpha: 0.9
-        beta: 0.9
-        gamma: 0.9
-        seasonalPeriods: 6
-        storedSeasons: 4
-        trend: additive
-        seasonal: additive
-    decisionType: "maximum"
+models:
+- type: HoltWinters
+  name: simple-holt-winters
+  perSyncPeriod: 1
+  holtWinters:
+    alpha: 0.9
+    beta: 0.9
+    gamma: 0.9
+    seasonalPeriods: 6
+    storedSeasons: 4
+    trend: additive
+    seasonal: additive
 ```
 
 The **holtWinters** component of the configuration handles configuration of the Linear regression options:
@@ -112,33 +105,30 @@ user guide](./hooks.md)
 For example, a hook using a HTTP request to fetch the values of runtime is configured as:
 
 ```yaml
-- name: predictiveConfig
-  value: |
-    models:
-    - type: HoltWinters
-      name: HoltWintersPrediction
-      perInterval: 1
-      holtWinters:
-        runtimeTuningFetchHook:
-          type: "http"
-          timeout: 2500
-          http:
-            method: "GET"
-            url: "http://tuning/holt_winters"
-            successCodes:
-              - 200
-            parameterMode: query
-        seasonalPeriods: 6
-        storedSeasons: 4
-        trend: "additive"
-    decisionType: "maximum"
+models:
+- type: HoltWinters
+  name: simple-holt-winters
+  perSyncPeriod: 1
+  holtWinters:
+    runtimeTuningFetchHook:
+      type: "http"
+      timeout: 2500
+      http:
+        method: "GET"
+        url: "http://tuning/holt_winters"
+        successCodes:
+          - 200
+        parameterMode: query
+    seasonalPeriods: 6
+    storedSeasons: 4
+    trend: additive
+    seasonal: additive
 ```
 
 The hook is defined with the name `runtimeTuningFetchHook`.
 
 The supported hook types for the PHPA are:
 
-- Shell scripts
 - HTTP requests
 
 The process is as follows:
@@ -158,57 +148,53 @@ The tuning values can be both hardcoded and fetched at runtime, for example the 
 runtime, and the `beta` and `gamma` values could be hardcoded in configuration:
 
 ```yaml
-- name: predictiveConfig
-  value: |
-    models:
-    - type: HoltWinters
-      name: HoltWintersPrediction
-      perInterval: 1
-      holtWinters:
-        runtimeTuningFetchHook:
-          type: "http"
-          timeout: 2500
-          http:
-            method: "GET"
-            url: "http://tuning/holt_winters"
-            successCodes:
-              - 200
-            parameterMode: query
-        beta: 0.9
-        gamma: 0.9
-        seasonalPeriods: 6
-        storedSeasons: 4
-        trend: "additive"
-    decisionType: "maximum"
+models:
+- type: HoltWinters
+  name: simple-holt-winters
+  perSyncPeriod: 1
+  holtWinters:
+    runtimeTuningFetchHook:
+      type: "http"
+      timeout: 2500
+      http:
+        method: "GET"
+        url: "http://tuning/holt_winters"
+        successCodes:
+          - 200
+        parameterMode: query
+    beta: 0.9
+    gamma: 0.9
+    seasonalPeriods: 6
+    storedSeasons: 4
+    trend: additive
+    seasonal: additive
 ```
 
 Or the values could be provided, and if they are not returned by the external source the hardcoded values will be used
 as a backup:
 
 ```yaml
-- name: predictiveConfig
-  value: |
-    models:
-    - type: HoltWinters
-      name: HoltWintersPrediction
-      perInterval: 1
-      holtWinters:
-        runtimeTuningFetchHook:
-          type: "http"
-          timeout: 2500
-          http:
-            method: "GET"
-            url: "http://tuning/holt_winters"
-            successCodes:
-              - 200
-            parameterMode: query
-        alpha: 0.9
-        beta: 0.9
-        gamma: 0.9
-        seasonalPeriods: 6
-        storedSeasons: 4
-        trend: "additive"
-    decisionType: "maximum"
+models:
+- type: HoltWinters
+  name: simple-holt-winters
+  perSyncPeriod: 1
+  holtWinters:
+    runtimeTuningFetchHook:
+      type: "http"
+      timeout: 2500
+      http:
+        method: "GET"
+        url: "http://tuning/holt_winters"
+        successCodes:
+          - 200
+        parameterMode: query
+    alpha: 0.9
+    beta: 0.9
+    gamma: 0.9
+    seasonalPeriods: 6
+    storedSeasons: 4
+    trend: additive
+    seasonal: additive
 ```
 
 If any value is missing, the PHPA will report it as an error (e.g.
@@ -247,34 +233,25 @@ The data that the external source will recieve will be formatted as:
       "trend": "additive"
     }
   },
-  "evaluations": [
+  "replicaHistory": [
     {
-      "id": 1,
-      "created": "2020-10-19T19:12:20Z",
-      "val": {
-        "targetReplicas": 0
-      }
+      "time": "2020-10-19T19:12:20Z",
+      "replicas": 0
     },
     {
-      "id": 2,
-      "created": "2020-10-19T19:12:40Z",
-      "val": {
-        "targetReplicas": 0
-      }
+      "time": "2020-10-19T19:12:40Z",
+      "replicas": 0
     },
     {
-      "id": 3,
-      "created": "2020-10-19T19:13:00Z",
-      "val": {
-        "targetReplicas": 0
-      }
+      "time": "2020-10-19T19:13:00Z",
+      "replicas": 0
     },
   ]
 }
 ```
 
-This provides information around the model being used, how it is configured, and previous scaling decisions
-(`evaluations`). This data could be used to help calculate the tuning values, or it could be ignored.
+This provides information around the model being used, how it is configured, and previous replica values
+(`replicaHistory`). This data could be used to help calculate the tuning values, or it could be ignored.
 
 #### Response Format
 

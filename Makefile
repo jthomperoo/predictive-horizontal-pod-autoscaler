@@ -4,10 +4,6 @@ VERSION = latest
 
 LOCAL_HELM_CHART_NAME=predictive-horizontal-pod-autoscaler
 
-default: generate
-	@echo "=============Building============="
-	go build -o dist/$(NAME) main.go
-
 run: deploy py_dependencies
 	go run github.com/cosmtrek/air
 

@@ -5,18 +5,3 @@ markdown_extensions:
   - codehilite
 plugins:
   - search
-nav:
-- Home: 'index.md'
-- 'User Guide':
-  - 'Getting Started': 'user-guide/getting-started.md'
-  - Metrics: 'user-guide/metrics.md'
-  - Models: 'user-guide/models.md'
-  - 'Sync Period': 'user-guide/sync-period.md'
-  - 'Downscale Stabilization': 'user-guide/downscale-stabilization.md'
-  - 'Minimum and Maximum Replicas': 'user-guide/min-max-replicas.md'
-  - 'Initial Readiness Delay': 'user-guide/initial-readiness-delay.md'
-  - 'CPU Initialization Period': 'user-guide/cpu-initialization-period.md'
-  - Tolerance: 'user-guide/tolerance.md'
-  - Hooks: 'user-guide/hooks.md'
-- Reference:
-  - Configuration: 'reference/configuration.md'

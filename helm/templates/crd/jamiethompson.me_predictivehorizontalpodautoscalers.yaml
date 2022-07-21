@@ -37,7 +37,8 @@ spec:
       jsonPath: .status.desiredReplicas
       name: Replicas
       type: integer
-    - description: The last time the CustomPodAutoscaler scaled the number of pods
+    - description: The last time the PredictiveHorizontalPodAutoscaler scaled the
+        number of pods
       jsonPath: .status.lastScaleTime
       name: Last Scale Time
       type: date
@@ -92,7 +93,7 @@ spec:
                 type: integer
               maxReplicas:
                 description: maxReplicas is the upper limit for the number of replicas
-                  to which the autoscaler can scale up. It cannot be less that minReplicas.
+                  to which the autoscaler can scale up. It cannot be less than minReplicas.
                 format: int32
                 minimum: 1
                 type: integer
