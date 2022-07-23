@@ -18,13 +18,4 @@ spec:
         - name: {{ .Chart.Name }}
           image: "jthomperoo/predictive-horizontal-pod-autoscaler:{{ .Chart.Version }}"
           imagePullPolicy: IfNotPresent
-          env:
-            - name: WATCH_NAMESPACE
-              value: ""
-            - name: POD_NAME
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.name
-            - name: OPERATOR_NAME
-              value: "custom-pod-autoscaler-operator"
 {{ end }}

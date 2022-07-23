@@ -22,6 +22,8 @@ it will still update the replica history available to make a prediction with and
   - `evaluations` renamed to `replicaHistory`.
   - Format change for `replicaHistory`, now in the format `[{"time": "<timestamp>", "replicas": <replica count>}]`.
 - Upgrade to Go `v1.18`.
+- No longer SQLite based storage, instead using Kubernetes configmaps which give persistent storage by default with
+resiliency when the autoscaler operator restarts.
 ### Removed
 - BREAKING CHANGES: Removed some no longer relevant configuration options.
   - `DBPath`
