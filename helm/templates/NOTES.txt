@@ -1,4 +1,4 @@
-Thanks for installing {{ .Chart.Name }}.
+Thanks for installing {{ .Chart.Name }} version {{ .Chart.Version }}.
 
 Your release is named {{ .Release.Name }}.
 

@@ -15,7 +15,7 @@ to gather metrics and to evaluate them as the Kubernetes Horizontal Pod Autoscal
 
 # Why would I use it?
 
-This autoscaler lets you choose models and fine tune them in order to predict how many replicas a resource should have,
+PHPAs lets you choose models and fine tune them in order to predict how many replicas a resource should have,
 preempting events such as regular, repeated high load. This allows for proactive rather than simply reactive scaling
 that can make intelligent ahead of time decisions.
 
@@ -45,6 +45,60 @@ This project works by calculating the number of replicas a resource should have,
 statistical models against them to produce predictions for the future. These predictions are compared and can be used
 instead of the raw replica count calculated by the Horizontal Pod Autoscaler logic.
 
+## What does a Predictive Horizontal Pod Autoscaler look like?
+
+PHPAs are designed to be as similar in configuration to Horizontal Pod Autoscalers as possible, with extra
+configuration options.
+
+PHPAs have their own custom resource:
+
+```yaml
+apiVersion: jamiethompson.me/v1alpha1
+kind: PredictiveHorizontalPodAutoscaler
+metadata:
+  name: simple-linear
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: php-apache
+  minReplicas: 1
+  maxReplicas: 10
+  downscaleStabilization: 0
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          averageUtilization: 50
+          type: Utilization
+  models:
+    - type: Linear
+      name: simple-linear
+      linear:
+        lookAhead: 10000
+        historySize: 6
+```
+
+This PHPA acts like a Horizontal Pod Autoscaler and autoscales to try and keep the target resource's CPU utilization at
+50%, but with the extra predictive layer of a linear regression model applied to the results.
+
+## Installation
+
+The operator for managing Predictive Horizontal Pod Autoscalers can be installed using Helm:
+
+```bash
+VERSION=v0.11.0
+HELM_CHART=predictive-horizontal-pod-autoscaler-operator
+helm install ${HELM_CHART} https://github.com/jthomperoo/predictive-horizontal-pod-autoscaler/releases/download/${VERSION}/predictive-horizontal-pod-autoscaler-${VERSION}.tgz
+```
+
+## Quick start
+
+Check out the [getting started
+guide](https://predictive-horizontal-pod-autoscaler.readthedocs.io/en/latest/user-guide/getting-started/) and the
+[examples](./examples/) for ways to use Predictive Horizontal Pod Autoscalers.
+
 ## More information
 
 See the [wiki for more information, such as guides and
@@ -53,8 +107,6 @@ references](https://predictive-horizontal-pod-autoscaler.readthedocs.io/en/lates
 See the [`examples/` directory](./examples) for working code samples.
 
 ## Developing this project
-
-### Environment
 
 Developing this project requires these dependencies:
 
