@@ -30,8 +30,7 @@ format:
 test: generate
 	@echo "=============Running tests============="
 	go test ./... -cover -coverprofile unit_cover.out
-	# TODO: re-enable when py tests re-added
-	# pytest algorithms/ --cov-report term --cov-report=xml:algorithm_coverage.out --cov-report=html:.algorithm_coverage --cov=algorithms/
+	pytest algorithms/ --cov-report term --cov-report=xml:algorithm_coverage.out --cov-report=html:.algorithm_coverage --cov=algorithms/
 
 docker:
 	docker build . -t $(REGISTRY)/$(NAME):$(VERSION)
@@ -48,6 +47,7 @@ generate: get_controller-gen
 view_coverage:
 	@echo "=============Loading coverage HTML============="
 	go tool cover -html=unit_cover.out
+	python -m webbrowser file://$(shell pwd)/.algorithm_coverage/index.html
 
 get_controller-gen:
 	go install sigs.k8s.io/controller-tools/cmd/controller-gen@v0.9.2

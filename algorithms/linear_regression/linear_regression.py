@@ -32,18 +32,12 @@ from dataclasses_json import dataclass_json, LetterCase
 #   "lookAhead": 3,
 #   "replicaHistory": [
 #       {
-#           "id": 0,
-#           "created": "2020-02-01T00:55:33Z",
-#           "val": {
-#               "targetReplicas": 3
-#           }
+#           "time": "2020-02-01T00:55:33Z",
+#           "replicas": 3
 #       },
 #       {
-#           "id": 1,
-#           "created": "2020-02-01T00:56:33Z",
-#           "val": {
-#               "targetReplicas": 2
-#           }
+#           "time": "2020-02-01T00:56:33Z",
+#           "replicas": 6
 #       }
 #   ]
 # }
