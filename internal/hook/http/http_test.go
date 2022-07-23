@@ -27,7 +27,7 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/hook"
+	jamiethompsonmev1alpha1 "github.com/jthomperoo/predictive-horizontal-pod-autoscaler/api/v1alpha1"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/hook/http"
 )
 
@@ -63,63 +63,63 @@ func TestExecute_ExecuteWithValue(t *testing.T) {
 		description string
 		expected    string
 		expectedErr error
-		definition  *hook.Definition
+		definition  *jamiethompsonmev1alpha1.HookDefinition
 		value       string
 		execute     http.Execute
 	}{
 		{
-			"Fail, missing HTTP method configuration",
-			"",
-			errors.New(`missing required 'http' configuration on hook definition`),
-			&hook.Definition{
+			description: "Fail, missing HTTP method configuration",
+			expected:    "",
+			expectedErr: errors.New(`missing required 'http' configuration on hook definition`),
+			definition: &jamiethompsonmev1alpha1.HookDefinition{
 				Type: "http",
 			},
-			"test",
-			http.Execute{},
+			value:   "test",
+			execute: http.Execute{},
 		},
 		{
-			"Fail, invalid HTTP method",
-			"",
-			errors.New(`net/http: invalid method "*?"`),
-			&hook.Definition{
+			description: "Fail, invalid HTTP method",
+			expected:    "",
+			expectedErr: errors.New(`net/http: invalid method "*?"`),
+			definition: &jamiethompsonmev1alpha1.HookDefinition{
 				Type: "http",
-				HTTP: &hook.HTTP{
+				HTTP: &jamiethompsonmev1alpha1.HTTPHook{
 					Method: "*?",
 					URL:    "https://custompodautoscaler.com",
 				},
 			},
-			"test",
-			http.Execute{},
+			value:   "test",
+			execute: http.Execute{},
 		},
 		{
-			"Fail, unknown parameter mode",
-			"",
-			errors.New(`unknown parameter mode 'unknown'`),
-			&hook.Definition{
+			description: "Fail, unknown parameter mode",
+			expected:    "",
+			expectedErr: errors.New(`unknown parameter mode 'unknown'`),
+			definition: &jamiethompsonmev1alpha1.HookDefinition{
 				Type: "http",
-				HTTP: &hook.HTTP{
+				HTTP: &jamiethompsonmev1alpha1.HTTPHook{
 					Method:        "GET",
 					URL:           "https://custompodautoscaler.com",
 					ParameterMode: "unknown",
 				},
 			},
-			"test",
-			http.Execute{},
+			value:   "test",
+			execute: http.Execute{},
 		},
 		{
-			"Fail, request fail",
-			"",
-			errors.New(`Get "https://custompodautoscaler.com?value=test": Test network error!`),
-			&hook.Definition{
+			description: "Fail, request fail",
+			expected:    "",
+			expectedErr: errors.New(`Get "https://custompodautoscaler.com?value=test": Test network error!`),
+			definition: &jamiethompsonmev1alpha1.HookDefinition{
 				Type: "http",
-				HTTP: &hook.HTTP{
+				HTTP: &jamiethompsonmev1alpha1.HTTPHook{
 					Method:        "GET",
 					URL:           "https://custompodautoscaler.com",
 					ParameterMode: "query",
 				},
 			},
-			"test",
-			http.Execute{
+			value: "test",
+			execute: http.Execute{
 				Client: gohttp.Client{
 					Transport: &testHTTPClient{
 						func(req *gohttp.Request) (*gohttp.Response, error) {
@@ -130,20 +130,20 @@ func TestExecute_ExecuteWithValue(t *testing.T) {
 			},
 		},
 		{
-			"Fail, timeout",
-			"",
-			errors.New(`Get "https://custompodautoscaler.com?value=test": context deadline exceeded`),
-			&hook.Definition{
+			description: "Fail, timeout",
+			expected:    "",
+			expectedErr: errors.New(`Get "https://custompodautoscaler.com?value=test": context deadline exceeded`),
+			definition: &jamiethompsonmev1alpha1.HookDefinition{
 				Type: "http",
-				HTTP: &hook.HTTP{
+				HTTP: &jamiethompsonmev1alpha1.HTTPHook{
 					Method:        "GET",
 					URL:           "https://custompodautoscaler.com",
 					ParameterMode: "query",
 				},
 				Timeout: 5,
 			},
-			"test",
-			http.Execute{
+			value: "test",
+			execute: http.Execute{
 				Client: func() gohttp.Client {
 					testserver := httptest.NewServer(gohttp.HandlerFunc(func(rw gohttp.ResponseWriter, req *gohttp.Request) {
 						time.Sleep(10 * time.Millisecond)
@@ -157,19 +157,19 @@ func TestExecute_ExecuteWithValue(t *testing.T) {
 			},
 		},
 		{
-			"Fail, invalid response body",
-			"",
-			errors.New(`Fail to read body!`),
-			&hook.Definition{
+			description: "Fail, invalid response body",
+			expected:    "",
+			expectedErr: errors.New(`Fail to read body!`),
+			definition: &jamiethompsonmev1alpha1.HookDefinition{
 				Type: "http",
-				HTTP: &hook.HTTP{
+				HTTP: &jamiethompsonmev1alpha1.HTTPHook{
 					Method:        "GET",
 					URL:           "https://custompodautoscaler.com",
 					ParameterMode: "query",
 				},
 			},
-			"test",
-			http.Execute{
+			value: "test",
+			execute: http.Execute{
 				Client: gohttp.Client{
 					Transport: &testHTTPClient{
 						func(req *gohttp.Request) (*gohttp.Response, error) {
@@ -189,12 +189,12 @@ func TestExecute_ExecuteWithValue(t *testing.T) {
 			},
 		},
 		{
-			"Fail, bad response code",
-			"",
-			errors.New(`http request failed, status: [400], response: 'bad request!'`),
-			&hook.Definition{
+			description: "Fail, bad response code",
+			expected:    "",
+			expectedErr: errors.New(`http request failed, status: [400], response: 'bad request!'`),
+			definition: &jamiethompsonmev1alpha1.HookDefinition{
 				Type: "http",
-				HTTP: &hook.HTTP{
+				HTTP: &jamiethompsonmev1alpha1.HTTPHook{
 					Method:        "GET",
 					URL:           "https://custompodautoscaler.com",
 					ParameterMode: "query",
@@ -204,8 +204,8 @@ func TestExecute_ExecuteWithValue(t *testing.T) {
 					},
 				},
 			},
-			"test",
-			http.Execute{
+			value: "test",
+			execute: http.Execute{
 				Client: gohttp.Client{
 					Transport: &testHTTPClient{
 						func(req *gohttp.Request) (*gohttp.Response, error) {
@@ -220,12 +220,12 @@ func TestExecute_ExecuteWithValue(t *testing.T) {
 			},
 		},
 		{
-			"Success, POST, body parameter, 3 headers",
-			"Success!",
-			nil,
-			&hook.Definition{
+			description: "Success, POST, body parameter, 3 headers",
+			expected:    "Success!",
+			expectedErr: nil,
+			definition: &jamiethompsonmev1alpha1.HookDefinition{
 				Type: "http",
-				HTTP: &hook.HTTP{
+				HTTP: &jamiethompsonmev1alpha1.HTTPHook{
 					Method:        "POST",
 					URL:           "https://custompodautoscaler.com",
 					ParameterMode: "body",
@@ -240,8 +240,8 @@ func TestExecute_ExecuteWithValue(t *testing.T) {
 					},
 				},
 			},
-			"test",
-			http.Execute{
+			value: "test",
+			execute: http.Execute{
 				Client: gohttp.Client{
 					Transport: &testHTTPClient{
 						func(req *gohttp.Request) (*gohttp.Response, error) {
@@ -280,12 +280,12 @@ func TestExecute_ExecuteWithValue(t *testing.T) {
 			},
 		},
 		{
-			"Success, GET, query parameter, 1 header",
-			"Success!",
-			nil,
-			&hook.Definition{
+			description: "Success, GET, query parameter, 1 header",
+			expected:    "Success!",
+			expectedErr: nil,
+			definition: &jamiethompsonmev1alpha1.HookDefinition{
 				Type: "http",
-				HTTP: &hook.HTTP{
+				HTTP: &jamiethompsonmev1alpha1.HTTPHook{
 					Method:        "GET",
 					URL:           "https://custompodautoscaler.com",
 					ParameterMode: "query",
@@ -298,8 +298,8 @@ func TestExecute_ExecuteWithValue(t *testing.T) {
 					},
 				},
 			},
-			"test",
-			http.Execute{
+			value: "test",
+			execute: http.Execute{
 				Client: gohttp.Client{
 					Transport: &testHTTPClient{
 						func(req *gohttp.Request) (*gohttp.Response, error) {
@@ -329,12 +329,12 @@ func TestExecute_ExecuteWithValue(t *testing.T) {
 			},
 		},
 		{
-			"Success, GET, query parameter, 0 headers",
-			"Success!",
-			nil,
-			&hook.Definition{
+			description: "Success, GET, query parameter, 0 headers",
+			expected:    "Success!",
+			expectedErr: nil,
+			definition: &jamiethompsonmev1alpha1.HookDefinition{
 				Type: "http",
-				HTTP: &hook.HTTP{
+				HTTP: &jamiethompsonmev1alpha1.HTTPHook{
 					Method:        "GET",
 					URL:           "https://custompodautoscaler.com",
 					ParameterMode: "query",
@@ -344,8 +344,8 @@ func TestExecute_ExecuteWithValue(t *testing.T) {
 					},
 				},
 			},
-			"test",
-			http.Execute{
+			value: "test",
+			execute: http.Execute{
 				Client: gohttp.Client{
 					Transport: &testHTTPClient{
 						func(req *gohttp.Request) (*gohttp.Response, error) {
@@ -371,12 +371,12 @@ func TestExecute_ExecuteWithValue(t *testing.T) {
 			},
 		},
 		{
-			"Success, PUT, body parameter, 0 headers",
-			"Success!",
-			nil,
-			&hook.Definition{
+			description: "Success, PUT, body parameter, 0 headers",
+			expected:    "Success!",
+			expectedErr: nil,
+			definition: &jamiethompsonmev1alpha1.HookDefinition{
 				Type: "http",
-				HTTP: &hook.HTTP{
+				HTTP: &jamiethompsonmev1alpha1.HTTPHook{
 					Method:        "PUT",
 					URL:           "https://custompodautoscaler.com",
 					ParameterMode: "body",
@@ -386,8 +386,8 @@ func TestExecute_ExecuteWithValue(t *testing.T) {
 					},
 				},
 			},
-			"test",
-			http.Execute{
+			value: "test",
+			execute: http.Execute{
 				Client: gohttp.Client{
 					Transport: &testHTTPClient{
 						func(req *gohttp.Request) (*gohttp.Response, error) {
@@ -438,9 +438,9 @@ func TestExecute_GetType(t *testing.T) {
 		execute     http.Execute
 	}{
 		{
-			"Return type",
-			"http",
-			http.Execute{},
+			description: "Return type",
+			expected:    "http",
+			execute:     http.Execute{},
 		},
 	}
 	for _, test := range tests {

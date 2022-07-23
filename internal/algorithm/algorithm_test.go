@@ -18,15 +18,197 @@ package algorithm_test
 
 import (
 	"errors"
+	"fmt"
+	"io/ioutil"
+	"os"
+	"os/exec"
+	"path"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/algorithm"
-	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/fake"
-	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/hook"
 )
 
-func TestRunAlgorithmWithValue(t *testing.T) {
+type command func(name string, arg ...string) *exec.Cmd
+
+type process func(t *testing.T)
+
+func TestShellProcess(t *testing.T) {
+	if os.Getenv("GO_TEST_PROCESS") != "1" {
+		return
+	}
+
+	processName := strings.Split(os.Args[3], "=")[1]
+	process := processes[processName]
+
+	if process == nil {
+		t.Errorf("Process %s not found", processName)
+		os.Exit(1)
+	}
+
+	process(t)
+
+	// Process should call os.Exit itself, if not exit with error
+	os.Exit(1)
+}
+
+func fakeExecCommandAndStart(name string, process process) command {
+	processes[name] = process
+	return func(command string, args ...string) *exec.Cmd {
+		cs := []string{"-test.run=TestShellProcess", "--", fmt.Sprintf("-process=%s", name), command}
+		cs = append(cs, args...)
+		cmd := exec.Command(os.Args[0], cs...)
+		cmd.Env = []string{"GO_TEST_PROCESS=1"}
+		cmd.Start()
+		return cmd
+	}
+}
+
+func fakeExecCommand(name string, process process) command {
+	processes[name] = process
+	return func(command string, args ...string) *exec.Cmd {
+		cs := []string{"-test.run=TestShellProcess", "--", fmt.Sprintf("-process=%s", name), command}
+		cs = append(cs, args...)
+		cmd := exec.Command(os.Args[0], cs...)
+		cmd.Env = []string{"GO_TEST_PROCESS=1"}
+		return cmd
+	}
+}
+
+type test struct {
+	description   string
+	expectedErr   error
+	expected      string
+	algorithmPath string
+	pipeValue     string
+	timeout       int
+	python        *algorithm.Python
+}
+
+var tests []test
+
+var processes map[string]process
+
+func TestMain(m *testing.M) {
+	wd, _ := os.Getwd()
+	processes = map[string]process{}
+	tests = []test{
+		{
+			description:   "Successful python command",
+			expectedErr:   nil,
+			expected:      "test std out",
+			algorithmPath: "test-algorithm.py",
+			pipeValue:     "pipe value",
+			timeout:       100,
+			python: &algorithm.Python{
+				Command: fakeExecCommand("success", func(t *testing.T) {
+					stdinb, err := ioutil.ReadAll(os.Stdin)
+					if err != nil {
+						fmt.Fprint(os.Stderr, err.Error())
+						os.Exit(1)
+					}
+
+					stdin := string(stdinb)
+					entrypoint := strings.TrimSpace(os.Args[4])
+					algorithmPath := strings.TrimSpace(strings.Join(os.Args[5:len(os.Args)], " "))
+
+					expectedAlgorithmPath := path.Join(wd, "test-algorithm.py")
+
+					// Check entrypoint is correct
+					if !cmp.Equal(entrypoint, "python") {
+						fmt.Fprintf(os.Stderr, "entrypoint mismatch (-want +got):\n%s", cmp.Diff("python", entrypoint))
+						os.Exit(1)
+					}
+
+					// Check command is correct
+					if !cmp.Equal(algorithmPath, expectedAlgorithmPath) {
+						fmt.Fprintf(os.Stderr, "algorithmPath mismatch (-want +got):\n%s", cmp.Diff(expectedAlgorithmPath, algorithmPath))
+						os.Exit(1)
+					}
+
+					// Check piped value in is correct
+					if !cmp.Equal(stdin, "pipe value") {
+						fmt.Fprintf(os.Stderr, "stdin mismatch (-want +got):\n%s", cmp.Diff("pipe value", stdin))
+						os.Exit(1)
+					}
+
+					fmt.Fprint(os.Stdout, "test std out")
+					os.Exit(0)
+				}),
+				Getwd: os.Getwd,
+			},
+		},
+		{
+			description:   "Failed python command",
+			expectedErr:   errors.New("exit status 1: shell command failed"),
+			expected:      "",
+			algorithmPath: "test-algorithm.py",
+			pipeValue:     "pipe value",
+			timeout:       100,
+			python: &algorithm.Python{
+				Command: fakeExecCommand("failed", func(t *testing.T) {
+					fmt.Fprint(os.Stderr, "shell command failed")
+					os.Exit(1)
+				}),
+				Getwd: os.Getwd,
+			},
+		},
+		{
+			description:   "Failed python command timeout",
+			expectedErr:   errors.New("entrypoint 'python', command 'test-algorithm.py' timed out"),
+			expected:      "",
+			algorithmPath: "test-algorithm.py",
+			pipeValue:     "pipe value",
+			timeout:       5,
+			python: &algorithm.Python{
+				Command: fakeExecCommand("timeout", func(t *testing.T) {
+					fmt.Fprint(os.Stdout, "test std out")
+					time.Sleep(10 * time.Millisecond)
+					os.Exit(0)
+				}),
+				Getwd: os.Getwd,
+			},
+		},
+		{
+			description:   "Failed python command fail to start",
+			expectedErr:   errors.New("exec: already started"),
+			expected:      "",
+			algorithmPath: "test-algorithm.py",
+			pipeValue:     "pipe value",
+			timeout:       100,
+			python: &algorithm.Python{
+				Command: fakeExecCommandAndStart("fail to start", func(t *testing.T) {
+					fmt.Fprint(os.Stdout, "test std out")
+					os.Exit(0)
+				}),
+				Getwd: os.Getwd,
+			},
+		},
+		{
+			description:   "Fail to get working directory",
+			expectedErr:   errors.New("fail to get working directory"),
+			expected:      "",
+			algorithmPath: "test-algorithm.py",
+			pipeValue:     "pipe value",
+			timeout:       100,
+			python: &algorithm.Python{
+				Command: fakeExecCommandAndStart("fail to start", func(t *testing.T) {
+					fmt.Fprint(os.Stdout, "test std out")
+					os.Exit(0)
+				}),
+				Getwd: func() (dir string, err error) {
+					return "", errors.New("fail to get working directory")
+				},
+			},
+		},
+	}
+	code := m.Run()
+	os.Exit(code)
+}
+
+func TestPython_RunAlgorithmWithValue(t *testing.T) {
 	equateErrorMessage := cmp.Comparer(func(x, y error) bool {
 		if x == nil || y == nil {
 			return x == nil && y == nil
@@ -34,55 +216,17 @@ func TestRunAlgorithmWithValue(t *testing.T) {
 		return x.Error() == y.Error()
 	})
 
-	var tests = []struct {
-		description   string
-		expected      string
-		expectedErr   error
-		runner        algorithm.Run
-		algorithmPath string
-		value         string
-		timeout       int
-	}{
-		{
-			"Fail to run shell command",
-			"",
-			errors.New("fail to run shell command"),
-			algorithm.Run{
-				Executer: &fake.Execute{
-					ExecuteWithValueReactor: func(definition *hook.Definition, value string) (string, error) {
-						return "", errors.New("fail to run shell command")
-					},
-				},
-			},
-			"test",
-			"test",
-			10,
-		},
-		{
-			"Successfully run shell command",
-			"Success!",
-			nil,
-			algorithm.Run{
-				Executer: &fake.Execute{
-					ExecuteWithValueReactor: func(definition *hook.Definition, value string) (string, error) {
-						return "Success!", nil
-					},
-				},
-			},
-			"test",
-			"test",
-			10,
-		},
-	}
 	for _, test := range tests {
 		t.Run(test.description, func(t *testing.T) {
-			result, err := test.runner.RunAlgorithmWithValue(test.algorithmPath, test.value, test.timeout)
+			result, err := test.python.RunAlgorithmWithValue(test.algorithmPath, test.pipeValue, test.timeout)
 			if !cmp.Equal(&err, &test.expectedErr, equateErrorMessage) {
+				t.Errorf(result)
 				t.Errorf("error mismatch (-want +got):\n%s", cmp.Diff(test.expectedErr, err, equateErrorMessage))
 				return
 			}
-			if !cmp.Equal(test.expected, result) {
-				t.Errorf("config mismatch (-want +got):\n%s", cmp.Diff(test.expected, result))
+
+			if !cmp.Equal(result, test.expected) {
+				t.Errorf("stdout mismatch (-want +got):\n%s", cmp.Diff(test.expected, result))
 			}
 		})
 	}

@@ -25,7 +25,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/hook"
+	jamiethompsonmev1alpha1 "github.com/jthomperoo/predictive-horizontal-pod-autoscaler/api/v1alpha1"
 )
 
 // Type http represents an HTTP request
@@ -53,7 +53,7 @@ type Execute struct {
 
 // ExecuteWithValue executes an HTTP request with the value provided as
 // parameter, configurable to be either in the body or query string
-func (e *Execute) ExecuteWithValue(definition *hook.Definition, value string) (string, error) {
+func (e *Execute) ExecuteWithValue(definition *jamiethompsonmev1alpha1.HookDefinition, value string) (string, error) {
 	if definition.HTTP == nil {
 		return "", fmt.Errorf("missing required 'http' configuration on hook definition")
 	}

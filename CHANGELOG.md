@@ -5,6 +5,32 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Changed
+- See the [migration guide from `v0.10.0` here](https://predictive-horizontal-pod-autoscaler.readthedocs.io/en/latest/user-guide/migration/v0_10_0-to-v0_11_0).
+- BREAKING CHANGE: Major rewrite converting this project from a Custom Pod Autoscaler to have its own dedicated CRD
+and operator.
+  - Configuration and deployment has changed completely, no longer need to install the Custom Pod Autoscaler Operator,
+  instead you need to install the Predictive Horizontal Pod Autoscaler as an operator.
+  - No longer deployed as `CustomPodAutoscaler` custom resources, now deployed as `PredictiveHorizontalPodAutoscaler`
+  custom resources.
+- BREAKING CHANGES: Several configuration options renamed for clarity.
+  - `LinearModel -> storedValues` renamed to `LinearModel -> historySize`
+  - `Model -> perInterval` renamed to `Model -> perSyncPeriod`
+- BREAKING CHANGES: `perSyncPeriod` behaviour changed slightly, now it will no longer calculate the prediction, but
+it will still update the replica history available to make a prediction with and prune the replica history if needed.
+- Holt-Winters runtime hooks format changed:
+  - `evaluations` renamed to `replicaHistory`.
+  - Format change for `replicaHistory`, now in the format `[{"time": "<timestamp>", "replicas": <replica count>}]`.
+- Upgrade to Go `v1.18`.
+- No longer SQLite based storage, instead using Kubernetes configmaps which give persistent storage by default with
+resiliency when the autoscaler operator restarts.
+### Removed
+- BREAKING CHANGES: Removed some no longer relevant configuration options.
+  - `DBPath`
+  - `MigrationPath`
+- BREAKING CHANGE: Since no longer built as a `CustomPodAutoscaler` the `startTime` configuration is no longer
+available: <https://custom-pod-autoscaler.readthedocs.io/en/latest/reference/configuration/#starttime>.
+- BREAKING CHANGE: Holt-Winters runtime hooks limited to only support HTTP, shell support dropped.
 
 ## [v0.10.0] - 2022-05-14
 ### Changed

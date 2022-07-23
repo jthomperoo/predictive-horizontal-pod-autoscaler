@@ -21,10 +21,10 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/config"
+	jamiethompsonmev1alpha1 "github.com/jthomperoo/predictive-horizontal-pod-autoscaler/api/v1alpha1"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/fake"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/prediction"
-	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/stored"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func TestModelPredict_GetPrediction(t *testing.T) {
@@ -36,33 +36,33 @@ func TestModelPredict_GetPrediction(t *testing.T) {
 	})
 
 	var tests = []struct {
-		description string
-		expected    int32
-		expectedErr error
-		predicters  []prediction.Predicter
-		model       *config.Model
-		evaluations []*stored.Evaluation
+		description    string
+		expected       int32
+		expectedErr    error
+		predicters     []prediction.Predicter
+		model          *jamiethompsonmev1alpha1.Model
+		replicaHistory []jamiethompsonmev1alpha1.TimestampedReplicas
 	}{
 		{
-			"Unknown model type",
-			0,
-			errors.New(`unknown model type 'invalid'`),
-			[]prediction.Predicter{},
-			&config.Model{
+			description: "Unknown model type",
+			expected:    0,
+			expectedErr: errors.New(`unknown model type 'invalid'`),
+			predicters:  []prediction.Predicter{},
+			model: &jamiethompsonmev1alpha1.Model{
 				Type: "invalid",
-				Linear: &config.Linear{
+				Linear: &jamiethompsonmev1alpha1.Linear{
 					LookAhead: 10,
 				},
 			},
-			[]*stored.Evaluation{},
+			replicaHistory: []jamiethompsonmev1alpha1.TimestampedReplicas{},
 		},
 		{
-			"GetIDsToRemove fail child predictor",
-			0,
-			errors.New("fail to get prediction from child"),
-			[]prediction.Predicter{
+			description: "GetIDsToRemove fail child predictor",
+			expected:    0,
+			expectedErr: errors.New("fail to get prediction from child"),
+			predicters: []prediction.Predicter{
 				&fake.Predicter{
-					GetPredictionReactor: func(model *config.Model, evaluations []*stored.Evaluation) (int32, error) {
+					GetPredictionReactor: func(model *jamiethompsonmev1alpha1.Model, evaluations []jamiethompsonmev1alpha1.TimestampedReplicas) (int32, error) {
 						return 0, errors.New("fail to get prediction from child")
 					},
 					GetTypeReactor: func() string {
@@ -70,20 +70,20 @@ func TestModelPredict_GetPrediction(t *testing.T) {
 					},
 				},
 			},
-			&config.Model{
+			model: &jamiethompsonmev1alpha1.Model{
 				Type: "test",
-				Linear: &config.Linear{
+				Linear: &jamiethompsonmev1alpha1.Linear{
 					LookAhead: 10,
 				}},
-			[]*stored.Evaluation{},
+			replicaHistory: []jamiethompsonmev1alpha1.TimestampedReplicas{},
 		},
 		{
-			"Successful prediction, single available model",
-			3,
-			nil,
-			[]prediction.Predicter{
+			description: "Successful prediction, single available model",
+			expected:    3,
+			expectedErr: nil,
+			predicters: []prediction.Predicter{
 				&fake.Predicter{
-					GetPredictionReactor: func(model *config.Model, evaluations []*stored.Evaluation) (int32, error) {
+					GetPredictionReactor: func(model *jamiethompsonmev1alpha1.Model, evaluations []jamiethompsonmev1alpha1.TimestampedReplicas) (int32, error) {
 						return 3, nil
 					},
 					GetTypeReactor: func() string {
@@ -91,20 +91,20 @@ func TestModelPredict_GetPrediction(t *testing.T) {
 					},
 				},
 			},
-			&config.Model{
+			model: &jamiethompsonmev1alpha1.Model{
 				Type: "test",
-				Linear: &config.Linear{
+				Linear: &jamiethompsonmev1alpha1.Linear{
 					LookAhead: 10,
 				}},
-			[]*stored.Evaluation{},
+			replicaHistory: []jamiethompsonmev1alpha1.TimestampedReplicas{},
 		},
 		{
-			"Successful prediction, three available models",
-			5,
-			nil,
-			[]prediction.Predicter{
+			description: "Successful prediction, three available models",
+			expected:    5,
+			expectedErr: nil,
+			predicters: []prediction.Predicter{
 				&fake.Predicter{
-					GetPredictionReactor: func(model *config.Model, evaluations []*stored.Evaluation) (int32, error) {
+					GetPredictionReactor: func(model *jamiethompsonmev1alpha1.Model, evaluations []jamiethompsonmev1alpha1.TimestampedReplicas) (int32, error) {
 						return 0, errors.New("incorrect model")
 					},
 					GetTypeReactor: func() string {
@@ -112,7 +112,7 @@ func TestModelPredict_GetPrediction(t *testing.T) {
 					},
 				},
 				&fake.Predicter{
-					GetPredictionReactor: func(model *config.Model, evaluations []*stored.Evaluation) (int32, error) {
+					GetPredictionReactor: func(model *jamiethompsonmev1alpha1.Model, evaluations []jamiethompsonmev1alpha1.TimestampedReplicas) (int32, error) {
 						return 0, errors.New("incorrect model")
 					},
 					GetTypeReactor: func() string {
@@ -120,7 +120,7 @@ func TestModelPredict_GetPrediction(t *testing.T) {
 					},
 				},
 				&fake.Predicter{
-					GetPredictionReactor: func(model *config.Model, evaluations []*stored.Evaluation) (int32, error) {
+					GetPredictionReactor: func(model *jamiethompsonmev1alpha1.Model, evaluations []jamiethompsonmev1alpha1.TimestampedReplicas) (int32, error) {
 						return 5, nil
 					},
 					GetTypeReactor: func() string {
@@ -128,13 +128,13 @@ func TestModelPredict_GetPrediction(t *testing.T) {
 					},
 				},
 			},
-			&config.Model{
+			model: &jamiethompsonmev1alpha1.Model{
 				Type: "test",
-				Linear: &config.Linear{
+				Linear: &jamiethompsonmev1alpha1.Linear{
 					LookAhead: 10,
 				},
 			},
-			[]*stored.Evaluation{},
+			replicaHistory: []jamiethompsonmev1alpha1.TimestampedReplicas{},
 		},
 	}
 	for _, test := range tests {
@@ -142,7 +142,7 @@ func TestModelPredict_GetPrediction(t *testing.T) {
 			predicter := &prediction.ModelPredict{
 				Predicters: test.predicters,
 			}
-			result, err := predicter.GetPrediction(test.model, test.evaluations)
+			result, err := predicter.GetPrediction(test.model, test.replicaHistory)
 			if !cmp.Equal(&err, &test.expectedErr, equateErrorMessage) {
 				t.Errorf("error mismatch (-want +got):\n%s", cmp.Diff(test.expectedErr, err, equateErrorMessage))
 				return
@@ -154,7 +154,7 @@ func TestModelPredict_GetPrediction(t *testing.T) {
 	}
 }
 
-func TestModelPredict_GetIDsToRemove(t *testing.T) {
+func TestModelPredict_PruneHistory(t *testing.T) {
 	equateErrorMessage := cmp.Comparer(func(x, y error) bool {
 		if x == nil || y == nil {
 			return x == nil && y == nil
@@ -163,105 +163,132 @@ func TestModelPredict_GetIDsToRemove(t *testing.T) {
 	})
 
 	var tests = []struct {
-		description string
-		expected    []int
-		expectedErr error
-		predicters  []prediction.Predicter
-		model       *config.Model
-		evaluations []*stored.Evaluation
+		description    string
+		expected       []jamiethompsonmev1alpha1.TimestampedReplicas
+		expectedErr    error
+		predicters     []prediction.Predicter
+		model          *jamiethompsonmev1alpha1.Model
+		replicaHistory []jamiethompsonmev1alpha1.TimestampedReplicas
 	}{
 		{
-			"Unknown model type",
-			nil,
-			errors.New(`unknown model type 'invalid'`),
-			[]prediction.Predicter{},
-			&config.Model{
+			description: "Unknown model type",
+			expected:    nil,
+			expectedErr: errors.New(`unknown model type 'invalid'`),
+			predicters:  []prediction.Predicter{},
+			model: &jamiethompsonmev1alpha1.Model{
 				Type: "invalid",
-				Linear: &config.Linear{
+				Linear: &jamiethompsonmev1alpha1.Linear{
 					LookAhead: 10,
 				},
 			},
-			[]*stored.Evaluation{},
+			replicaHistory: []jamiethompsonmev1alpha1.TimestampedReplicas{},
 		},
 		{
-			"GetIDsToRemove fail child predictor",
-			nil,
-			errors.New("fail to get IDs to remove"),
-			[]prediction.Predicter{
+			description: "Successful PruneHistory, single available model, remove last",
+			expected: []jamiethompsonmev1alpha1.TimestampedReplicas{
+				{
+					Time:     &v1.Time{},
+					Replicas: 1,
+				},
+				{
+					Time:     &v1.Time{},
+					Replicas: 2,
+				},
+			},
+			expectedErr: nil,
+			predicters: []prediction.Predicter{
 				&fake.Predicter{
-					GetIDsToRemoveReactor: func(model *config.Model, evaluations []*stored.Evaluation) ([]int, error) {
-						return nil, errors.New("fail to get IDs to remove")
+					PruneHistoryReactor: func(model *jamiethompsonmev1alpha1.Model, replicaHistory []jamiethompsonmev1alpha1.TimestampedReplicas) ([]jamiethompsonmev1alpha1.TimestampedReplicas, error) {
+						replicaHistory = replicaHistory[:len(replicaHistory)-1]
+						return replicaHistory, nil
 					},
 					GetTypeReactor: func() string {
 						return "test"
 					},
 				},
 			},
-			&config.Model{
+			model: &jamiethompsonmev1alpha1.Model{
 				Type: "test",
-				Linear: &config.Linear{
+				Linear: &jamiethompsonmev1alpha1.Linear{
 					LookAhead: 10,
 				}},
-			[]*stored.Evaluation{},
-		},
-		{
-			"Successful GetIDsToRemove, single available model",
-			[]int{5},
-			nil,
-			[]prediction.Predicter{
-				&fake.Predicter{
-					GetIDsToRemoveReactor: func(model *config.Model, evaluations []*stored.Evaluation) ([]int, error) {
-						return []int{5}, nil
-					},
-					GetTypeReactor: func() string {
-						return "test"
-					},
+			replicaHistory: []jamiethompsonmev1alpha1.TimestampedReplicas{
+				{
+					Time:     &v1.Time{},
+					Replicas: 1,
+				},
+				{
+					Time:     &v1.Time{},
+					Replicas: 2,
+				},
+				{
+					Time:     &v1.Time{},
+					Replicas: 3,
 				},
 			},
-			&config.Model{
-				Type: "test",
-				Linear: &config.Linear{
-					LookAhead: 10,
-				}},
-			[]*stored.Evaluation{},
 		},
 		{
-			"Successful GetIDsToRemove, three available models",
-			[]int{5},
-			nil,
-			[]prediction.Predicter{
+			description: "Successful PruneHistory, three available models, remove last",
+			expected: []jamiethompsonmev1alpha1.TimestampedReplicas{
+				{
+					Time:     &v1.Time{},
+					Replicas: 1,
+				},
+				{
+					Time:     &v1.Time{},
+					Replicas: 2,
+				},
+			},
+			expectedErr: nil,
+			predicters: []prediction.Predicter{
 				&fake.Predicter{
-					GetIDsToRemoveReactor: func(model *config.Model, evaluations []*stored.Evaluation) ([]int, error) {
-						return []int{1}, nil
+					PruneHistoryReactor: func(model *jamiethompsonmev1alpha1.Model, replicaHistory []jamiethompsonmev1alpha1.TimestampedReplicas) ([]jamiethompsonmev1alpha1.TimestampedReplicas, error) {
+						replicaHistory = replicaHistory[:len(replicaHistory)-1]
+						return replicaHistory, nil
 					},
 					GetTypeReactor: func() string {
 						return "incorrect-model"
 					},
 				},
 				&fake.Predicter{
-					GetIDsToRemoveReactor: func(model *config.Model, evaluations []*stored.Evaluation) ([]int, error) {
-						return []int{2}, nil
+					PruneHistoryReactor: func(model *jamiethompsonmev1alpha1.Model, replicaHistory []jamiethompsonmev1alpha1.TimestampedReplicas) ([]jamiethompsonmev1alpha1.TimestampedReplicas, error) {
+						replicaHistory = replicaHistory[:len(replicaHistory)-1]
+						return replicaHistory, nil
 					},
 					GetTypeReactor: func() string {
 						return "incorrect-model-2"
 					},
 				},
 				&fake.Predicter{
-					GetIDsToRemoveReactor: func(model *config.Model, evaluations []*stored.Evaluation) ([]int, error) {
-						return []int{5}, nil
+					PruneHistoryReactor: func(model *jamiethompsonmev1alpha1.Model, replicaHistory []jamiethompsonmev1alpha1.TimestampedReplicas) ([]jamiethompsonmev1alpha1.TimestampedReplicas, error) {
+						replicaHistory = replicaHistory[:len(replicaHistory)-1]
+						return replicaHistory, nil
 					},
 					GetTypeReactor: func() string {
 						return "test"
 					},
 				},
 			},
-			&config.Model{
+			model: &jamiethompsonmev1alpha1.Model{
 				Type: "test",
-				Linear: &config.Linear{
+				Linear: &jamiethompsonmev1alpha1.Linear{
 					LookAhead: 10,
 				},
 			},
-			[]*stored.Evaluation{},
+			replicaHistory: []jamiethompsonmev1alpha1.TimestampedReplicas{
+				{
+					Time:     &v1.Time{},
+					Replicas: 1,
+				},
+				{
+					Time:     &v1.Time{},
+					Replicas: 2,
+				},
+				{
+					Time:     &v1.Time{},
+					Replicas: 3,
+				},
+			},
 		},
 	}
 	for _, test := range tests {
@@ -269,7 +296,7 @@ func TestModelPredict_GetIDsToRemove(t *testing.T) {
 			predicter := &prediction.ModelPredict{
 				Predicters: test.predicters,
 			}
-			result, err := predicter.GetIDsToRemove(test.model, test.evaluations)
+			result, err := predicter.PruneHistory(test.model, test.replicaHistory)
 			if !cmp.Equal(&err, &test.expectedErr, equateErrorMessage) {
 				t.Errorf("error mismatch (-want +got):\n%s", cmp.Diff(test.expectedErr, err, equateErrorMessage))
 				return
@@ -287,8 +314,8 @@ func TestModelPredict_GetType(t *testing.T) {
 		expected    string
 	}{
 		{
-			"Successful get type",
-			"Model",
+			description: "Successful get type",
+			expected:    "Model",
 		},
 	}
 	for _, test := range tests {

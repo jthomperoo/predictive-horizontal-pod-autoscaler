@@ -1,4 +1,4 @@
-# Copyright 2021 The Predictive Horizontal Pod Autoscaler Authors.
+# Copyright 2022 The Predictive Horizontal Pod Autoscaler Authors.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -45,13 +45,10 @@ def test_linear_regression(subtests):
         "",
         "stdin":
         """{
-                "evaluations": [
+                "replicaHistory": [
                     {
-                        "id": 0,
-                        "created": "2020-02-01T00:55:33Z",
-                        "val": {
-                            "targetReplicas": 2
-                        }
+                        "time": "2020-02-01T00:55:33Z",
+                        "replicas": 2
                     }
                 ]
             }"""
@@ -67,13 +64,10 @@ def test_linear_regression(subtests):
         "stdin":
         """{
                 "lookAhead": 10,
-                "evaluations": [
+                "replicaHistory": [
                     {
-                        "id": 0,
-                        "created": "invalid",
-                        "val": {
-                            "targetReplicas": 2
-                        }
+                        "time": "invalid",
+                        "replicas": 2
                     }
                 ]
             }"""
@@ -89,8 +83,8 @@ def test_linear_regression(subtests):
         "stdin":
         """{
                 "lookAhead": 15000,
-                "current_time": "invalid",
-                "evaluations": []
+                "currentTime": "invalid",
+                "replicaHistory": []
             }"""
     }, {
         "description":
@@ -104,35 +98,23 @@ def test_linear_regression(subtests):
         "stdin":
         """{
                 "lookAhead": 0,
-                "current_time": "2020-02-01T00:56:12Z",
-                "evaluations": [
+                "currentTime": "2020-02-01T00:56:12Z",
+                "replicaHistory": [
                     {
-                        "id": 0,
-                        "created": "2020-02-01T00:55:33Z",
-                        "val": {
-                            "targetReplicas": 1
-                        }
+                        "replicas": 1,
+                        "time": "2020-02-01T00:55:33Z"
                     },
                     {
-                        "id": 1,
-                        "created": "2020-02-01T00:55:43Z",
-                        "val": {
-                            "targetReplicas": 2
-                        }
+                        "replicas": 2,
+                        "time": "2020-02-01T00:55:43Z"
                     },
                     {
-                        "id": 2,
-                        "created": "2020-02-01T00:55:53Z",
-                        "val": {
-                            "targetReplicas": 3
-                        }
+                        "replicas": 3,
+                        "time": "2020-02-01T00:55:53Z"
                     },
                     {
-                        "id": 3,
-                        "created": "2020-02-01T00:56:03Z",
-                        "val": {
-                            "targetReplicas": 4
-                        }
+                        "replicas": 4,
+                        "time": "2020-02-01T00:56:03Z"
                     }
                 ]
             }"""
@@ -148,35 +130,23 @@ def test_linear_regression(subtests):
         "stdin":
         """{
                 "lookAhead": 10000,
-                "current_time": "2020-02-01T00:56:12Z",
-                "evaluations": [
+                "currentTime": "2020-02-01T00:56:12Z",
+                "replicaHistory": [
                     {
-                        "id": 0,
-                        "created": "2020-02-01T00:55:33Z",
-                        "val": {
-                            "targetReplicas": 1
-                        }
+                        "replicas": 1,
+                        "time": "2020-02-01T00:55:33Z"
                     },
                     {
-                        "id": 1,
-                        "created": "2020-02-01T00:55:43Z",
-                        "val": {
-                            "targetReplicas": 2
-                        }
+                        "replicas": 2,
+                        "time": "2020-02-01T00:55:43Z"
                     },
                     {
-                        "id": 2,
-                        "created": "2020-02-01T00:55:53Z",
-                        "val": {
-                            "targetReplicas": 3
-                        }
+                        "replicas": 3,
+                        "time": "2020-02-01T00:55:53Z"
                     },
                     {
-                        "id": 3,
-                        "created": "2020-02-01T00:56:03Z",
-                        "val": {
-                            "targetReplicas": 4
-                        }
+                        "replicas": 4,
+                        "time": "2020-02-01T00:56:03Z"
                     }
                 ]
             }"""
@@ -192,35 +162,23 @@ def test_linear_regression(subtests):
         "stdin":
         """{
                 "lookAhead": 15000,
-                "current_time": "2020-02-01T00:56:12Z",
-                "evaluations": [
+                "currentTime": "2020-02-01T00:56:12Z",
+                "replicaHistory": [
                     {
-                        "id": 0,
-                        "created": "2020-02-01T00:55:33Z",
-                        "val": {
-                            "targetReplicas": 1
-                        }
+                        "replicas": 1,
+                        "time": "2020-02-01T00:55:33Z"
                     },
                     {
-                        "id": 1,
-                        "created": "2020-02-01T00:55:43Z",
-                        "val": {
-                            "targetReplicas": 2
-                        }
+                        "replicas": 2,
+                        "time": "2020-02-01T00:55:43Z"
                     },
                     {
-                        "id": 2,
-                        "created": "2020-02-01T00:55:53Z",
-                        "val": {
-                            "targetReplicas": 3
-                        }
+                        "replicas": 3,
+                        "time": "2020-02-01T00:55:53Z"
                     },
                     {
-                        "id": 3,
-                        "created": "2020-02-01T00:56:03Z",
-                        "val": {
-                            "targetReplicas": 4
-                        }
+                        "replicas": 4,
+                        "time": "2020-02-01T00:56:03Z"
                     }
                 ]
             }"""

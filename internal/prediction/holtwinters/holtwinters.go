@@ -22,25 +22,25 @@ import (
 	"sort"
 	"strconv"
 
-	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/algorithm"
-	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/config"
+	jamiethompsonmev1alpha1 "github.com/jthomperoo/predictive-horizontal-pod-autoscaler/api/v1alpha1"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/hook"
-	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/stored"
 )
 
-// Type HoltWinters is the type of the HoltWinters predicter
-const Type = "HoltWinters"
-
-const algorithmPath = "/app/algorithms/holt_winters/holt_winters.py"
+const algorithmPath = "algorithms/holt_winters/holt_winters.py"
 
 const (
 	defaultTimeout = 30000
 )
 
-// Predict provides logic for using Linear Regression to make a prediction
+// Runner defines an algorithm runner, allowing algorithms to be run
+type AlgorithmRunner interface {
+	RunAlgorithmWithValue(algorithmPath string, value string, timeout int) (string, error)
+}
+
+// Predict provides logic for using Holt Winters to make a prediction
 type Predict struct {
-	Execute hook.Executer
-	Runner  algorithm.Runner
+	HookExecute hook.Executer
+	Runner      AlgorithmRunner
 }
 
 type holtWintersParametersParameters struct {
@@ -59,8 +59,8 @@ type holtWintersParametersParameters struct {
 }
 
 type runTimeTuningFetchHookRequest struct {
-	Model       *config.Model        `json:"model"`
-	Evaluations []*stored.Evaluation `json:"evaluations"`
+	Model          jamiethompsonmev1alpha1.Model                 `json:"model"`
+	ReplicaHistory []jamiethompsonmev1alpha1.TimestampedReplicas `json:"replicaHistory"`
 }
 
 type runTimeTuningFetchHookResult struct {
@@ -69,15 +69,15 @@ type runTimeTuningFetchHookResult struct {
 	Gamma *float64 `json:"gamma"`
 }
 
-// GetPrediction uses a linear regression to predict what the replica count should be based on historical evaluations
-func (p *Predict) GetPrediction(model *config.Model, evaluations []*stored.Evaluation) (int32, error) {
+// GetPrediction uses holt winters to predict what the replica count should be based on historical evaluations
+func (p *Predict) GetPrediction(model *jamiethompsonmev1alpha1.Model, replicaHistory []jamiethompsonmev1alpha1.TimestampedReplicas) (int32, error) {
 	err := p.validate(model)
 	if err != nil {
 		return 0, err
 	}
 
 	// Statsmodels requires at least 10 + 2 * (seasonal_periods // 2) to make a prediction with Holt Winters
-	if len(evaluations) < 10+2*(model.HoltWinters.SeasonalPeriods/2) {
+	if len(replicaHistory) < 10+2*(model.HoltWinters.SeasonalPeriods/2) {
 		return 0, nil
 	}
 
@@ -89,8 +89,8 @@ func (p *Predict) GetPrediction(model *config.Model, evaluations []*stored.Evalu
 
 		// Convert request into JSON string
 		request, err := json.Marshal(&runTimeTuningFetchHookRequest{
-			Model:       model,
-			Evaluations: evaluations,
+			Model:          *model,
+			ReplicaHistory: replicaHistory,
 		})
 		if err != nil {
 			// Should not occur
@@ -98,7 +98,7 @@ func (p *Predict) GetPrediction(model *config.Model, evaluations []*stored.Evalu
 		}
 
 		// Request runtime tuning values
-		hookResult, err := p.Execute.ExecuteWithValue(model.HoltWinters.RuntimeTuningFetchHook, string(request))
+		hookResult, err := p.HookExecute.ExecuteWithValue(model.HoltWinters.RuntimeTuningFetchHook, string(request))
 		if err != nil {
 			return 0, err
 		}
@@ -132,9 +132,9 @@ func (p *Predict) GetPrediction(model *config.Model, evaluations []*stored.Evalu
 	}
 
 	// Collect data for historical series
-	series := make([]float64, len(evaluations))
-	for i, evaluation := range evaluations {
-		series[i] = float64(evaluation.Evaluation.TargetReplicas)
+	series := make([]float64, len(replicaHistory))
+	for i, timestampedReplica := range replicaHistory {
+		series[i] = float64(timestampedReplica.Replicas)
 	}
 
 	parameters, err := json.Marshal(holtWintersParametersParameters{
@@ -174,36 +174,38 @@ func (p *Predict) GetPrediction(model *config.Model, evaluations []*stored.Evalu
 	return int32(prediction), nil
 }
 
-// GetIDsToRemove provides the list of stored evaluation IDs to remove, if there are too many stored seasons
-// it will remove the oldest seasons
-func (p *Predict) GetIDsToRemove(model *config.Model, evaluations []*stored.Evaluation) ([]int, error) {
-	if model.HoltWinters == nil {
-		return nil, errors.New("no HoltWinters configuration provided for model")
+func (p *Predict) PruneHistory(model *jamiethompsonmev1alpha1.Model, replicaHistory []jamiethompsonmev1alpha1.TimestampedReplicas) ([]jamiethompsonmev1alpha1.TimestampedReplicas, error) {
+	err := p.validate(model)
+	if err != nil {
+		return nil, err
 	}
 
 	// Sort by date created
-	sort.Slice(evaluations, func(i, j int) bool {
-		return evaluations[i].Created.Before(evaluations[j].Created)
+	sort.Slice(replicaHistory, func(i, j int) bool {
+		return !replicaHistory[i].Time.Before(replicaHistory[j].Time)
 	})
 
-	var markedForRemove []int
-
 	// If there are too many stored seasons, remove the oldest ones
-	seasonsToRemove := len(evaluations)/model.HoltWinters.SeasonalPeriods - model.HoltWinters.StoredSeasons
-	for i := 0; i < seasonsToRemove; i++ {
-		for j := 0; j < model.HoltWinters.SeasonalPeriods; j++ {
-			markedForRemove = append(markedForRemove, evaluations[i+j].ID)
-		}
+
+	// This rounds down, so if you have 7 replica data, with seasonal period of 3 and only 2 stored seasons it will
+	// round the 7 / 3 (2.34) down to 2, then it will do 2 - 2 resulting in not removing any seasons
+	// This is deliberate to allow full seasons to build up before pruning the old ones
+	numberOfSeasonsToRemove := len(replicaHistory)/model.HoltWinters.SeasonalPeriods - model.HoltWinters.StoredSeasons
+	numberOfReplicasToRemove := len(replicaHistory) - numberOfSeasonsToRemove*model.HoltWinters.SeasonalPeriods
+
+	for i := len(replicaHistory) - 1; i >= numberOfReplicasToRemove; i-- {
+		replicaHistory = append(replicaHistory[:i], replicaHistory[i+1:]...)
 	}
-	return markedForRemove, nil
+
+	return replicaHistory, nil
 }
 
 // GetType returns the type of the Prediction model
 func (p *Predict) GetType() string {
-	return Type
+	return jamiethompsonmev1alpha1.TypeHoltWinters
 }
 
-func (p *Predict) validate(model *config.Model) error {
+func (p *Predict) validate(model *jamiethompsonmev1alpha1.Model) error {
 	if model.HoltWinters == nil {
 		return errors.New("no HoltWinters configuration provided for model")
 	}

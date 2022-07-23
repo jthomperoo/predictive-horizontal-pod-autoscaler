@@ -1,0 +1,21 @@
+{{ if eq .Values.mode "cluster"}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Chart.Name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: {{ .Chart.Name }}
+  template:
+    metadata:
+      labels:
+        name: {{ .Chart.Name }}
+    spec:
+      serviceAccountName: {{ .Chart.Name }}-cluster
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "jthomperoo/predictive-horizontal-pod-autoscaler:{{ .Chart.Version }}"
+          imagePullPolicy: IfNotPresent
+{{ end }}

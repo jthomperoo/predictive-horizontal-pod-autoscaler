@@ -1,0 +1,54 @@
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  creationTimestamp: null
+  name: mutating-webhook-configuration
+webhooks:
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-jamiethompson-me-jamiethompson-me-v1alpha1-predictivehorizontalpodautoscaler
+  failurePolicy: Fail
+  name: mpredictivehorizontalpodautoscaler.kb.io
+  rules:
+  - apiGroups:
+    - jamiethompson.me.jamiethompson.me
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - predictivehorizontalpodautoscalers
+  sideEffects: None
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  creationTimestamp: null
+  name: validating-webhook-configuration
+webhooks:
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-jamiethompson-me-jamiethompson-me-v1alpha1-predictivehorizontalpodautoscaler
+  failurePolicy: Fail
+  name: vpredictivehorizontalpodautoscaler.kb.io
+  rules:
+  - apiGroups:
+    - jamiethompson.me.jamiethompson.me
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - predictivehorizontalpodautoscalers
+  sideEffects: None

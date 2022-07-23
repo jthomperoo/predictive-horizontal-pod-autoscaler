@@ -1,5 +1,5 @@
 /*
-Copyright 2021 The Predictive Horizontal Pod Autoscaler Authors.
+Copyright 2022 The Predictive Horizontal Pod Autoscaler Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,25 +17,24 @@ limitations under the License.
 package fake
 
 import (
-	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/config"
-	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/stored"
+	jamiethompsonmev1alpha1 "github.com/jthomperoo/predictive-horizontal-pod-autoscaler/api/v1alpha1"
 )
 
 // Predicter (fake) provides a way to insert functionality into a Predicter
 type Predicter struct {
-	GetPredictionReactor  func(model *config.Model, evaluations []*stored.Evaluation) (int32, error)
-	GetIDsToRemoveReactor func(model *config.Model, evaluations []*stored.Evaluation) ([]int, error)
-	GetTypeReactor        func() string
+	GetPredictionReactor func(model *jamiethompsonmev1alpha1.Model, replicaHistory []jamiethompsonmev1alpha1.TimestampedReplicas) (int32, error)
+	PruneHistoryReactor  func(model *jamiethompsonmev1alpha1.Model, replicaHistory []jamiethompsonmev1alpha1.TimestampedReplicas) ([]jamiethompsonmev1alpha1.TimestampedReplicas, error)
+	GetTypeReactor       func() string
 }
 
 // GetIDsToRemove calls the fake Predicter function
-func (f *Predicter) GetIDsToRemove(model *config.Model, evaluations []*stored.Evaluation) ([]int, error) {
-	return f.GetIDsToRemoveReactor(model, evaluations)
+func (f *Predicter) PruneHistory(model *jamiethompsonmev1alpha1.Model, replicaHistory []jamiethompsonmev1alpha1.TimestampedReplicas) ([]jamiethompsonmev1alpha1.TimestampedReplicas, error) {
+	return f.PruneHistoryReactor(model, replicaHistory)
 }
 
 // GetPrediction calls the fake Predicter function
-func (f *Predicter) GetPrediction(model *config.Model, evaluations []*stored.Evaluation) (int32, error) {
-	return f.GetPredictionReactor(model, evaluations)
+func (f *Predicter) GetPrediction(model *jamiethompsonmev1alpha1.Model, replicaHistory []jamiethompsonmev1alpha1.TimestampedReplicas) (int32, error) {
+	return f.GetPredictionReactor(model, replicaHistory)
 }
 
 // GetType calls the fake Predicter function

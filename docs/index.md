@@ -3,6 +3,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/jthomperoo/predictive-horizontal-pod-autoscaler)](https://goreportcard.com/report/github.com/jthomperoo/predictive-horizontal-pod-autoscaler)
 [![Documentation Status](https://readthedocs.org/projects/predictive-horizontal-pod-autoscaler/badge/?version=latest)](https://predictive-horizontal-pod-autoscaler.readthedocs.io/en/latest)
 [![License](https://img.shields.io/:license-apache-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0.html)
+
 # Predictive Horizontal Pod Autoscaler
 
 Visit the GitHub repository at <https://www.github.com/jthomperoo/predictive-horizontal-pod-autoscaler> to see examples,
@@ -10,13 +11,15 @@ raise issues, and to contribute to the project.
 
 # What is it?
 
-This is a [Custom Pod Autoscaler](https://www.github.com/jthomperoo/custom-pod-autoscaler); aiming to have identical
-functionality to the Horizontal Pod Autoscaler, however with added predictive elements using statistical models.
+Predictive Horizontal Pod Autoscalers (PHPAs) are Horizontal Pod Autoscalers (HPAs) with extra predictive capabilities
+baked in, allowing you to apply statistical models to the results of HPA calculations to make proactive scaling
+decisions.
 
 # Why would I use it?
 
 This autoscaler lets you choose models and fine tune them in order to predict how many replicas a resource should have,
-preempting events such as regular, repeated high load.
+preempting events such as regular, repeated high load. This allows for proactive rather than simply reactive scaling
+that can make intelligent ahead of time decisions.
 
 # What systems would need it?
 
@@ -38,4 +41,3 @@ solutions such as EKS or GCP.
     * Downscale Stabilization.
     * Sync Period.
     * Initial Readiness Delay.
-* Runs in Kubernetes as a standard Pod.

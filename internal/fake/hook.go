@@ -1,5 +1,5 @@
 /*
-Copyright 2021 The Predictive Horizontal Pod Autoscaler Authors.
+Copyright 2022 The Predictive Horizontal Pod Autoscaler Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -16,16 +16,16 @@ limitations under the License.
 
 package fake
 
-import "github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/hook"
+import jamiethompsonmev1alpha1 "github.com/jthomperoo/predictive-horizontal-pod-autoscaler/api/v1alpha1"
 
 // Execute (fake) provides a way to insert functionality into a hook executer
 type Execute struct {
-	ExecuteWithValueReactor func(definition *hook.Definition, value string) (string, error)
+	ExecuteWithValueReactor func(definition *jamiethompsonmev1alpha1.HookDefinition, value string) (string, error)
 	GetTypeReactor          func() string
 }
 
 // ExecuteWithValue calls the fake Executer function
-func (e *Execute) ExecuteWithValue(definition *hook.Definition, value string) (string, error) {
+func (e *Execute) ExecuteWithValue(definition *jamiethompsonmev1alpha1.HookDefinition, value string) (string, error) {
 	return e.ExecuteWithValueReactor(definition, value)
 }
 

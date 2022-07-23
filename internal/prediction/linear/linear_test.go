@@ -22,11 +22,15 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/config"
+	jamiethompsonmev1alpha1 "github.com/jthomperoo/predictive-horizontal-pod-autoscaler/api/v1alpha1"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/fake"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/prediction/linear"
-	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/stored"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
+
+func intPtr(i int) *int {
+	return &i
+}
 
 func TestPredict_GetPrediction(t *testing.T) {
 	equateErrorMessage := cmp.Comparer(func(x, y error) bool {
@@ -37,141 +41,166 @@ func TestPredict_GetPrediction(t *testing.T) {
 	})
 
 	var tests = []struct {
-		description string
-		expected    int32
-		expectedErr error
-		predicter   *linear.Predict
-		model       *config.Model
-		evaluations []*stored.Evaluation
+		description    string
+		expected       int32
+		expectedErr    error
+		predicter      *linear.Predict
+		model          *jamiethompsonmev1alpha1.Model
+		replicaHistory []jamiethompsonmev1alpha1.TimestampedReplicas
 	}{
 		{
-			"Fail no Linear configuration",
-			0,
-			errors.New("no Linear configuration provided for model"),
-			&linear.Predict{},
-			&config.Model{},
-			[]*stored.Evaluation{},
+			description:    "Fail no Linear configuration",
+			expected:       0,
+			expectedErr:    errors.New("no Linear configuration provided for model"),
+			predicter:      &linear.Predict{},
+			model:          &jamiethompsonmev1alpha1.Model{},
+			replicaHistory: []jamiethompsonmev1alpha1.TimestampedReplicas{},
 		},
 		{
-			"Fail no evaluations",
-			0,
-			errors.New("no evaluations provided for Linear regression model"),
-			&linear.Predict{},
-			&config.Model{
-				Type: linear.Type,
-				Linear: &config.Linear{
-					StoredValues: 5,
-					LookAhead:    0,
+			description: "Fail no evaluations",
+			expected:    0,
+			expectedErr: errors.New("no evaluations provided for Linear regression model"),
+			predicter:   &linear.Predict{},
+			model: &jamiethompsonmev1alpha1.Model{
+				Type: jamiethompsonmev1alpha1.TypeLinear,
+				Linear: &jamiethompsonmev1alpha1.Linear{
+					HistorySize: 5,
+					LookAhead:   0,
 				},
 			},
-			[]*stored.Evaluation{},
+			replicaHistory: []jamiethompsonmev1alpha1.TimestampedReplicas{},
 		},
 		{
-			"Success, only one evaluation, return without the prediction",
-			32,
-			nil,
-			&linear.Predict{},
-			&config.Model{
-				Type: linear.Type,
-				Linear: &config.Linear{
-					StoredValues: 5,
-					LookAhead:    0,
+			description: "Success, only one evaluation, return without the prediction",
+			expected:    32,
+			expectedErr: nil,
+			predicter:   &linear.Predict{},
+			model: &jamiethompsonmev1alpha1.Model{
+				Type: jamiethompsonmev1alpha1.TypeLinear,
+				Linear: &jamiethompsonmev1alpha1.Linear{
+					HistorySize: 5,
+					LookAhead:   0,
 				},
 			},
-			[]*stored.Evaluation{
+			replicaHistory: []jamiethompsonmev1alpha1.TimestampedReplicas{
 				{
-					ID: 0,
-					Evaluation: stored.DBEvaluation{
-						TargetReplicas: 32,
-					},
+					Replicas: 32,
 				},
 			},
 		},
 		{
-			"Fail execution of algorithm fails",
-			0,
-			errors.New("algorithm fail"),
-			&linear.Predict{
+			description: "Fail execution of algorithm fails",
+			expected:    0,
+			expectedErr: errors.New("algorithm fail"),
+			predicter: &linear.Predict{
 				Runner: &fake.Run{
 					RunAlgorithmWithValueReactor: func(algorithmPath, value string, timeout int) (string, error) {
 						return "", errors.New("algorithm fail")
 					},
 				},
 			},
-			&config.Model{
-				Type: linear.Type,
-				Linear: &config.Linear{
-					StoredValues: 5,
-					LookAhead:    0,
+			model: &jamiethompsonmev1alpha1.Model{
+				Type: jamiethompsonmev1alpha1.TypeLinear,
+				Linear: &jamiethompsonmev1alpha1.Linear{
+					HistorySize: 5,
+					LookAhead:   0,
 				},
 			},
-			[]*stored.Evaluation{
+			replicaHistory: []jamiethompsonmev1alpha1.TimestampedReplicas{
 				{
-					ID: 0,
+					Replicas: 1,
 				},
 				{
-					ID: 1,
+					Replicas: 2,
 				},
 			},
 		},
 		{
-			"Fail algorithm returns non-integer castable value",
-			0,
-			errors.New(`strconv.Atoi: parsing "invalid": invalid syntax`),
-			&linear.Predict{
+			description: "Fail algorithm returns non-integer castable value",
+			expected:    0,
+			expectedErr: errors.New(`strconv.Atoi: parsing "invalid": invalid syntax`),
+			predicter: &linear.Predict{
 				Runner: &fake.Run{
 					RunAlgorithmWithValueReactor: func(algorithmPath, value string, timeout int) (string, error) {
 						return "invalid", nil
 					},
 				},
 			},
-			&config.Model{
-				Type: linear.Type,
-				Linear: &config.Linear{
-					StoredValues: 5,
-					LookAhead:    0,
+			model: &jamiethompsonmev1alpha1.Model{
+				Type: jamiethompsonmev1alpha1.TypeLinear,
+				Linear: &jamiethompsonmev1alpha1.Linear{
+					HistorySize: 5,
+					LookAhead:   0,
 				},
 			},
-			[]*stored.Evaluation{
+			replicaHistory: []jamiethompsonmev1alpha1.TimestampedReplicas{
 				{
-					ID: 0,
+					Replicas: 1,
 				},
 				{
-					ID: 1,
+					Replicas: 2,
 				},
 			},
 		},
 		{
-			"Success",
-			3,
-			nil,
-			&linear.Predict{
+			description: "Success",
+			expected:    3,
+			expectedErr: nil,
+			predicter: &linear.Predict{
 				Runner: &fake.Run{
 					RunAlgorithmWithValueReactor: func(algorithmPath, value string, timeout int) (string, error) {
 						return "3", nil
 					},
 				},
 			},
-			&config.Model{
-				Type: linear.Type,
-				Linear: &config.Linear{
-					StoredValues: 5,
-					LookAhead:    0,
+			model: &jamiethompsonmev1alpha1.Model{
+				Type: jamiethompsonmev1alpha1.TypeLinear,
+				Linear: &jamiethompsonmev1alpha1.Linear{
+					HistorySize: 5,
+					LookAhead:   0,
 				},
 			},
-			[]*stored.Evaluation{
+			replicaHistory: []jamiethompsonmev1alpha1.TimestampedReplicas{
 				{
-					ID: 0,
+					Replicas: 1,
 				},
 				{
-					ID: 1,
+					Replicas: 2,
+				},
+			},
+		},
+		{
+			description: "Success, use custom timeout",
+			expected:    3,
+			expectedErr: nil,
+			predicter: &linear.Predict{
+				Runner: &fake.Run{
+					RunAlgorithmWithValueReactor: func(algorithmPath, value string, timeout int) (string, error) {
+						return "3", nil
+					},
+				},
+			},
+			model: &jamiethompsonmev1alpha1.Model{
+				Type: jamiethompsonmev1alpha1.TypeLinear,
+				Linear: &jamiethompsonmev1alpha1.Linear{
+					HistorySize: 5,
+					LookAhead:   0,
+				},
+				CalculationTimeout: intPtr(10),
+			},
+			replicaHistory: []jamiethompsonmev1alpha1.TimestampedReplicas{
+				{
+					Replicas: 1,
+				},
+				{
+					Replicas: 2,
 				},
 			},
 		},
 	}
 	for _, test := range tests {
 		t.Run(test.description, func(t *testing.T) {
-			result, err := test.predicter.GetPrediction(test.model, test.evaluations)
+			result, err := test.predicter.GetPrediction(test.model, test.replicaHistory)
 			if !cmp.Equal(&err, &test.expectedErr, equateErrorMessage) {
 				t.Errorf("error mismatch (-want +got):\n%s", cmp.Diff(test.expectedErr, err, equateErrorMessage))
 				return
@@ -183,7 +212,7 @@ func TestPredict_GetPrediction(t *testing.T) {
 	}
 }
 
-func TestModelPredict_GetIDsToRemove(t *testing.T) {
+func TestModelPredict_PruneHistory(t *testing.T) {
 	equateErrorMessage := cmp.Comparer(func(x, y error) bool {
 		if x == nil || y == nil {
 			return x == nil && y == nil
@@ -192,54 +221,104 @@ func TestModelPredict_GetIDsToRemove(t *testing.T) {
 	})
 
 	var tests = []struct {
-		description string
-		expected    []int
-		expectedErr error
-		model       *config.Model
-		evaluations []*stored.Evaluation
+		description    string
+		expected       []jamiethompsonmev1alpha1.TimestampedReplicas
+		expectedErr    error
+		model          *jamiethompsonmev1alpha1.Model
+		replicaHistory []jamiethompsonmev1alpha1.TimestampedReplicas
 	}{
 		{
-			"Fail no Linear configuration",
-			nil,
-			errors.New("no Linear configuration provided for model"),
-			&config.Model{},
-			[]*stored.Evaluation{},
+			description:    "Fail no Linear configuration",
+			expected:       nil,
+			expectedErr:    errors.New("no Linear configuration provided for model"),
+			model:          &jamiethompsonmev1alpha1.Model{},
+			replicaHistory: []jamiethompsonmev1alpha1.TimestampedReplicas{},
 		},
 		{
-			"3 IDs too many, mark 3 for removal",
-			[]int{5, 3, 8},
-			nil,
-			&config.Model{
-				Linear: &config.Linear{
-					StoredValues: 3,
+			description: "Only 3 in history, max size 4",
+			expected: []jamiethompsonmev1alpha1.TimestampedReplicas{
+				{
+					Replicas: 4,
+					Time:     &metav1.Time{Time: time.Time{}.Add(time.Duration(6) * time.Second)},
+				},
+				{
+					Replicas: 2,
+					Time:     &metav1.Time{Time: time.Time{}.Add(time.Duration(5) * time.Second)},
+				},
+				{
+					Replicas: 1,
+					Time:     &metav1.Time{Time: time.Time{}.Add(time.Duration(4) * time.Second)},
 				},
 			},
-			[]*stored.Evaluation{
+			expectedErr: nil,
+			model: &jamiethompsonmev1alpha1.Model{
+				Linear: &jamiethompsonmev1alpha1.Linear{
+					HistorySize: 4,
+				},
+			},
+			replicaHistory: []jamiethompsonmev1alpha1.TimestampedReplicas{
 				{
-					ID:      1,
-					Created: time.Time{}.Add(time.Duration(4) * time.Second),
+					Replicas: 4,
+					Time:     &metav1.Time{Time: time.Time{}.Add(time.Duration(6) * time.Second)},
 				},
 				{
-					ID:      2,
-					Created: time.Time{}.Add(time.Duration(5) * time.Second),
+					Replicas: 2,
+					Time:     &metav1.Time{Time: time.Time{}.Add(time.Duration(5) * time.Second)},
+				},
+				{
+					Replicas: 1,
+					Time:     &metav1.Time{Time: time.Time{}.Add(time.Duration(4) * time.Second)},
+				},
+			},
+		},
+		{
+			description: "3 too many, remove oldest 3",
+			expected: []jamiethompsonmev1alpha1.TimestampedReplicas{
+				{
+					Replicas: 4,
+					Time:     &metav1.Time{Time: time.Time{}.Add(time.Duration(6) * time.Second)},
+				},
+				{
+					Replicas: 2,
+					Time:     &metav1.Time{Time: time.Time{}.Add(time.Duration(5) * time.Second)},
+				},
+				{
+					Replicas: 1,
+					Time:     &metav1.Time{Time: time.Time{}.Add(time.Duration(4) * time.Second)},
+				},
+			},
+			expectedErr: nil,
+			model: &jamiethompsonmev1alpha1.Model{
+				Linear: &jamiethompsonmev1alpha1.Linear{
+					HistorySize: 3,
+				},
+			},
+			replicaHistory: []jamiethompsonmev1alpha1.TimestampedReplicas{
+				{
+					Replicas: 1,
+					Time:     &metav1.Time{Time: time.Time{}.Add(time.Duration(4) * time.Second)},
+				},
+				{
+					Replicas: 2,
+					Time:     &metav1.Time{Time: time.Time{}.Add(time.Duration(5) * time.Second)},
 				},
 				// START OLDEST
 				{
-					ID:      5,
-					Created: time.Time{}.Add(time.Duration(1) * time.Second),
+					Replicas: 5,
+					Time:     &metav1.Time{Time: time.Time{}.Add(time.Duration(1) * time.Second)},
 				},
 				{
-					ID:      3,
-					Created: time.Time{}.Add(time.Duration(2) * time.Second),
+					Replicas: 3,
+					Time:     &metav1.Time{Time: time.Time{}.Add(time.Duration(2) * time.Second)},
 				},
 				{
-					ID:      8,
-					Created: time.Time{}.Add(time.Duration(3) * time.Second),
+					Replicas: 8,
+					Time:     &metav1.Time{Time: time.Time{}.Add(time.Duration(3) * time.Second)},
 				},
 				// END OLDEST
 				{
-					ID:      4,
-					Created: time.Time{}.Add(time.Duration(6) * time.Second),
+					Replicas: 4,
+					Time:     &metav1.Time{Time: time.Time{}.Add(time.Duration(6) * time.Second)},
 				},
 			},
 		},
@@ -247,7 +326,7 @@ func TestModelPredict_GetIDsToRemove(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.description, func(t *testing.T) {
 			predicter := &linear.Predict{}
-			result, err := predicter.GetIDsToRemove(test.model, test.evaluations)
+			result, err := predicter.PruneHistory(test.model, test.replicaHistory)
 			if !cmp.Equal(&err, &test.expectedErr, equateErrorMessage) {
 				t.Errorf("error mismatch (-want +got):\n%s", cmp.Diff(test.expectedErr, err, equateErrorMessage))
 				return
@@ -265,8 +344,8 @@ func TestPredict_GetType(t *testing.T) {
 		expected    string
 	}{
 		{
-			"Successful get type",
-			"Linear",
+			description: "Successful get type",
+			expected:    "Linear",
 		},
 	}
 	for _, test := range tests {

@@ -1,55 +1,37 @@
-apiVersion: custompodautoscaler.com/v1
-kind: CustomPodAutoscaler
+apiVersion: jamiethompson.me/v1alpha1
+kind: PredictiveHorizontalPodAutoscaler
 metadata:
-  name: dynamic-holt-winters-example
+  name: dynamic-holt-winters
 spec:
-  template:
-    spec:
-      containers:
-      - name: dynamic-holt-winters-example
-        image: jthomperoo/predictive-horizontal-pod-autoscaler:latest
-        imagePullPolicy: Always
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
     name: php-apache
-  roleRequiresMetricsServer: true
-  config:
-    - name: minReplicas
-      value: "1"
-    - name: maxReplicas
-      value: "10"
-    - name: predictiveConfig
-      value: |
-        models:
-        - type: HoltWinters
-          name: HoltWintersPrediction
-          perInterval: 1
-          holtWinters:
-            runtimeTuningFetchHook:
-              type: "http"
-              timeout: 2500
-              http:
-                method: "GET"
-                url: "http://tuning/holt_winters"
-                successCodes:
-                  - 200
-                parameterMode: query
-            seasonalPeriods: 6
-            storedSeasons: 4
-            trend: "additive"
-            seasonal: additive
-        decisionType: "maximum"
-        metrics:
-        - type: Resource
-          resource:
-            name: cpu
-            target:
-              type: Utilization
-              averageUtilization: 50
-    - name: interval
-      value: "20000"
-    - name: startTime
-      value: "60000"
-    - name: downscaleStabilization
-      value: "30"
+  minReplicas: 1
+  maxReplicas: 10
+  syncPeriod: 20000
+  downscaleStabilization: 30
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 50
+  models:
+  - type: HoltWinters
+    name: HoltWintersPrediction
+    holtWinters:
+      runtimeTuningFetchHook:
+        type: "http"
+        timeout: 2500
+        http:
+          method: "GET"
+          url: "http://tuning/holt_winters"
+          successCodes:
+            - 200
+          parameterMode: query
+      seasonalPeriods: 6
+      storedSeasons: 4
+      trend: "additive"
+      seasonal: additive

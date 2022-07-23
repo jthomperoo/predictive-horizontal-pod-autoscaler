@@ -10,6 +10,9 @@ assignees: ''
 **Describe the bug**
 A clear and concise description of what the bug is.
 
+**Predictive Horizontal Pod Autoscaler Version**
+The version of the Predictive Horizontal Pod Autoscaler the bug has been found on.
+
 **To Reproduce**
 Steps to reproduce the behavior:
 1. Deploy '...'
