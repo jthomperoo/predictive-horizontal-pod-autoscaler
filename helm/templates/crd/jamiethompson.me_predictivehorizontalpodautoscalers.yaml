@@ -68,6 +68,7 @@ spec:
                 description: cpuInitializationPeriod is equivalent to --horizontal-pod-autoscaler-cpu-initialization-period;
                   the period after pod start when CPU samples might be skipped. Default
                   value 300 seconds (5 minutes).
+                minimum: 0
                 type: integer
               decisionType:
                 description: decisionType is the strategy to use when picking which
@@ -76,6 +77,11 @@ spec:
                   a single model. For details on which decisionTypes are available
                   visit https://predictive-horizontal-pod-autoscaler.readthedocs.io/en/latest/reference/configuration/#decisiontype
                   Default strategy is 'maximum'
+                enum:
+                - maximum
+                - minimum
+                - mean
+                - median
                 type: string
               downscaleStabilization:
                 description: downscaleStabilization defines in seconds the length
@@ -85,11 +91,13 @@ spec:
                   out the maximum target replicas from these evaluations. This results
                   in a more smoothed downscaling and a cooldown, which can reduce
                   the effect of thrashing. Default value 300 seconds (5 minutes).
+                minimum: 0
                 type: integer
               initialReadinessDelay:
                 description: initialReadinessDelay is equivalent to --horizontal-pod-autoscaler-initial-readiness-delay;
                   the period after pod start during which readiness changes will be
                   treated as initial readiness. Default value 30 seconds.
+                minimum: 0
                 type: integer
               maxReplicas:
                 description: maxReplicas is the upper limit for the number of replicas
@@ -596,18 +604,23 @@ spec:
                         if it takes longer than this timeout it should skip processing
                         the model. Default varies based on model type: Linear is 30000
                         milliseconds (30 seconds)'
+                      minimum: 1
                       type: integer
                     holtWinters:
-                      description: HoltWinters represents a holt-winters exponential
-                        smoothing prediction model configuration
+                      description: holtWinters is the configuration to use for the
+                        holt winters model, it will only be used if the type is set
+                        to 'HoltWinters'
                       properties:
                         alpha:
+                          minimum: 0
                           type: number
                         beta:
+                          minimum: 0
                           type: number
                         dampedTrend:
                           type: boolean
                         gamma:
+                          minimum: 0
                           type: number
                         initialLevel:
                           type: number
@@ -616,6 +629,11 @@ spec:
                         initialTrend:
                           type: number
                         initializationMethod:
+                          enum:
+                          - estimated
+                          - heuristic
+                          - known
+                          - legacy-heuristic
                           type: string
                         runtimeTuningFetchHook:
                           description: HookDefinition describes a hook for passing
@@ -630,8 +648,21 @@ spec:
                                     type: string
                                   type: object
                                 method:
+                                  enum:
+                                  - GET
+                                  - HEAD
+                                  - POST
+                                  - PUT
+                                  - DELETE
+                                  - CONNECT
+                                  - OPTIONS
+                                  - TRACE
+                                  - PATCH
                                   type: string
                                 parameterMode:
+                                  enum:
+                                  - query
+                                  - body
                                   type: string
                                 successCodes:
                                   items:
@@ -646,21 +677,35 @@ spec:
                               - url
                               type: object
                             timeout:
+                              minimum: 1
                               type: integer
                             type:
+                              enum:
+                              - http
                               type: string
                           required:
-                          - http
                           - timeout
                           - type
                           type: object
                         seasonal:
+                          enum:
+                          - add
+                          - additive
+                          - mul
+                          - multiplicative
                           type: string
                         seasonalPeriods:
+                          minimum: 1
                           type: integer
                         storedSeasons:
+                          minimum: 1
                           type: integer
                         trend:
+                          enum:
+                          - add
+                          - additive
+                          - mul
+                          - multiplicative
                           type: string
                       required:
                       - seasonal
@@ -680,11 +725,13 @@ spec:
                             data as new ones are added. For example a value of 6 means
                             there will only be a maxmimu of 6 stored timestamped replica
                             counts for this model.
+                          minimum: 1
                           type: integer
                         lookAhead:
                           description: lookAhead is how far in the future should the
                             linear regression predict in seconds. For example a value
                             of 10 will predict 10 seconds into the future
+                          minimum: 1
                           type: integer
                       required:
                       - historySize
@@ -705,10 +752,14 @@ spec:
                         model is not run on, it will still add the calculated replica
                         values to the model data history and then prune that history
                         if needs. Default value is 1 (run every sync period)
+                      minimum: 1
                       type: integer
                     type:
                       description: type is the type of the model, for example 'Linear'.
                         To see a full list of supported model types visit https://predictive-horizontal-pod-autoscaler.readthedocs.io/en/latest/user-guide/models/.
+                      enum:
+                      - Linear
+                      - HoltWinters
                       type: string
                   required:
                   - name
@@ -737,12 +788,14 @@ spec:
                 description: syncPeriod is equivalent to --horizontal-pod-autoscaler-sync-period;
                   the frequency with which the PHPA calculates replica counts and
                   scales in milliseconds. Default value 15000 milliseconds (15 seconds).
+                minimum: 1
                 type: integer
               tolerance:
                 description: tolerance is equivalent to --horizontal-pod-autoscaler-tolerance;
                   the minimum change (from 1.0) in the desired-to-actual metrics ratio
                   for the predictive horizontal pod autoscaler to consider scaling.
                   Default value 0.1.
+                minimum: 0
                 type: number
             required:
             - maxReplicas

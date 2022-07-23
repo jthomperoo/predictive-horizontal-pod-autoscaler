@@ -37,20 +37,29 @@ const (
 	TypeLinear      = "Linear"
 )
 
+const (
+	HookTypeHTTP = "http"
+)
+
 // HookDefinition describes a hook for passing data/triggering logic, such as through a shell command
 type HookDefinition struct {
-	Type    string    `json:"type"`
-	Timeout int       `json:"timeout"`
-	HTTP    *HTTPHook `json:"http"`
+	// +kubebuilder:validation:Enum=http
+	Type string `json:"type"`
+	// +kubebuilder:validation:Minimum=1
+	Timeout int `json:"timeout"`
+	// +optional
+	HTTP *HTTPHook `json:"http"`
 }
 
 // HTTPHook describes configuration options for an HTTP request hook
 type HTTPHook struct {
-	Method        string            `json:"method"`
-	URL           string            `json:"url"`
-	Headers       map[string]string `json:"headers,omitempty"`
-	SuccessCodes  []int             `json:"successCodes"`
-	ParameterMode string            `json:"parameterMode"`
+	// +kubebuilder:validation:Enum=GET;HEAD;POST;PUT;DELETE;CONNECT;OPTIONS;TRACE;PATCH
+	Method       string            `json:"method"`
+	URL          string            `json:"url"`
+	Headers      map[string]string `json:"headers,omitempty"`
+	SuccessCodes []int             `json:"successCodes"`
+	// +kubebuilder:validation:Enum=query;body
+	ParameterMode string `json:"parameterMode"`
 }
 
 // Linear represents a linear regression prediction model configuration
@@ -58,32 +67,45 @@ type Linear struct {
 	// historySize is how many timestamped replica counts should be stored for this linear regression, with older
 	// timestamped replica counts being removed from the data as new ones are added. For example a value of 6 means
 	// there will only be a maxmimu of 6 stored timestamped replica counts for this model.
+	// +kubebuilder:validation:Minimum=1
 	HistorySize int `json:"historySize"`
 	// lookAhead is how far in the future should the linear regression predict in seconds. For example a value of 10
 	// will predict 10 seconds into the future
+	// +kubebuilder:validation:Minimum=1
 	LookAhead int `json:"lookAhead"`
 }
 
 // HoltWinters represents a holt-winters exponential smoothing prediction model configuration
 type HoltWinters struct {
+	// +kubebuilder:validation:Minimum=0
 	// +optional
 	Alpha *float64 `json:"alpha"`
 
+	// +kubebuilder:validation:Minimum=0
 	// +optional
 	Beta *float64 `json:"beta"`
 
+	// +kubebuilder:validation:Minimum=0
 	// +optional
 	Gamma *float64 `json:"gamma"`
 
-	Trend           string `json:"trend"`
-	Seasonal        string `json:"seasonal"`
-	SeasonalPeriods int    `json:"seasonalPeriods"`
-	StoredSeasons   int    `json:"storedSeasons"`
+	// +kubebuilder:validation:Enum=add;additive;mul;multiplicative
+	Trend string `json:"trend"`
+
+	// +kubebuilder:validation:Enum=add;additive;mul;multiplicative
+	Seasonal string `json:"seasonal"`
+
+	// +kubebuilder:validation:Minimum=1
+	SeasonalPeriods int `json:"seasonalPeriods"`
+
+	// +kubebuilder:validation:Minimum=1
+	StoredSeasons int `json:"storedSeasons"`
 
 	// +optional
 	DampedTrend *bool `json:"dampedTrend"`
 
 	// +optional
+	// +kubebuilder:validation:Enum=estimated;heuristic;known;legacy-heuristic
 	InitializationMethod *string `json:"initializationMethod"`
 
 	// +optional
@@ -103,6 +125,7 @@ type HoltWinters struct {
 type Model struct {
 	// type is the type of the model, for example 'Linear'. To see a full list of supported model types visit
 	// https://predictive-horizontal-pod-autoscaler.readthedocs.io/en/latest/user-guide/models/.
+	// +kubebuilder:validation:Enum=Linear;HoltWinters
 	Type string `json:"type"`
 
 	// name is the name of the model, this can be any arbitrary name and is just used to distinguish between models if
@@ -113,6 +136,7 @@ type Model struct {
 	// takes longer than this timeout it should skip processing the model.
 	// Default varies based on model type:
 	// Linear is 30000 milliseconds (30 seconds)
+	// +kubebuilder:validation:Minimum=1
 	// +optional
 	CalculationTimeout *int `json:"calculationTimeout"`
 
@@ -122,6 +146,7 @@ type Model struct {
 	// For sync periods that the model is not run on, it will still add the calculated replica values to the model data
 	// history and then prune that history if needs.
 	// Default value is 1 (run every sync period)
+	// +kubebuilder:validation:Minimum=1
 	// +optional
 	PerSyncPeriod *int `json:"perSyncPeriod"`
 
@@ -130,6 +155,8 @@ type Model struct {
 	// +optional
 	Linear *Linear `json:"linear"`
 
+	// holtWinters is the configuration to use for the holt winters model, it will only be used if the type is set to
+	// 'HoltWinters'
 	// +optional
 	HoltWinters *HoltWinters `json:"holtWinters"`
 }
@@ -194,30 +221,35 @@ type PredictiveHorizontalPodAutoscalerSpec struct {
 	// over the window specified and picking out the maximum target replicas from these evaluations. This results in a
 	// more smoothed downscaling and a cooldown, which can reduce the effect of thrashing.
 	// Default value 300 seconds (5 minutes).
+	// +kubebuilder:validation:Minimum=0
 	// +optional
 	DownscaleStabilization *int `json:"downscaleStabilization"`
 
 	// cpuInitializationPeriod is equivalent to --horizontal-pod-autoscaler-cpu-initialization-period; the period after
 	// pod start when CPU samples might be skipped.
 	// Default value 300 seconds (5 minutes).
+	// +kubebuilder:validation:Minimum=0
 	// +optional
 	CPUInitializationPeriod *int `json:"cpuInitializationPeriod"`
 
 	// initialReadinessDelay is equivalent to --horizontal-pod-autoscaler-initial-readiness-delay; the period after pod
 	// start during which readiness changes will be treated as initial readiness.
 	// Default value 30 seconds.
+	// +kubebuilder:validation:Minimum=0
 	// +optional
 	InitialReadinessDelay *int `json:"initialReadinessDelay"`
 
 	// tolerance is equivalent to --horizontal-pod-autoscaler-tolerance; the minimum change (from 1.0) in the
 	// desired-to-actual metrics ratio for the predictive horizontal pod autoscaler to consider scaling.
 	// Default value 0.1.
+	// +kubebuilder:validation:Minimum=0
 	// +optional
 	Tolerance *float64 `json:"tolerance"`
 
 	// syncPeriod is equivalent to --horizontal-pod-autoscaler-sync-period; the frequency with which the PHPA
 	// calculates replica counts and scales in milliseconds.
 	// Default value 15000 milliseconds (15 seconds).
+	// +kubebuilder:validation:Minimum=1
 	// +optional
 	SyncPeriod *int `json:"syncPeriod"`
 
@@ -230,6 +262,7 @@ type PredictiveHorizontalPodAutoscalerSpec struct {
 	// which decisionTypes are available visit
 	// https://predictive-horizontal-pod-autoscaler.readthedocs.io/en/latest/reference/configuration/#decisiontype
 	// Default strategy is 'maximum'
+	// +kubebuilder:validation:Enum=maximum;minimum;mean;median
 	// +optional
 	DecisionType *string `json:"decisionType"`
 }

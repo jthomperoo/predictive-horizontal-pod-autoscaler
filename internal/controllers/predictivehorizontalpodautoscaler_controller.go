@@ -19,13 +19,15 @@ package controllers
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"sort"
 	"time"
 
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
+	autoscalingv2 "k8s.io/api/autoscaling/v2beta2"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
@@ -86,7 +88,7 @@ func (r *PredictiveHorizontalPodAutoscalerReconciler) Reconcile(ctx context.Cont
 	instance := &jamiethompsonmev1alpha1.PredictiveHorizontalPodAutoscaler{}
 	err := r.Client.Get(ctx, req.NamespacedName, instance)
 	if err != nil {
-		if errors.IsNotFound(err) {
+		if k8serrors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
 			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
 			// Return and don't requeue
@@ -535,7 +537,7 @@ func (r *PredictiveHorizontalPodAutoscalerReconciler) getPHPAConfigMapAndData(ct
 
 	err := r.Client.Get(context.Background(), types.NamespacedName{Name: configMap.GetName(), Namespace: configMap.GetNamespace()}, configMap)
 	if err != nil {
-		if !errors.IsNotFound(err) {
+		if !k8serrors.IsNotFound(err) {
 			return nil, nil, fmt.Errorf("failed to get PHPA configmap: %w", err)
 		}
 
@@ -587,7 +589,51 @@ func (r *PredictiveHorizontalPodAutoscalerReconciler) preScaleStatusCheck(ctx co
 
 // validate performs validation on the PHPA, will return an error if the PHPA is not valid
 func (r *PredictiveHorizontalPodAutoscalerReconciler) validate(instance *jamiethompsonmev1alpha1.PredictiveHorizontalPodAutoscaler) error {
-	// TODO: add validation here!
+	spec := instance.Spec
+
+	if spec.MinReplicas != nil && spec.MaxReplicas < *spec.MinReplicas {
+		return fmt.Errorf("spec.maxReplicas (%d) cannot be less than spec.minReplicas (%d)",
+			spec.MaxReplicas, *spec.MinReplicas)
+	}
+
+	if spec.MinReplicas != nil && *spec.MinReplicas == 0 {
+		// We need to check that if they set min replicas to zero they have at least 1 object or external metric
+		// configured
+		valid := false
+		for _, metric := range spec.Metrics {
+			if metric.Type == autoscalingv2.ObjectMetricSourceType || metric.Type == autoscalingv2.ExternalMetricSourceType {
+				valid = true
+				break
+			}
+		}
+		if !valid {
+			return errors.New("spec.minReplicas can only be 0 if you have at least 1 object or external metric configured")
+		}
+	}
+
+	for _, model := range spec.Models {
+		if model.Type == jamiethompsonmev1alpha1.TypeHoltWinters {
+			hw := model.HoltWinters
+			if hw == nil {
+				return fmt.Errorf("invalid model '%s', type is '%s' but no Holt Winters configuration provided",
+					model.Name, model.Type)
+			}
+
+			if hw.RuntimeTuningFetchHook != nil {
+				hook := hw.RuntimeTuningFetchHook
+				if hook.Type == jamiethompsonmev1alpha1.HookTypeHTTP && hook.HTTP == nil {
+					return fmt.Errorf("invalid model '%s', runtimeTuningFetchHook is type '%s' but no HTTP hook configuration provided",
+						model.Name, hook.Type)
+				}
+			}
+		}
+
+		if model.Type == jamiethompsonmev1alpha1.TypeLinear && model.Linear == nil {
+			return fmt.Errorf("invalid model '%s', type is '%s' but no Linear Regression configuration provided",
+				model.Name, model.Type)
+		}
+	}
+
 	return nil
 }
 

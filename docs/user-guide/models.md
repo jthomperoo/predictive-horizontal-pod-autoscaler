@@ -64,7 +64,7 @@ The **holtWinters** component of the configuration handles configuration of the 
 - **alpha**, **beta**, **gamma** - these are the smoothing coefficients for level, trend and seasonality respectively,
 requires tweaking and analysis to be able to optimise. See [here](https://github.com/jthomperoo/holtwinters) or
 [here](https://grisha.org/blog/2016/01/29/triple-exponential-smoothing-forecasting/) for more details.
-- **seasonalPeriods** - the length of a season in base unit intervals, for example if your interval was `10000`
+- **seasonalPeriods** - the length of a season in base unit sync periods, for example if your sync period was `10000`
 (10 seconds), and your repeated season was 60 seconds long, this value would be `6`.
 - **storedSeasons** - the number of seasons to store, for example `4`, if there are `>4` seasons stored, the oldest
 season will be removed.
