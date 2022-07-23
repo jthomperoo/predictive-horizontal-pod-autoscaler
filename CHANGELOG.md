@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [v0.11.1] - 2022-07-23
 ### Fixed
 - Bug that caused the autoscaler to fail to scale every time, due to invalid K8s GVR resource fed to the scaling
 client.
@@ -122,7 +124,9 @@ Holt-Winters configuration.
 - Added the ability to use Linear Regression models to predict future scaling.
 
 [Unreleased]:
-https://github.com/jthomperoo/predictive-horizontal-pod-autoscaler/compare/v0.11.0...HEAD
+https://github.com/jthomperoo/predictive-horizontal-pod-autoscaler/compare/v0.11.1...HEAD
+[v0.11.1]:
+https://github.com/jthomperoo/predictive-horizontal-pod-autoscaler/compare/v0.11.0...v0.11.1
 [v0.11.0]:
 https://github.com/jthomperoo/predictive-horizontal-pod-autoscaler/compare/v0.10.0...v0.11.0
 [v0.10.0]:

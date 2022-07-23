@@ -7,7 +7,7 @@ The PHPA operator can be installed using Helm, run this command to install the o
 cluster-wide scope:
 
 ```bash
-VERSION=v0.11.0
+VERSION=v0.11.1
 HELM_CHART=predictive-horizontal-pod-autoscaler-operator
 helm install ${HELM_CHART} https://github.com/jthomperoo/predictive-horizontal-pod-autoscaler/releases/download/${VERSION}/predictive-horizontal-pod-autoscaler-${VERSION}.tgz
 ```
