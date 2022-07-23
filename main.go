@@ -19,7 +19,6 @@ package main
 import (
 	"flag"
 	"os"
-	"os/exec"
 	"time"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
@@ -125,9 +124,7 @@ func main() {
 	cpuInitializationPeriod := time.Duration(300) * time.Second
 	initialReadinessDelay := time.Duration(30) * time.Second
 	tolerance := 0.1
-	pyRunner := &algorithm.Python{
-		Command: exec.Command,
-	}
+	pyRunner := algorithm.NewAlgorithmPython()
 	httpExec := &http.Execute{}
 
 	if err = (&controllers.PredictiveHorizontalPodAutoscalerReconciler{

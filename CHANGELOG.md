@@ -21,6 +21,7 @@ it will still update the replica history available to make a prediction with and
 - Holt-Winters runtime hooks format changed:
   - `evaluations` renamed to `replicaHistory`.
   - Format change for `replicaHistory`, now in the format `[{"time": "<timestamp>", "replicas": <replica count>}]`.
+- Upgrade to Go `v1.18`.
 ### Removed
 - BREAKING CHANGES: Removed some no longer relevant configuration options.
   - `DBPath`

@@ -63,7 +63,7 @@ func TestExecute_ExecuteWithValue(t *testing.T) {
 		description string
 		expected    string
 		expectedErr error
-		definition  *jamiethompsonmev1alpha1.Definition
+		definition  *jamiethompsonmev1alpha1.HookDefinition
 		value       string
 		execute     http.Execute
 	}{
@@ -71,7 +71,7 @@ func TestExecute_ExecuteWithValue(t *testing.T) {
 			description: "Fail, missing HTTP method configuration",
 			expected:    "",
 			expectedErr: errors.New(`missing required 'http' configuration on hook definition`),
-			definition: &jamiethompsonmev1alpha1.Definition{
+			definition: &jamiethompsonmev1alpha1.HookDefinition{
 				Type: "http",
 			},
 			value:   "test",
@@ -81,7 +81,7 @@ func TestExecute_ExecuteWithValue(t *testing.T) {
 			description: "Fail, invalid HTTP method",
 			expected:    "",
 			expectedErr: errors.New(`net/http: invalid method "*?"`),
-			definition: &jamiethompsonmev1alpha1.Definition{
+			definition: &jamiethompsonmev1alpha1.HookDefinition{
 				Type: "http",
 				HTTP: &jamiethompsonmev1alpha1.HTTPHook{
 					Method: "*?",
@@ -95,7 +95,7 @@ func TestExecute_ExecuteWithValue(t *testing.T) {
 			description: "Fail, unknown parameter mode",
 			expected:    "",
 			expectedErr: errors.New(`unknown parameter mode 'unknown'`),
-			definition: &jamiethompsonmev1alpha1.Definition{
+			definition: &jamiethompsonmev1alpha1.HookDefinition{
 				Type: "http",
 				HTTP: &jamiethompsonmev1alpha1.HTTPHook{
 					Method:        "GET",
@@ -110,7 +110,7 @@ func TestExecute_ExecuteWithValue(t *testing.T) {
 			description: "Fail, request fail",
 			expected:    "",
 			expectedErr: errors.New(`Get "https://custompodautoscaler.com?value=test": Test network error!`),
-			definition: &jamiethompsonmev1alpha1.Definition{
+			definition: &jamiethompsonmev1alpha1.HookDefinition{
 				Type: "http",
 				HTTP: &jamiethompsonmev1alpha1.HTTPHook{
 					Method:        "GET",
@@ -133,7 +133,7 @@ func TestExecute_ExecuteWithValue(t *testing.T) {
 			description: "Fail, timeout",
 			expected:    "",
 			expectedErr: errors.New(`Get "https://custompodautoscaler.com?value=test": context deadline exceeded`),
-			definition: &jamiethompsonmev1alpha1.Definition{
+			definition: &jamiethompsonmev1alpha1.HookDefinition{
 				Type: "http",
 				HTTP: &jamiethompsonmev1alpha1.HTTPHook{
 					Method:        "GET",
@@ -160,7 +160,7 @@ func TestExecute_ExecuteWithValue(t *testing.T) {
 			description: "Fail, invalid response body",
 			expected:    "",
 			expectedErr: errors.New(`Fail to read body!`),
-			definition: &jamiethompsonmev1alpha1.Definition{
+			definition: &jamiethompsonmev1alpha1.HookDefinition{
 				Type: "http",
 				HTTP: &jamiethompsonmev1alpha1.HTTPHook{
 					Method:        "GET",
@@ -192,7 +192,7 @@ func TestExecute_ExecuteWithValue(t *testing.T) {
 			description: "Fail, bad response code",
 			expected:    "",
 			expectedErr: errors.New(`http request failed, status: [400], response: 'bad request!'`),
-			definition: &jamiethompsonmev1alpha1.Definition{
+			definition: &jamiethompsonmev1alpha1.HookDefinition{
 				Type: "http",
 				HTTP: &jamiethompsonmev1alpha1.HTTPHook{
 					Method:        "GET",
@@ -223,7 +223,7 @@ func TestExecute_ExecuteWithValue(t *testing.T) {
 			description: "Success, POST, body parameter, 3 headers",
 			expected:    "Success!",
 			expectedErr: nil,
-			definition: &jamiethompsonmev1alpha1.Definition{
+			definition: &jamiethompsonmev1alpha1.HookDefinition{
 				Type: "http",
 				HTTP: &jamiethompsonmev1alpha1.HTTPHook{
 					Method:        "POST",
@@ -283,7 +283,7 @@ func TestExecute_ExecuteWithValue(t *testing.T) {
 			description: "Success, GET, query parameter, 1 header",
 			expected:    "Success!",
 			expectedErr: nil,
-			definition: &jamiethompsonmev1alpha1.Definition{
+			definition: &jamiethompsonmev1alpha1.HookDefinition{
 				Type: "http",
 				HTTP: &jamiethompsonmev1alpha1.HTTPHook{
 					Method:        "GET",
@@ -332,7 +332,7 @@ func TestExecute_ExecuteWithValue(t *testing.T) {
 			description: "Success, GET, query parameter, 0 headers",
 			expected:    "Success!",
 			expectedErr: nil,
-			definition: &jamiethompsonmev1alpha1.Definition{
+			definition: &jamiethompsonmev1alpha1.HookDefinition{
 				Type: "http",
 				HTTP: &jamiethompsonmev1alpha1.HTTPHook{
 					Method:        "GET",
@@ -374,7 +374,7 @@ func TestExecute_ExecuteWithValue(t *testing.T) {
 			description: "Success, PUT, body parameter, 0 headers",
 			expected:    "Success!",
 			expectedErr: nil,
-			definition: &jamiethompsonmev1alpha1.Definition{
+			definition: &jamiethompsonmev1alpha1.HookDefinition{
 				Type: "http",
 				HTTP: &jamiethompsonmev1alpha1.HTTPHook{
 					Method:        "PUT",

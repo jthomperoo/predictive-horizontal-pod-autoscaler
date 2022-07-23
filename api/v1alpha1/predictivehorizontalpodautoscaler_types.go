@@ -37,8 +37,8 @@ const (
 	TypeLinear      = "Linear"
 )
 
-// Definition describes a hook for passing data/triggering logic, such as through a shell command
-type Definition struct {
+// HookDefinition describes a hook for passing data/triggering logic, such as through a shell command
+type HookDefinition struct {
 	Type    string    `json:"type"`
 	Timeout int       `json:"timeout"`
 	HTTP    *HTTPHook `json:"http"`
@@ -96,7 +96,7 @@ type HoltWinters struct {
 	InitialSeasonal *float64 `json:"initialSeasonal"`
 
 	// +optional
-	RuntimeTuningFetchHook *Definition `json:"runtimeTuningFetchHook"`
+	RuntimeTuningFetchHook *HookDefinition `json:"runtimeTuningFetchHook"`
 }
 
 // Model represents a prediction model to use, e.g. a linear regression

@@ -23,6 +23,6 @@ import (
 
 // Executer interface provides methods for executing user logic with a value passed through to it
 type Executer interface {
-	ExecuteWithValue(definition *jamiethompsonmev1alpha1.Definition, value string) (string, error)
+	ExecuteWithValue(definition *jamiethompsonmev1alpha1.HookDefinition, value string) (string, error)
 	GetType() string
 }

@@ -618,8 +618,8 @@ spec:
                         initializationMethod:
                           type: string
                         runtimeTuningFetchHook:
-                          description: Definition describes a hook for passing data/triggering
-                            logic, such as through a shell command
+                          description: HookDefinition describes a hook for passing
+                            data/triggering logic, such as through a shell command
                           properties:
                             http:
                               description: HTTPHook describes configuration options

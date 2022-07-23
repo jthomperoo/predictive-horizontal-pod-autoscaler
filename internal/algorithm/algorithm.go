@@ -31,15 +31,23 @@ const (
 
 type command = func(name string, arg ...string) *exec.Cmd
 
+func NewAlgorithmPython() *Python {
+	return &Python{
+		Command: exec.Command,
+		Getwd:   os.Getwd,
+	}
+}
+
 // Python is an implementation of an algorithm runner that runs algorithms using Python commands
 type Python struct {
 	Command command
+	Getwd   func() (dir string, err error)
 }
 
 // RunAlgorithmWithValue runs an algorithm at the path provided, passing through the value provided
 func (r *Python) RunAlgorithmWithValue(algorithmPath string, value string, timeout int) (string, error) {
 
-	wd, err := os.Getwd()
+	wd, err := r.Getwd()
 	if err != nil {
 		return "", err
 	}

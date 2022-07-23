@@ -53,7 +53,7 @@ type Execute struct {
 
 // ExecuteWithValue executes an HTTP request with the value provided as
 // parameter, configurable to be either in the body or query string
-func (e *Execute) ExecuteWithValue(definition *jamiethompsonmev1alpha1.Definition, value string) (string, error) {
+func (e *Execute) ExecuteWithValue(definition *jamiethompsonmev1alpha1.HookDefinition, value string) (string, error) {
 	if definition.HTTP == nil {
 		return "", fmt.Errorf("missing required 'http' configuration on hook definition")
 	}

@@ -175,13 +175,14 @@ func (p *Predict) GetPrediction(model *jamiethompsonmev1alpha1.Model, replicaHis
 }
 
 func (p *Predict) PruneHistory(model *jamiethompsonmev1alpha1.Model, replicaHistory []jamiethompsonmev1alpha1.TimestampedReplicas) ([]jamiethompsonmev1alpha1.TimestampedReplicas, error) {
-	if model.HoltWinters == nil {
-		return nil, errors.New("no HoltWinters configuration provided for model")
+	err := p.validate(model)
+	if err != nil {
+		return nil, err
 	}
 
 	// Sort by date created
 	sort.Slice(replicaHistory, func(i, j int) bool {
-		return replicaHistory[i].Time.Before(replicaHistory[j].Time)
+		return !replicaHistory[i].Time.Before(replicaHistory[j].Time)
 	})
 
 	// If there are too many stored seasons, remove the oldest ones

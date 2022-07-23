@@ -58,7 +58,7 @@ See the [`examples/` directory](./examples) for working code samples.
 
 Developing this project requires these dependencies:
 
-* [Go](https://golang.org/doc/install) >= `1.17`
+* [Go](https://golang.org/doc/install) >= `1.18`
 * [Python](https://www.python.org/downloads/) == `3.8.x`
 * [Helm](https://helm.sh/) == `3.9.x`
 
