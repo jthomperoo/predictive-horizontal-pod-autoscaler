@@ -9,10 +9,18 @@ spec:
     name: php-apache
   minReplicas: 1
   maxReplicas: 10
+  syncPeriod: 20000
+  downscaleStabilization: 30
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 50
   models:
   - type: HoltWinters
-    name: dynamic-holt-winters
-    perSyncPeriod: 1
+    name: HoltWintersPrediction
     holtWinters:
       runtimeTuningFetchHook:
         type: "http"
@@ -27,13 +35,3 @@ spec:
       storedSeasons: 4
       trend: "additive"
       seasonal: additive
-  decisionType: "maximum"
-  metrics:
-  - type: Resource
-    resource:
-      name: cpu
-      target:
-        type: Utilization
-        averageUtilization: 50
-  syncPeriod: 20000
-  downscaleStabilization: 30

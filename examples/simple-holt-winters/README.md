@@ -1,12 +1,7 @@
-# Dynamic Holt Winters
+# Simple Holt Winters
 
 This example shows how Holt-Winters can be used to with the Predictive Horizontal Pod Autoscaler (PHPA) to predict
-scaling demand based on seasonal data. This example is described as *dynamic* as it fetches it's tuning values from
-an external source at runtime, allowing these values to be dynamically calculated at runtime rather than being
-hardcoded.
-
-This example specifically uses a HTTP request to a tuning service to fetch the `alpha`, `beta` and `gamma` Holt Winters
-tuning values at runtime.
+scaling demand based on seasonal data.
 
 This uses the Holt-Winters time series prediction method, which allows for defining seasons to predict how to scale.
 For example, defining a season as 24 hours,a deployment regularly has a higher CPU load between 3pm and 5pm, the model
@@ -56,7 +51,7 @@ it produces.
 9. Use `kubectl logs -l run=tuning -f` to see the logs of the tuning service, it will report any time it is queried and
 it will print the value provided to it.
 10. Use
-`kubectl get configmap predictive-horizontal-pod-autoscaler-dynamic-holt-winters-data -o=json | jq -r '.data.data | fromjson | .modelHistories["dynamic-holt-winters"].replicaHistory[] | .time,.replicas'`
+`kubectl get configmap predictive-horizontal-pod-autoscaler-simple-holt-winters-data -o=json | jq -r '.data.data | fromjson | .modelHistories["simple-holt-winters"].replicaHistory[] | .time,.replicas'`
 to see the replica history for the autoscaler stored in a configmap and tracked by the autoscaler.
 
 Every minute the load tester will increase the load on the application we are autoscaling for 30 seconds. The PHPA will
@@ -90,7 +85,7 @@ autoscaler will act:
 apiVersion: jamiethompson.me/v1alpha1
 kind: PredictiveHorizontalPodAutoscaler
 metadata:
-  name: dynamic-holt-winters
+  name: simple-holt-winters
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
@@ -109,21 +104,16 @@ spec:
         averageUtilization: 50
   models:
   - type: HoltWinters
-    name: HoltWintersPrediction
+    name: simple-holt-winters
     holtWinters:
-      runtimeTuningFetchHook:
-        type: "http"
-        timeout: 2500
-        http:
-          method: "GET"
-          url: "http://tuning/holt_winters"
-          successCodes:
-            - 200
-          parameterMode: query
+      alpha: 0.9
+      beta: 0.9
+      gamma: 0.9
       seasonalPeriods: 6
       storedSeasons: 4
-      trend: "additive"
+      trend: additive
       seasonal: additive
+
 ```
 
 - `scaleTargetRef` is the resource the autoscaler is targeting for scaling.
@@ -139,9 +129,8 @@ CPU utilization at 50% per pod.
   - `type` - 'HoltWinters', using a Holt-Winters predictive model.
   - `name` - Unique name of the model.
   - `holtWinters` - Holt-Winters specific configuration.
-    * `runtimeTuningFetchHook` - This is a [hook](https://predictive-horizontal-pod-autoscaler.readthedocs.io/en/latest/user-guide/hooks)
-    that is used to dynamically fetch the `alpha`, `beta` and `gamma` values at runtime, in this example it is using a
-    `HTTP` request to `http://tuning/holt_winters`.
+      * `alpha`, `beta`, `gamma` - these are the smoothing coefficients for level, trend and seasonality
+      respectively.
     * `seasonalPeriods` - the length of a season in base unit sync periods, for this example sync period is `20000`
     (20 seconds), and season length is `6`, resulting in a season length of 20 * 6 = 120 seconds = 2 minutes.
     * `storedSeasons` - the number of seasons to store, for this example `4`, if there are more than 4 seasons

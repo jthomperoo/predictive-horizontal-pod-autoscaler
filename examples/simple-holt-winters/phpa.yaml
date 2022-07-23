@@ -9,6 +9,15 @@ spec:
     name: php-apache
   minReplicas: 1
   maxReplicas: 10
+  syncPeriod: 20000
+  downscaleStabilization: 30
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 50
   models:
   - type: HoltWinters
     name: simple-holt-winters
@@ -20,11 +29,3 @@ spec:
       storedSeasons: 4
       trend: additive
       seasonal: additive
-  metrics:
-  - type: Resource
-    resource:
-      name: cpu
-      target:
-        type: Utilization
-        averageUtilization: 50
-  downscaleStabilization: 30

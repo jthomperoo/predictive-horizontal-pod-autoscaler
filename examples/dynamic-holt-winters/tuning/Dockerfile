@@ -1,4 +1,4 @@
-# Copyright 2021 The Predictive Horizontal Pod Autoscaler Authors.
+# Copyright 2022 The Predictive Horizontal Pod Autoscaler Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM python:3.6-slim
+FROM python:3.8-slim
 # We copy just the requirements.txt first to leverage Docker cache
 COPY ./requirements.txt /app/requirements.txt
 WORKDIR /app

@@ -9,6 +9,7 @@ spec:
     name: php-apache
   minReplicas: 1
   maxReplicas: 10
+  downscaleStabilization: 0
   metrics:
     - type: Resource
       resource:
@@ -22,4 +23,3 @@ spec:
       linear:
         lookAhead: 10000
         historySize: 6
-  downscaleStabilization: 0
