@@ -84,6 +84,10 @@ except KeyError as ex:
     print(f"Invalid JSON provided: missing {str(ex)}, exiting", file=sys.stderr)
     sys.exit(1)
 
+if len(algorithm_input.series) < 2 * algorithm_input.seasonal_periods:
+    print("Invalid data provided, must be at least 2 * seasonal_periods observations, exiting", file=sys.stderr)
+    sys.exit(1)
+
 if len(algorithm_input.series) < 10 + 2 * (algorithm_input.seasonal_periods // 2):
     print("Invalid data provided, must be at least 10 + 2 * (seasonal_periods // 2) observations, exiting",
           file=sys.stderr)
