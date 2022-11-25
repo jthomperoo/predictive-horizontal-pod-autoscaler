@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Fixed
+- Bug that would display a statsmodels error when using Holt-Winters and having too few observations (less than 2 *
+seasonal periods).
 
 ## [v0.11.1] - 2022-07-23
 ### Fixed

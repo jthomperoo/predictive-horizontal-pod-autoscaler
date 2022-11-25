@@ -76,7 +76,14 @@ func (p *Predict) GetPrediction(model *jamiethompsonmev1alpha1.Model, replicaHis
 		return 0, err
 	}
 
+	// Statsmodels requires at least 2 * seasonal_periods to make a prediction with Holt Winters
+	// https://github.com/statsmodels/statsmodels/blob/77bb1d276c7d11bc8657497b4307aa7575c3e65c/statsmodels/tsa/exponential_smoothing/initialization.py#L57-L61
+	if len(replicaHistory) < 2*model.HoltWinters.SeasonalPeriods {
+		return 0, nil
+	}
+
 	// Statsmodels requires at least 10 + 2 * (seasonal_periods // 2) to make a prediction with Holt Winters
+	// https://github.com/statsmodels/statsmodels/blob/77bb1d276c7d11bc8657497b4307aa7575c3e65c/statsmodels/tsa/exponential_smoothing/initialization.py#L66-L71
 	if len(replicaHistory) < 10+2*(model.HoltWinters.SeasonalPeriods/2) {
 		return 0, nil
 	}

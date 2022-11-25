@@ -45,7 +45,7 @@ def test_holt_winters(subtests):
         "expected_status_code":
         1,
         "expected_stderr":
-        "Invalid data provided, must be at least 10 + 2 * (seasonal_periods // 2) " + "observations, exiting\n",
+        "Invalid data provided, must be at least 10 + 2 * (seasonal_periods // 2) observations, exiting\n",
         "expected_stdout":
         "",
         "stdin":
@@ -57,6 +57,25 @@ def test_holt_winters(subtests):
                 "gamma": 0.3,
                 "seasonalPeriods": 3,
                 "series": [1,3,1,1,3,1,1,3,1]
+            }"""
+    }, {
+        "description":
+        "Failure, less than required observations observations, 2 observations",
+        "expected_status_code":
+        1,
+        "expected_stderr":
+        "Invalid data provided, must be at least 2 * seasonal_periods observations, exiting\n",
+        "expected_stdout":
+        "",
+        "stdin":
+        """{
+                "trend": "add",
+                "seasonal": "add",
+                "alpha": 0.9,
+                "beta": 0.9,
+                "gamma": 0.3,
+                "seasonalPeriods": 3,
+                "series": [1,3]
             }"""
     }, {
         "description":

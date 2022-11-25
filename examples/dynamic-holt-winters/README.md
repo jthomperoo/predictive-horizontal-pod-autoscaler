@@ -49,7 +49,7 @@ Walkthrough](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-aut
 4. Deploy the tuning service `kubectl apply -f tuning/tuning.yaml`.
 5. Use `kubectl apply -f phpa.yaml` to start the autoscaler, pointing at the previously created deployment.
 6. Build the load tester image `docker build -t load-tester load` and import it into your Kubernetes cluster
-  (`k3d image import load`).
+  (`k3d image import load-tester`).
 7. Deploy the load tester, note the time as it will run for 30 seconds every minute `kubectl apply -f load/load.yaml`.
 8. Use `kubectl logs -l name=predictive-horizontal-pod-autoscaler -f` to see the autoscaler working and the log output
 it produces.

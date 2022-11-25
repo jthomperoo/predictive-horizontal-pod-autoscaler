@@ -74,6 +74,33 @@ func TestPredict_GetPrediction(t *testing.T) {
 			[]jamiethompsonmev1alpha1.TimestampedReplicas{},
 		},
 		{
+			"Success, less than 2 * seasonal_periods observations",
+			0,
+			nil,
+			&holtwinters.Predict{},
+			&jamiethompsonmev1alpha1.Model{
+				Type: jamiethompsonmev1alpha1.TypeLinear,
+				HoltWinters: &jamiethompsonmev1alpha1.HoltWinters{
+					Alpha:           float64Ptr(0.9),
+					Beta:            float64Ptr(0.9),
+					Gamma:           float64Ptr(0.9),
+					SeasonalPeriods: 3,
+					StoredSeasons:   3,
+					Trend:           "add",
+				},
+			},
+			[]jamiethompsonmev1alpha1.TimestampedReplicas{
+				{
+					Time:     &metav1.Time{Time: time.Now().UTC().Add(time.Duration(-80) * time.Second)},
+					Replicas: 1,
+				},
+				{
+					Time:     &metav1.Time{Time: time.Now().UTC().Add(time.Duration(-70) * time.Second)},
+					Replicas: 3,
+				},
+			},
+		},
+		{
 			"Success, less than 10 + 2 * (seasonal_periods // 2) observations",
 			0,
 			nil,

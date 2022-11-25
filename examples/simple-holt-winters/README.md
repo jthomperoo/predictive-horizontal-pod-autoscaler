@@ -39,18 +39,15 @@ This example was based on the [Horizontal Pod Autoscaler
 Walkthrough](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale-walkthrough/).
 
 1. Use `kubectl apply -f deployment.yaml` to spin up the app/deployment to manage, called `php-apache`.
-2. Build the tuning image `docker build -t tuning tuning` and import it into your Kubernetes cluster
-  (`k3d image import tuning`).
-4. Deploy the tuning service `kubectl apply -f tuning/tuning.yaml`.
-5. Use `kubectl apply -f phpa.yaml` to start the autoscaler, pointing at the previously created deployment.
-6. Build the load tester image `docker build -t load-tester load` and import it into your Kubernetes cluster
-  (`k3d image import load`).
-7. Deploy the load tester, note the time as it will run for 30 seconds every minute `kubectl apply -f load/load.yaml`.
-8. Use `kubectl logs -l name=predictive-horizontal-pod-autoscaler -f` to see the autoscaler working and the log output
+2. Use `kubectl apply -f phpa.yaml` to start the autoscaler, pointing at the previously created deployment.
+3. Build the load tester image `docker build -t load-tester load` and import it into your Kubernetes cluster
+  (`k3d image import load-tester`).
+4. Deploy the load tester, note the time as it will run for 30 seconds every minute `kubectl apply -f load/load.yaml`.
+5. Use `kubectl logs -l name=predictive-horizontal-pod-autoscaler -f` to see the autoscaler working and the log output
 it produces.
-9. Use `kubectl logs -l run=tuning -f` to see the logs of the tuning service, it will report any time it is queried and
+6. Use `kubectl logs -l run=tuning -f` to see the logs of the tuning service, it will report any time it is queried and
 it will print the value provided to it.
-10. Use
+7. Use
 `kubectl get configmap predictive-horizontal-pod-autoscaler-simple-holt-winters-data -o=json | jq -r '.data.data | fromjson | .modelHistories["simple-holt-winters"].replicaHistory[] | .time,.replicas'`
 to see the replica history for the autoscaler stored in a configmap and tracked by the autoscaler.
 
