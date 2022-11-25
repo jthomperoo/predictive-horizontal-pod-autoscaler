@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [v0.11.2] - 2022-11-25
 ### Fixed
 - Bug that would display a statsmodels error when using Holt-Winters and having too few observations (less than 2 *
 seasonal periods).
@@ -127,7 +129,9 @@ Holt-Winters configuration.
 - Added the ability to use Linear Regression models to predict future scaling.
 
 [Unreleased]:
-https://github.com/jthomperoo/predictive-horizontal-pod-autoscaler/compare/v0.11.1...HEAD
+https://github.com/jthomperoo/predictive-horizontal-pod-autoscaler/compare/v0.11.2...HEAD
+[v0.11.2]:
+https://github.com/jthomperoo/predictive-horizontal-pod-autoscaler/compare/v0.11.1...v0.11.2
 [v0.11.1]:
 https://github.com/jthomperoo/predictive-horizontal-pod-autoscaler/compare/v0.11.0...v0.11.1
 [v0.11.0]:
