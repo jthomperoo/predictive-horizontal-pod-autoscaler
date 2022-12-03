@@ -297,9 +297,9 @@ type PredictiveHorizontalPodAutoscalerStatus struct {
 	CurrentMetrics []autoscalingv2.MetricStatus `json:"currentMetrics"`
 }
 
-//+kubebuilder:object:root=true
-//+kubebuilder:subresource:status
-//+kubebuilder:resource:shortName=phpa
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
+// +kubebuilder:resource:shortName=phpa
 // +kubebuilder:printcolumn:name="Reference",type="string",JSONPath=`.status.reference`,description="The identifier for the resource being scaled in the format <api-version>/<api-kind/<name>"
 // +kubebuilder:printcolumn:name="Min Pods",type="integer",JSONPath=`.spec.minReplicas`,description="The minimum number of replicas of pods that the resource being managed by the autoscaler can have"
 // +kubebuilder:printcolumn:name="Max Pods",type="integer",JSONPath=`.spec.maxReplicas`,description="The maximum number of replicas of pods that the resource being managed by the autoscaler can have"

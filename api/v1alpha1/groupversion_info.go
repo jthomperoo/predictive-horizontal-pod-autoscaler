@@ -15,8 +15,8 @@ limitations under the License.
 */
 
 // Package v1alpha1 contains API Schema definitions for the jamiethompson.me v1alpha1 API group
-//+kubebuilder:object:generate=true
-//+groupName=jamiethompson.me
+// +kubebuilder:object:generate=true
+// +groupName=jamiethompson.me
 package v1alpha1
 
 import (
