@@ -6,8 +6,13 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 ### Changed
+- **BREAKING CHANGE** PHPA spec upgraded from `autoscaling/v2beta2` to `autoscaling/v2` for the following definitions:
+  - `CrossVersionObjectReference` in the `scaleTargetRef` field.
+  - `MetricSpec` in the `metrics` field.
+  - `MetricStatus` in the `currentMetrics` field.
 - Upgraded to [k8shorizmetrics `v2.0.0`](https://github.com/jthomperoo/k8shorizmetrics/releases/tag/v2.0.0).
 - Upgraded from `autoscaling/v2beta2` to `autoscaling/v2`.
+- Upgraded to Go `v1.19`.
 
 ## [v0.11.2] - 2022-11-25
 ### Fixed
