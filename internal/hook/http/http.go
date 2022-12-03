@@ -20,7 +20,7 @@ package http
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	gohttp "net/http"
 	"strings"
 	"time"
@@ -68,7 +68,7 @@ func (e *Execute) ExecuteWithValue(definition *jamiethompsonmev1alpha1.HookDefin
 	switch definition.HTTP.ParameterMode {
 	case BodyParameterMode:
 		// Set body parameter
-		req.Body = ioutil.NopCloser(strings.NewReader(value))
+		req.Body = io.NopCloser(strings.NewReader(value))
 	case QueryParameterMode:
 		// Set query parameter
 		query := req.URL.Query()
@@ -94,7 +94,7 @@ func (e *Execute) ExecuteWithValue(definition *jamiethompsonmev1alpha1.HookDefin
 	}
 
 	// Read the response body
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", err
 	}

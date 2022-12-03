@@ -37,9 +37,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	"github.com/jthomperoo/k8shorizmetrics"
-	"github.com/jthomperoo/k8shorizmetrics/metricsclient"
-	"github.com/jthomperoo/k8shorizmetrics/podsclient"
+	"github.com/jthomperoo/k8shorizmetrics/v2"
+	"github.com/jthomperoo/k8shorizmetrics/v2/metricsclient"
+	"github.com/jthomperoo/k8shorizmetrics/v2/podsclient"
 
 	jamiethompsonmev1alpha1 "github.com/jthomperoo/predictive-horizontal-pod-autoscaler/api/v1alpha1"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/algorithm"

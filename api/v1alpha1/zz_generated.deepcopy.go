@@ -22,7 +22,7 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"k8s.io/api/autoscaling/v2beta2"
+	"k8s.io/api/autoscaling/v2"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -297,7 +297,7 @@ func (in *PredictiveHorizontalPodAutoscalerSpec) DeepCopyInto(out *PredictiveHor
 	}
 	if in.Metrics != nil {
 		in, out := &in.Metrics, &out.Metrics
-		*out = make([]v2beta2.MetricSpec, len(*in))
+		*out = make([]v2.MetricSpec, len(*in))
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
@@ -367,7 +367,7 @@ func (in *PredictiveHorizontalPodAutoscalerStatus) DeepCopyInto(out *PredictiveH
 	}
 	if in.CurrentMetrics != nil {
 		in, out := &in.CurrentMetrics, &out.CurrentMetrics
-		*out = make([]v2beta2.MetricStatus, len(*in))
+		*out = make([]v2.MetricStatus, len(*in))
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}

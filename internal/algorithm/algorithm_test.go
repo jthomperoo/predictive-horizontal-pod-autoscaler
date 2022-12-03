@@ -19,7 +19,7 @@ package algorithm_test
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"os/exec"
 	"path"
@@ -104,7 +104,7 @@ func TestMain(m *testing.M) {
 			timeout:       100,
 			python: &algorithm.Python{
 				Command: fakeExecCommand("success", func(t *testing.T) {
-					stdinb, err := ioutil.ReadAll(os.Stdin)
+					stdinb, err := io.ReadAll(os.Stdin)
 					if err != nil {
 						fmt.Fprint(os.Stderr, err.Error())
 						os.Exit(1)
