@@ -18,7 +18,7 @@ deploy: generate
 
 lint: generate
 	@echo "=============Linting============="
-	go run honnef.co/go/tools/cmd/staticcheck ./...
+	go run honnef.co/go/tools/cmd/staticcheck@v0.3.3 ./...
 	pylint algorithms --rcfile=.pylintrc
 
 format:

@@ -19,7 +19,7 @@ package http_test
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	gohttp "net/http"
 	"net/http/httptest"
 	"strings"
@@ -210,7 +210,7 @@ func TestExecute_ExecuteWithValue(t *testing.T) {
 					Transport: &testHTTPClient{
 						func(req *gohttp.Request) (*gohttp.Response, error) {
 							return &gohttp.Response{
-								Body:       ioutil.NopCloser(strings.NewReader("bad request!")),
+								Body:       io.NopCloser(strings.NewReader("bad request!")),
 								Header:     gohttp.Header{},
 								StatusCode: 400,
 							}, nil
@@ -251,7 +251,7 @@ func TestExecute_ExecuteWithValue(t *testing.T) {
 							}
 
 							// Read the request body
-							body, err := ioutil.ReadAll(req.Body)
+							body, err := io.ReadAll(req.Body)
 							if err != nil {
 								return nil, err
 							}
@@ -270,7 +270,7 @@ func TestExecute_ExecuteWithValue(t *testing.T) {
 							}
 
 							return &gohttp.Response{
-								Body:       ioutil.NopCloser(strings.NewReader("Success!")),
+								Body:       io.NopCloser(strings.NewReader("Success!")),
 								Header:     gohttp.Header{},
 								StatusCode: 200,
 							}, nil
@@ -319,7 +319,7 @@ func TestExecute_ExecuteWithValue(t *testing.T) {
 							}
 
 							return &gohttp.Response{
-								Body:       ioutil.NopCloser(strings.NewReader("Success!")),
+								Body:       io.NopCloser(strings.NewReader("Success!")),
 								Header:     gohttp.Header{},
 								StatusCode: 200,
 							}, nil
@@ -361,7 +361,7 @@ func TestExecute_ExecuteWithValue(t *testing.T) {
 							}
 
 							return &gohttp.Response{
-								Body:       ioutil.NopCloser(strings.NewReader("Success!")),
+								Body:       io.NopCloser(strings.NewReader("Success!")),
 								Header:     gohttp.Header{},
 								StatusCode: 200,
 							}, nil
@@ -397,7 +397,7 @@ func TestExecute_ExecuteWithValue(t *testing.T) {
 							}
 
 							// Read the request body
-							body, err := ioutil.ReadAll(req.Body)
+							body, err := io.ReadAll(req.Body)
 							if err != nil {
 								return nil, err
 							}
@@ -407,7 +407,7 @@ func TestExecute_ExecuteWithValue(t *testing.T) {
 							}
 
 							return &gohttp.Response{
-								Body:       ioutil.NopCloser(strings.NewReader("Success!")),
+								Body:       io.NopCloser(strings.NewReader("Success!")),
 								Header:     gohttp.Header{},
 								StatusCode: 200,
 							}, nil
