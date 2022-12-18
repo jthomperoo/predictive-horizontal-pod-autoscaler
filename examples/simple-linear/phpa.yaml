@@ -9,7 +9,9 @@ spec:
     name: php-apache
   minReplicas: 1
   maxReplicas: 10
-  downscaleStabilization: 0
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 0
   metrics:
     - type: Resource
       resource:

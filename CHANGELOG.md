@@ -6,6 +6,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 ### Changed
+- See the [migration guide from `v0.11.2`
+here](https://predictive-horizontal-pod-autoscaler.readthedocs.io/en/latest/user-guide/migration/v0_11_2-to-v0_12_0).
 - **BREAKING CHANGE** PHPA spec upgraded from `autoscaling/v2beta2` to `autoscaling/v2` for the following definitions:
   - `CrossVersionObjectReference` in the `scaleTargetRef` field.
   - `MetricSpec` in the `metrics` field.
@@ -13,6 +15,12 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 - Upgraded to [k8shorizmetrics `v2.0.0`](https://github.com/jthomperoo/k8shorizmetrics/releases/tag/v2.0.0).
 - Upgraded from `autoscaling/v2beta2` to `autoscaling/v2`.
 - Upgraded to Go `v1.19`.
+### Removed
+- **BREAKING CHANGE** Removed `downscaleStabilization`, replaced with `behavior`, `scaleDown`,
+`stabilizationWindowSeconds`.
+### Added
+- Support for [HPA scaling
+behaviors](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/#configurable-scaling-behavior).
 
 ## [v0.11.2] - 2022-11-25
 ### Fixed
