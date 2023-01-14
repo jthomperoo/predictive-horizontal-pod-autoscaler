@@ -1,5 +1,5 @@
 /*
-Copyright 2022 The Predictive Horizontal Pod Autoscaler Authors.
+Copyright 2023 The Predictive Horizontal Pod Autoscaler Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -35,11 +35,6 @@ func Validate(instance *jamiethompsonmev1alpha1.PredictiveHorizontalPodAutoscale
 	}
 
 	err = validateModels(spec.Models)
-	if err != nil {
-		return err
-	}
-
-	err = validateScalingBehavior(spec.Behavior)
 	if err != nil {
 		return err
 	}
@@ -93,21 +88,5 @@ func validateModels(models []jamiethompsonmev1alpha1.Model) error {
 				model.Name, model.Type)
 		}
 	}
-	return nil
-}
-
-func validateScalingBehavior(behavior *autoscalingv2.HorizontalPodAutoscalerBehavior) error {
-	if behavior == nil {
-		return nil
-	}
-
-	if behavior.ScaleUp != nil && len(behavior.ScaleUp.Policies) <= 0 {
-		return errors.New("invalid scaleUp policy, must provide at least one policy to apply")
-	}
-
-	if behavior.ScaleDown != nil && len(behavior.ScaleDown.Policies) <= 0 {
-		return errors.New("invalid scaleDown policy, must provide at least one policy to apply")
-	}
-
 	return nil
 }

@@ -1,5 +1,5 @@
 /*
-Copyright 2022 The Predictive Horizontal Pod Autoscaler Authors.
+Copyright 2023 The Predictive Horizontal Pod Autoscaler Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,6 +14,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// Package scalebehavior provides functions for managing the scaling behavior of the PHPA.
+// This applies HPA scaling behaviors (downscale stabilization, scale rules), PHPA scaling strategies, and min/max
+// replicas.
+// Much of the code for this package has been directly copied from the Kubernetes source code here:
+// https://github.com/kubernetes/kubernetes/blob/3e26e104bdf9d0dc3c4046d6350b93557c67f3f4/pkg/controller/podautoscaler/horizontal.go
 package scalebehavior
 
 import (
@@ -27,22 +32,7 @@ import (
 	jamiethompsonmev1alpha1 "github.com/jthomperoo/predictive-horizontal-pod-autoscaler/api/v1alpha1"
 )
 
-const (
-	defaultDecisionType = jamiethompsonmev1alpha1.DecisionMaximum
-
-	defaultMinReplicas = 1
-
-	scaleUpLimitFactor  = 2.0
-	scaleUpLimitMinimum = 4.0
-)
-
-func DecideTargetReplicasByScalingStrategy(
-	instance *jamiethompsonmev1alpha1.PredictiveHorizontalPodAutoscaler, predictedReplicas []int32) int32 {
-
-	decisionType := defaultDecisionType
-	if instance.Spec.DecisionType != nil {
-		decisionType = *instance.Spec.DecisionType
-	}
+func DecideTargetReplicasByScalingStrategy(decisionType string, predictedReplicas []int32) int32 {
 
 	// Sort in ascending order
 	sort.Slice(predictedReplicas, func(i, j int) bool { return predictedReplicas[i] < predictedReplicas[j] })
@@ -96,9 +86,12 @@ func DecideTargetReplicasByScalingStrategy(
 }
 
 func DecideTargetReplicasByBehavior(
-	instance *jamiethompsonmev1alpha1.PredictiveHorizontalPodAutoscaler, currentReplicas int32, targetReplicas int32,
+	behavior *autoscalingv2.HorizontalPodAutoscalerBehavior, currentReplicas int32, targetReplicas int32,
+	minReplicas int32, maxReplicas int32,
+	scaleUpReplicaHistory []jamiethompsonmev1alpha1.TimestampedReplicas,
 	scaleDownReplicaHistory []jamiethompsonmev1alpha1.TimestampedReplicas,
-	scaleUpReplicaHistory []jamiethompsonmev1alpha1.TimestampedReplicas) int32 {
+	scaleUpEventHistory []jamiethompsonmev1alpha1.TimestampedReplicas,
+	scaleDownEventHistory []jamiethompsonmev1alpha1.TimestampedReplicas) int32 {
 
 	// Upscale stabilization
 	upscaleMinValue := targetReplicas
@@ -126,11 +119,18 @@ func DecideTargetReplicasByBehavior(
 		stabilizedReplicas = downscaleMaxValue
 	}
 
-	if instance.Spec.Behavior == nil {
-		return decideTargetReplicasByDefaultBehaviorRate(instance, currentReplicas, stabilizedReplicas)
+	targetReplicas = decideTargetReplicasByBehaviorRate(behavior, currentReplicas, stabilizedReplicas, scaleUpEventHistory,
+		scaleDownEventHistory)
+
+	if targetReplicas < minReplicas {
+		targetReplicas = minReplicas
 	}
 
-	return decideTargetReplicasByBehaviorRate(instance, currentReplicas, stabilizedReplicas)
+	if targetReplicas > maxReplicas {
+		targetReplicas = maxReplicas
+	}
+
+	return targetReplicas
 }
 
 // returns the longest policy period in seconds from the policies in a set of scaling rules provided
@@ -167,44 +167,123 @@ func PruneTimestampedReplicasToWindow(
 	return prunedTimestampedReplicas
 }
 
-func decideTargetReplicasByDefaultBehaviorRate(instance *jamiethompsonmev1alpha1.PredictiveHorizontalPodAutoscaler,
-	currentReplicas int32, targetReplicas int32) int32 {
+func decideTargetReplicasByBehaviorRate(behavior *autoscalingv2.HorizontalPodAutoscalerBehavior,
+	currentReplicas int32, targetReplicas int32,
+	scaleUpEvents []jamiethompsonmev1alpha1.TimestampedReplicas,
+	scaleDownEvents []jamiethompsonmev1alpha1.TimestampedReplicas) int32 {
 
 	if targetReplicas > currentReplicas {
 		// Scale up
-		maxReplicas := instance.Spec.MaxReplicas
+		scaleUpLimit := calculateScaleUpLimitWithinScalingRules(currentReplicas, scaleUpEvents, scaleDownEvents,
+			behavior.ScaleUp)
 
-		scaleUpLimit := calculateDefaultScaleUpLimit(currentReplicas)
-
-		if maxReplicas > scaleUpLimit {
-			maxReplicas = scaleUpLimit
+		if scaleUpLimit < currentReplicas {
+			// We shouldn't scale up further until the scaleUpEvents will be cleaned up
+			scaleUpLimit = currentReplicas
 		}
 
-		if targetReplicas > maxReplicas {
-			targetReplicas = maxReplicas
+		if targetReplicas > scaleUpLimit {
+			return scaleUpLimit
 		}
 	} else if targetReplicas < currentReplicas {
 		// Scale down
-		minReplicas := int32(defaultMinReplicas)
-		if instance.Spec.MinReplicas != nil {
-			minReplicas = *instance.Spec.MinReplicas
+		scaleDownLimit := calculateScaleDownLimitWithinScalingRules(currentReplicas, scaleUpEvents, scaleDownEvents,
+			behavior.ScaleDown)
+
+		if scaleDownLimit > currentReplicas {
+			// We shouldn't scale down further until the scaleDownEvents will be cleaned up
+			scaleDownLimit = currentReplicas
 		}
 
-		if targetReplicas < minReplicas {
-			targetReplicas = minReplicas
+		if targetReplicas < scaleDownLimit {
+			return scaleDownLimit
 		}
 	}
 
+	// Within the scaling limits
 	return targetReplicas
 }
 
-func decideTargetReplicasByBehaviorRate(instance *jamiethompsonmev1alpha1.PredictiveHorizontalPodAutoscaler,
-	currentReplicas int32, targetReplicas int32) int32 {
-	// TODO: Implement this, see
-	// https://github.com/kubernetes/kubernetes/blob/3e26e104bdf9d0dc3c4046d6350b93557c67f3f4/pkg/controller/podautoscaler/horizontal.go#L1049
-	return targetReplicas
+func calculateScaleUpLimitWithinScalingRules(currentReplicas int32,
+	scaleUpEvents []jamiethompsonmev1alpha1.TimestampedReplicas,
+	scaleDownEvents []jamiethompsonmev1alpha1.TimestampedReplicas,
+	scalingRules *autoscalingv2.HPAScalingRules) int32 {
+	var result int32
+	var proposed int32
+	var selectPolicyFn func(int32, int32) int32
+	if *scalingRules.SelectPolicy == autoscalingv2.DisabledPolicySelect {
+		return currentReplicas // Scaling is disabled
+	} else if *scalingRules.SelectPolicy == autoscalingv2.MinChangePolicySelect {
+		result = math.MaxInt32
+		selectPolicyFn = min // For scaling up, the lowest change ('min' policy) produces a minimum value
+	} else {
+		result = math.MinInt32
+		selectPolicyFn = max // Use the default policy otherwise to produce a highest possible change
+	}
+	for _, policy := range scalingRules.Policies {
+		replicasAddedInCurrentPeriod := getReplicaChanges(scaleUpEvents)
+		replicasDeletedInCurrentPeriod := getReplicaChanges(scaleDownEvents)
+		periodStartReplicas := currentReplicas - replicasAddedInCurrentPeriod + replicasDeletedInCurrentPeriod
+		if policy.Type == autoscalingv2.PodsScalingPolicy {
+			proposed = periodStartReplicas + policy.Value
+		} else if policy.Type == autoscalingv2.PercentScalingPolicy {
+			// the proposal has to be rounded up because the proposed change might not increase the replica count causing the target to never scale up
+			proposed = int32(math.Ceil(float64(periodStartReplicas) * (1 + float64(policy.Value)/100)))
+		}
+		result = selectPolicyFn(result, proposed)
+	}
+	return result
 }
 
-func calculateDefaultScaleUpLimit(currentReplicas int32) int32 {
-	return int32(math.Max(scaleUpLimitFactor*float64(currentReplicas), scaleUpLimitMinimum))
+func calculateScaleDownLimitWithinScalingRules(currentReplicas int32,
+	scaleUpEvents []jamiethompsonmev1alpha1.TimestampedReplicas,
+	scaleDownEvents []jamiethompsonmev1alpha1.TimestampedReplicas,
+	scalingRules *autoscalingv2.HPAScalingRules) int32 {
+	var result int32
+	var proposed int32
+	var selectPolicyFn func(int32, int32) int32
+	if *scalingRules.SelectPolicy == autoscalingv2.DisabledPolicySelect {
+		return currentReplicas // Scaling is disabled
+	} else if *scalingRules.SelectPolicy == autoscalingv2.MinChangePolicySelect {
+		result = math.MinInt32
+		selectPolicyFn = max // For scaling down, the lowest change ('min' policy) produces a maximum value
+	} else {
+		result = math.MaxInt32
+		selectPolicyFn = min // Use the default policy otherwise to produce a highest possible change
+	}
+	for _, policy := range scalingRules.Policies {
+		replicasAddedInCurrentPeriod := getReplicaChanges(scaleUpEvents)
+		replicasDeletedInCurrentPeriod := getReplicaChanges(scaleDownEvents)
+		periodStartReplicas := currentReplicas - replicasAddedInCurrentPeriod + replicasDeletedInCurrentPeriod
+		if policy.Type == autoscalingv2.PodsScalingPolicy {
+			proposed = periodStartReplicas - policy.Value
+		} else if policy.Type == autoscalingv2.PercentScalingPolicy {
+			proposed = int32(float64(periodStartReplicas) * (1 - float64(policy.Value)/100))
+		}
+		result = selectPolicyFn(result, proposed)
+	}
+	return result
+}
+
+func getReplicaChanges(scaleEvents []jamiethompsonmev1alpha1.TimestampedReplicas) int32 {
+	var replicas int32
+	for _, rec := range scaleEvents {
+		replicas += rec.Replicas
+	}
+
+	return replicas
+}
+
+func max(a, b int32) int32 {
+	if a >= b {
+		return a
+	}
+	return b
+}
+
+func min(a, b int32) int32 {
+	if a <= b {
+		return a
+	}
+	return b
 }

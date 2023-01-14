@@ -40,21 +40,6 @@ Default value: `15000` (15 seconds).
 
 Set in milliseconds.
 
-## downscaleStabilization
-
-```yaml
-downscaleStabilization: 150
-```
-
-Equivalent to `--horizontal-pod-autoscaler-downscale-stabilization`; the length of the downscale stabilization window.
-Downscale stabilization works by recording all evaluations over the window specified and picking out the maximum target
-replicas from these evaluations. This results in a more smoothed downscaling and a cooldown, which can reduce the
-effect of thrashing.
-
-Set in seconds.
-
-Default value: `300` (5 minutes).
-
 ## cpuInitializationPeriod
 
 ```yaml
