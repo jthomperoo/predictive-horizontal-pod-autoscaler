@@ -859,6 +859,23 @@ spec:
                         if needs. Default value is 1 (run every sync period)
                       minimum: 1
                       type: integer
+                    resetDuration:
+                      description: resetDuration is how long can pass without data
+                        for the model before the model should reset. This is useful
+                        in case a model hasn't been calculated in a long time (e.g.
+                        a cluster being powered off) to prevent it from operating
+                        on old data and to ensure that the start interval is recalculated.
+                        This value is a string duration, e.g. 2m30s is 2 minutes and
+                        30 seconds.
+                      type: string
+                    startInterval:
+                      description: startInterval is the next interval to start applying
+                        this model at. This allows you to make sure a model starts
+                        recording and being calculated only after a certain interval
+                        has passed, e.g. a Holt Winters model that only runs at the
+                        top of every hour. This value is a string duration, e.g. 2m30s
+                        is 2 minutes and 30 seconds.
+                      type: string
                     type:
                       description: type is the type of the model, for example 'Linear'.
                         To see a full list of supported model types visit https://predictive-horizontal-pod-autoscaler.readthedocs.io/en/latest/user-guide/models/.

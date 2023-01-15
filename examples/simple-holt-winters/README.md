@@ -127,6 +127,8 @@ spec:
   models:
   - type: HoltWinters
     name: simple-holt-winters
+    startInterval: 60s
+    resetDuration: 5m
     holtWinters:
       alpha: 0.9
       beta: 0.9
@@ -150,6 +152,9 @@ CPU utilization at 50% per pod.
 - `models` - predictive models to apply.
   - `type` - 'HoltWinters', using a Holt-Winters predictive model.
   - `name` - Unique name of the model.
+  - `startInterval` - The model will only apply at the top of the next full minute
+  - `resetDuration` - The model's replica history will be cleared out if it's been longer than 5 minutes without any
+  data recorded (e.g. if the cluster is turned off).
   - `holtWinters` - Holt-Winters specific configuration.
       * `alpha`, `beta`, `gamma` - these are the smoothing coefficients for level, trend and seasonality
       respectively.

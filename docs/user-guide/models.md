@@ -2,7 +2,7 @@
 
 ## Shared Configuration
 
-All models share these three options:
+All models share these properties:
 
 - **type** - The type of the model, for example 'Linear'.
 - **name** - The name of the model, must be unique and not shared by multiple models.
@@ -11,6 +11,14 @@ a base unit, with a value of `1` resulting in the model being recalculated every
 recalculated every other sync period, `3` waits for two sync periods after every calculation and so on.
 - **calculationTimeout** - The timeout for calculating using an algorithm, if this timeout is exceeded the calculation
 is skipped. Defaults set based on the algorithm used, see below.
+- **startInterval** - The [duration](https://pkg.go.dev/time#ParseDuration) that the model should start to apply from.
+For example a value of `1m` would mean the model would only start to apply at the top of the next minute. This is
+useful if you have seasonal data that you need the model synced to, such as Holt-Winters, which allows you to do things
+like making sure the model defines the start of a Holt-Winters season as starting at midnight (with the season being)
+the whole day.
+- **resetDuration** - The [duration](https://pkg.go.dev/time#ParseDuration) that the model can go for without recording
+any data before the data is too old and is cleared out. A new start time will be calculated from the `startInterval`
+if it's provided at this point too.
 
 All models use `syncPeriod` as a base unit, so if the sync period is defined as `10000` (10 seconds), the models will
 base their timings and calculations as multiples of 10 seconds.
@@ -49,6 +57,8 @@ models:
 - type: HoltWinters
   name: simple-holt-winters
   perSyncPeriod: 1
+  startInterval: 60s
+  startIntervalResetDuration: 5m
   holtWinters:
     alpha: 0.9
     beta: 0.9
@@ -109,6 +119,8 @@ models:
 - type: HoltWinters
   name: simple-holt-winters
   perSyncPeriod: 1
+  startInterval: 60s
+  startIntervalResetDuration: 5m
   holtWinters:
     runtimeTuningFetchHook:
       type: "http"

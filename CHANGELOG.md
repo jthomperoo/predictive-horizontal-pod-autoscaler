@@ -5,6 +5,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- New ability to choose a start interval for a model, e.g. a holt winters model that only starts at the next full hour.
+  - `startInterval` is an optional [duration](https://pkg.go.dev/time#ParseDuration) that defines the next interval to
+  start at. For example `1m` would start the model recording data and calculating after the next full minute has passed.
+- New ability to clear a model's replica history if too much time has passed since it last recorded any data.
+  - `resetDuration` is an optional [duration](https://pkg.go.dev/time#ParseDuration) that defines how long should be
+  allowed to pass without a model recording any data, if that occurs the replica history is cleared and if a start
+  interval is provided a new start time is calculated. If a model is not calculated for an extended period of time
+  (e.g. a cluster being powered off) this allows old data to be cleared out and not used in calculations and a new
+  start time calculated to respect any provided interval. For example `3m` would clear the model's replica history
+  (and reset the start time if interval is provided) if it has been more than 3 minutes since the last data was
+  recorded for the model.
+### Changed
+- **BREAKING CHANGE** typo fixed, `ModelHistory.ReplicaHistroy` renamed to `ModelHistory.ReplicaHistory`.
 
 ## [v0.12.0] - 2023-01-15
 ### Changed

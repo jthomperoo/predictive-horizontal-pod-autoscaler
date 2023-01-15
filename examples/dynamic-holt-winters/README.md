@@ -151,6 +151,8 @@ spec:
   models:
   - type: HoltWinters
     name: HoltWintersPrediction
+    startInterval: 60s
+    resetDuration: 5m
     holtWinters:
       runtimeTuningFetchHook:
         type: "http"
@@ -180,6 +182,9 @@ CPU utilization at 50% per pod.
 - `models` - predictive models to apply.
   - `type` - 'HoltWinters', using a Holt-Winters predictive model.
   - `name` - Unique name of the model.
+  - `startInterval` - The model will only apply at the top of the next full minute
+  - `resetDuration` - The model's replica history will be cleared out if it's been longer than 5 minutes without any
+  data recorded (e.g. if the cluster is turned off).
   - `holtWinters` - Holt-Winters specific configuration.
     * `runtimeTuningFetchHook` - This is a [hook](https://predictive-horizontal-pod-autoscaler.readthedocs.io/en/latest/user-guide/hooks)
     that is used to dynamically fetch the `alpha`, `beta` and `gamma` values at runtime, in this example it is using a
