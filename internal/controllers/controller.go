@@ -687,8 +687,8 @@ func defaultUpscale() *autoscalingv2.HPAScalingRules {
 func nextInterval(t time.Time, d time.Duration) time.Time {
 	nextT := t.Round(d)
 	if nextT.Before(t) {
-		// If the calculated start time has already passed, lets add the duration onto it to get the
-		// next time
+		// If the calculated next time has already passed, lets add the duration onto it to get the next interval after
+		// the time
 		nextT = nextT.Add(d)
 	}
 	return nextT
