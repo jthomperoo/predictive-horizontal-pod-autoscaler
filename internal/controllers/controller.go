@@ -1,5 +1,5 @@
 /*
-Copyright 2022 The Predictive Horizontal Pod Autoscaler Authors.
+Copyright 2023 The Predictive Horizontal Pod Autoscaler Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,18 +19,16 @@ package controllers
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
-	"sort"
 	"time"
 
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
-	autoscalingv2 "k8s.io/api/autoscaling/v2"
 	corev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
+	autoscalingv2 "k8s.io/api/autoscaling/v2"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -43,18 +41,44 @@ import (
 	"github.com/jthomperoo/k8shorizmetrics/v2"
 	jamiethompsonmev1alpha1 "github.com/jthomperoo/predictive-horizontal-pod-autoscaler/api/v1alpha1"
 	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/prediction"
+	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/scalebehavior"
+	"github.com/jthomperoo/predictive-horizontal-pod-autoscaler/internal/validation"
 )
 
+// PHPA configuration constants
 const (
-	defaultMinReplicas             = 1
-	defaultSyncPeriod              = 15 * time.Second
-	defaultErrorRetryPeriod        = 10 * time.Second
-	defaultDownscaleStabilization  = 300
+	defaultSyncPeriod       = 15 * time.Second
+	defaultErrorRetryPeriod = 10 * time.Second
+)
+
+// HPA calculation configuration constants
+const (
 	defaultCPUInitializationPeriod = 30
 	defaultInitialReadinessDelay   = 30
 	defaultTolerance               = 0.1
-	defaultDecisionType            = jamiethompsonmev1alpha1.DecisionMaximum
 	defaultPerSyncPeriod           = 1
+)
+
+// PHPA scale constraints
+const (
+	defaultDecisionType = jamiethompsonmev1alpha1.DecisionMaximum
+	defaultMinReplicas  = 1
+)
+
+// Downscale constants
+const (
+	defaultDownscaleStabilization                 = int32(300)
+	defaultDownscalePercentagePolicyPeriodSeconds = int32(60)
+	defaultDownscalePercentagePolicyValue         = int32(100)
+)
+
+// Upscale constants
+const (
+	defaultUpscaleStabilization                 = int32(0)
+	defaultUpscalePercentagePolicyPeriodSeconds = int32(60)
+	defaultUpscalePercentagePolicyValue         = int32(100)
+	defaultUpscalePodsPolicyPeriodSeconds       = int32(60)
+	defaultUpscalePodsPolicyValue               = int32(4)
 )
 
 const (
@@ -99,7 +123,7 @@ func (r *PredictiveHorizontalPodAutoscalerReconciler) Reconcile(ctx context.Cont
 		return reconcile.Result{RequeueAfter: defaultErrorRetryPeriod}, err
 	}
 
-	err = r.validate(instance)
+	err = validation.Validate(instance)
 	if err != nil {
 		logger.Error(err, "invalid PredictiveHorizontalPodAutoscaler, disabling PHPA until changed to be valid")
 		// We stop processing here without requeueing since the PHPA is invalid, if changes are made to the spec that
@@ -115,9 +139,65 @@ func (r *PredictiveHorizontalPodAutoscalerReconciler) Reconcile(ctx context.Cont
 		return reconcile.Result{RequeueAfter: defaultErrorRetryPeriod}, err
 	}
 
-	configMap, phpaData, err := r.getPHPAConfigMapAndData(ctx, instance)
+	configMapName := fmt.Sprintf("predictive-horizontal-pod-autoscaler-%s-data", instance.Name)
+	phpaData := &jamiethompsonmev1alpha1.PredictiveHorizontalPodAutoscalerData{}
+	configMap := &corev1.ConfigMap{}
+
+	// Check if configmap exists, if not create a blank one
+	err = r.Client.Get(context.Background(),
+		types.NamespacedName{
+			Name:      configMapName,
+			Namespace: instance.Namespace,
+		},
+		configMap)
 	if err != nil {
+		if k8serrors.IsNotFound(err) {
+			logger.V(1).Info("No configmap found for PHPA, creating a new one",
+				"scaleTargetRef", scaleTargetRef)
+
+			configMap := &corev1.ConfigMap{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      fmt.Sprintf("predictive-horizontal-pod-autoscaler-%s-data", instance.Name),
+					Namespace: instance.Namespace,
+				},
+			}
+
+			configMap.SetOwnerReferences([]metav1.OwnerReference{{
+				APIVersion: instance.APIVersion,
+				Kind:       instance.Kind,
+				Name:       instance.Name,
+				UID:        instance.UID,
+			}})
+
+			phpaData.ModelHistories = map[string]jamiethompsonmev1alpha1.ModelHistory{}
+
+			data, err := json.Marshal(phpaData)
+			if err != nil {
+				// Should not occur, panic
+				panic(err)
+			}
+
+			configMap.Data = map[string]string{
+				configMapDataKey: string(data),
+			}
+
+			err = r.Client.Create(ctx, configMap)
+			if err != nil {
+				logger.Error(err, "failed to create PHPA configmap", "scaleTargetRef", scaleTargetRef)
+				return reconcile.Result{RequeueAfter: defaultErrorRetryPeriod}, err
+			}
+
+			// After creating the config map lets wait until the owner references are set up, then the reconcile
+			// loop will kick in again
+			return reconcile.Result{}, nil
+		}
 		logger.Error(err, "failed to get PHPA config map and data", "scaleTargetRef", scaleTargetRef)
+		return reconcile.Result{RequeueAfter: defaultErrorRetryPeriod}, err
+	}
+
+	err = json.Unmarshal([]byte(configMap.Data[configMapDataKey]), phpaData)
+	if err != nil {
+		logger.Error(err, "failed to parse PHPA data", "scaleTargetRef", scaleTargetRef)
 		return reconcile.Result{RequeueAfter: defaultErrorRetryPeriod}, err
 	}
 
@@ -177,18 +257,51 @@ func (r *PredictiveHorizontalPodAutoscalerReconciler) Reconcile(ctx context.Cont
 		return reconcile.Result{RequeueAfter: defaultErrorRetryPeriod}, err
 	}
 
-	targetReplicas, downscaleStabilizationHistory, err := r.decideTargetReplicas(instance, predictedReplicas, now)
-	if err != nil {
-		logger.Error(err, "failed to decide targer replicas",
-			"scaleTargetRef", scaleTargetRef,
-			"currentReplicas", scale.Spec.Replicas,
-			"predictedReplicas", predictedReplicas,
-		)
-		return reconcile.Result{RequeueAfter: defaultErrorRetryPeriod}, err
+	decisionType := defaultDecisionType
+	if instance.Spec.DecisionType != nil {
+		decisionType = *instance.Spec.DecisionType
 	}
 
+	targetReplicas := scalebehavior.DecideTargetReplicasByScalingStrategy(decisionType, predictedReplicas)
+
+	currentReplicas := scale.Spec.Replicas
+
+	timestampedReplicaValue := jamiethompsonmev1alpha1.TimestampedReplicas{
+		Time:     &metav1.Time{Time: now},
+		Replicas: targetReplicas,
+	}
+
+	behavior := fillBehaviorDefaults(instance.Spec.Behavior)
+
+	minReplicas := int32(defaultMinReplicas)
+	if instance.Spec.MinReplicas != nil {
+		minReplicas = *instance.Spec.MinReplicas
+	}
+
+	// Get the longest possible period that a scaling policy would look back for
+	scaleUpLongestPolicyPeriod := scalebehavior.GetLongestPolicyPeriod(behavior.ScaleUp)
+	scaleDownLongestPolicyPeriod := scalebehavior.GetLongestPolicyPeriod(behavior.ScaleDown)
+
+	scaleUpEventHistory := scalebehavior.PruneTimestampedReplicasToWindow(
+		instance.Status.ScaleUpEventHistory, scaleUpLongestPolicyPeriod, now)
+
+	scaleDownEventHistory := scalebehavior.PruneTimestampedReplicasToWindow(
+		instance.Status.ScaleDownEventHistory, scaleDownLongestPolicyPeriod, now)
+
+	scaleUpReplicaHistory := scalebehavior.PruneTimestampedReplicasToWindow(
+		instance.Status.ScaleUpReplicaHistory, *behavior.ScaleUp.StabilizationWindowSeconds, now)
+	scaleUpReplicaHistory = append(scaleUpReplicaHistory, timestampedReplicaValue)
+
+	scaleDownReplicaHistory := scalebehavior.PruneTimestampedReplicasToWindow(
+		instance.Status.ScaleDownReplicaHistory, *behavior.ScaleDown.StabilizationWindowSeconds, now)
+	scaleDownReplicaHistory = append(scaleDownReplicaHistory, timestampedReplicaValue)
+
+	targetReplicas = scalebehavior.DecideTargetReplicasByBehavior(behavior, currentReplicas, targetReplicas, minReplicas,
+		instance.Spec.MaxReplicas, scaleUpReplicaHistory, scaleDownReplicaHistory, scaleUpEventHistory,
+		scaleDownEventHistory, now)
+
 	// Only scale if the current replicas is different than the target
-	if scale.Spec.Replicas != targetReplicas {
+	if currentReplicas != targetReplicas {
 		scale.Spec.Replicas = targetReplicas
 		_, err := r.ScaleClient.Scales(instance.Namespace).Update(ctx, targetGR, scale, metav1.UpdateOptions{})
 		if err != nil {
@@ -198,12 +311,39 @@ func (r *PredictiveHorizontalPodAutoscalerReconciler) Reconcile(ctx context.Cont
 				"targetReplicas", targetReplicas)
 			return reconcile.Result{RequeueAfter: defaultErrorRetryPeriod}, err
 		}
+
+		scaleTime := time.Now().UTC()
+
+		if targetReplicas > currentReplicas {
+			// Scale up
+			scaleEvent := jamiethompsonmev1alpha1.TimestampedReplicas{
+				Time:     &metav1.Time{Time: scaleTime},
+				Replicas: targetReplicas - currentReplicas,
+			}
+			instance.Status.ScaleUpEventHistory = append(instance.Status.ScaleUpEventHistory, scaleEvent)
+			instance.Status.ScaleUpEventHistory = scalebehavior.PruneTimestampedReplicasToWindow(
+				instance.Status.ScaleUpEventHistory,
+				scaleUpLongestPolicyPeriod,
+				scaleTime)
+		} else {
+			// Scale down
+			scaleEvent := jamiethompsonmev1alpha1.TimestampedReplicas{
+				Time:     &metav1.Time{Time: scaleTime},
+				Replicas: currentReplicas - targetReplicas,
+			}
+			instance.Status.ScaleDownEventHistory = append(instance.Status.ScaleDownEventHistory, scaleEvent)
+			instance.Status.ScaleDownEventHistory = scalebehavior.PruneTimestampedReplicasToWindow(
+				instance.Status.ScaleDownEventHistory,
+				scaleDownLongestPolicyPeriod,
+				scaleTime)
+		}
 	}
 
 	instance.Status.LastScaleTime = &metav1.Time{Time: now}
 	instance.Status.DesiredReplicas = targetReplicas
 	instance.Status.CurrentReplicas = scale.Spec.Replicas
-	instance.Status.ReplicaHistory = downscaleStabilizationHistory
+	instance.Status.ScaleDownReplicaHistory = scaleDownReplicaHistory
+	instance.Status.ScaleUpReplicaHistory = scaleUpReplicaHistory
 	err = r.Client.Status().Update(ctx, instance)
 	if err != nil {
 		logger.Error(err, "failed to update status of resource",
@@ -242,105 +382,6 @@ func (r *PredictiveHorizontalPodAutoscalerReconciler) updateConfigMapData(ctx co
 	}
 
 	return nil
-}
-
-// decideTargetReplicas uses the list of predicted replicas (from the calculated HPA value and the model predictions)
-// and returns a single value to use for scaling. This accounts for both downscale stabilization and the decisionType
-// scaling strategy.
-func (r *PredictiveHorizontalPodAutoscalerReconciler) decideTargetReplicas(
-	instance *jamiethompsonmev1alpha1.PredictiveHorizontalPodAutoscaler, predictedReplicas []int32,
-	now time.Time) (int32, []jamiethompsonmev1alpha1.TimestampedReplicas, error) {
-
-	minReplicas := int32(defaultMinReplicas)
-	if instance.Spec.MinReplicas != nil {
-		minReplicas = *instance.Spec.MinReplicas
-	}
-
-	decisionType := defaultDecisionType
-	if instance.Spec.DecisionType != nil {
-		decisionType = *instance.Spec.DecisionType
-	}
-
-	downscaleStabilization := defaultDownscaleStabilization
-	if instance.Spec.DownscaleStabilization != nil {
-		downscaleStabilization = *instance.Spec.DownscaleStabilization
-	}
-
-	// Sort in ascending order
-	sort.Slice(predictedReplicas, func(i, j int) bool { return predictedReplicas[i] < predictedReplicas[j] })
-
-	// Decide which replica count to use based on decision type
-	var targetReplicas int32
-	switch decisionType {
-	case jamiethompsonmev1alpha1.DecisionMaximum:
-		max := int32(0)
-		for i, predictedReplica := range predictedReplicas {
-			if i == 0 || predictedReplica > max {
-				max = predictedReplica
-			}
-		}
-		targetReplicas = max
-	case jamiethompsonmev1alpha1.DecisionMinimum:
-		min := int32(0)
-		for i, predictedReplica := range predictedReplicas {
-			if i == 0 || predictedReplica < min {
-				min = predictedReplica
-			}
-		}
-		targetReplicas = min
-	case jamiethompsonmev1alpha1.DecisionMean:
-		total := int32(0)
-		for _, predictedReplica := range predictedReplicas {
-			total += predictedReplica
-		}
-		targetReplicas = int32(float64(int(total) / len(predictedReplicas)))
-	case jamiethompsonmev1alpha1.DecisionMedian:
-		halfIndex := len(predictedReplicas) / 2
-		if len(predictedReplicas)%2 == 0 {
-			// Even
-			targetReplicas = (predictedReplicas[halfIndex-1] + predictedReplicas[halfIndex]) / 2
-		} else {
-			// Odd
-			targetReplicas = predictedReplicas[halfIndex]
-		}
-	default:
-		return 0, nil, fmt.Errorf("unknown decision type '%s'", decisionType)
-	}
-
-	if targetReplicas < minReplicas {
-		targetReplicas = minReplicas
-	}
-
-	if targetReplicas > instance.Spec.MaxReplicas {
-		targetReplicas = instance.Spec.MaxReplicas
-	}
-
-	downscaleStabilizationHistory := instance.Status.ReplicaHistory
-
-	// Prune old evaluations
-	// Cutoff is current time - stabilization window
-	cutoff := &metav1.Time{Time: now.Add(time.Duration(-downscaleStabilization) * time.Second)}
-	// Loop backwards over stabilization evaluations to prune old ones
-	// Backwards loop to allow values to be removed mid-loop without breaking it
-	for i := len(downscaleStabilizationHistory) - 1; i >= 0; i-- {
-		timestampedReplica := downscaleStabilizationHistory[i]
-		if timestampedReplica.Time.Before(cutoff) {
-			downscaleStabilizationHistory = append(downscaleStabilizationHistory[:i], downscaleStabilizationHistory[i+1:]...)
-		}
-	}
-
-	downscaleStabilizationHistory = append(downscaleStabilizationHistory, jamiethompsonmev1alpha1.TimestampedReplicas{
-		Time:     &metav1.Time{Time: now},
-		Replicas: targetReplicas,
-	})
-
-	for _, timestampedReplica := range downscaleStabilizationHistory {
-		if timestampedReplica.Replicas > targetReplicas {
-			targetReplicas = timestampedReplica.Replicas
-		}
-	}
-
-	return targetReplicas, downscaleStabilizationHistory, nil
 }
 
 // processModels processes every model provided in the spec, it does not return any errors and will instead simply
@@ -482,64 +523,6 @@ func (r *PredictiveHorizontalPodAutoscalerReconciler) calculateReplicas(
 	return calculatedReplicas, nil
 }
 
-// getPHPAConfigMapAndData returns the config map and parsed data for the PHPA
-func (r *PredictiveHorizontalPodAutoscalerReconciler) getPHPAConfigMapAndData(ctx context.Context,
-	instance *jamiethompsonmev1alpha1.PredictiveHorizontalPodAutoscaler) (*corev1.ConfigMap, *jamiethompsonmev1alpha1.PredictiveHorizontalPodAutoscalerData, error) {
-
-	logger := log.FromContext(ctx)
-
-	scaleTargetRef := instance.Spec.ScaleTargetRef
-
-	// Check if configmap exists, if not create a blank one
-	phpaData := &jamiethompsonmev1alpha1.PredictiveHorizontalPodAutoscalerData{
-		ModelHistories: map[string]jamiethompsonmev1alpha1.ModelHistory{},
-	}
-	configMap := &corev1.ConfigMap{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      fmt.Sprintf("predictive-horizontal-pod-autoscaler-%s-data", instance.Name),
-			Namespace: instance.Namespace,
-		},
-	}
-	configMap.SetOwnerReferences([]metav1.OwnerReference{{
-		APIVersion: instance.APIVersion,
-		Kind:       instance.Kind,
-		Name:       instance.Name,
-		UID:        instance.UID,
-	}})
-
-	err := r.Client.Get(context.Background(), types.NamespacedName{Name: configMap.GetName(), Namespace: configMap.GetNamespace()}, configMap)
-	if err != nil {
-		if !k8serrors.IsNotFound(err) {
-			return nil, nil, fmt.Errorf("failed to get PHPA configmap: %w", err)
-		}
-
-		logger.V(1).Info("No configmap found for PHPA, creating a new one",
-			"scaleTargetRef", scaleTargetRef)
-
-		data, err := json.Marshal(phpaData)
-		if err != nil {
-			// Should not occur, panic
-			panic(err)
-		}
-
-		configMap.Data = map[string]string{
-			configMapDataKey: string(data),
-		}
-
-		err = r.Client.Create(ctx, configMap)
-		if err != nil {
-			return nil, nil, fmt.Errorf("failed to create PHPA configmap: %w", err)
-		}
-	}
-
-	err = json.Unmarshal([]byte(configMap.Data[configMapDataKey]), phpaData)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to parse PHPA data: %w", err)
-	}
-
-	return configMap, phpaData, nil
-}
-
 // preScaleStatusCheck makes sure that the PHPAs status fields are correct before scaling, e.g. the reference field
 // is set
 func (r *PredictiveHorizontalPodAutoscalerReconciler) preScaleStatusCheck(ctx context.Context,
@@ -559,54 +542,83 @@ func (r *PredictiveHorizontalPodAutoscalerReconciler) preScaleStatusCheck(ctx co
 	return nil
 }
 
-// validate performs validation on the PHPA, will return an error if the PHPA is not valid
-func (r *PredictiveHorizontalPodAutoscalerReconciler) validate(instance *jamiethompsonmev1alpha1.PredictiveHorizontalPodAutoscaler) error {
-	spec := instance.Spec
+func fillBehaviorDefaults(behavior *autoscalingv2.HorizontalPodAutoscalerBehavior) *autoscalingv2.HorizontalPodAutoscalerBehavior {
+	// Defaults sourced from these sources:
+	// https://github.com/kubernetes/enhancements/blob/7f681415a0011a0f6f98d9f112eeb7731f9eacd7/keps/sig-autoscaling/853-configurable-hpa-scale-velocity/README.md
+	// https://github.com/kubernetes/kubernetes/blob/3e26e104bdf9d0dc3c4046d6350b93557c67f3f4/pkg/apis/autoscaling/v2/defaults.go
 
-	if spec.MinReplicas != nil && spec.MaxReplicas < *spec.MinReplicas {
-		return fmt.Errorf("spec.maxReplicas (%d) cannot be less than spec.minReplicas (%d)",
-			spec.MaxReplicas, *spec.MinReplicas)
-	}
-
-	if spec.MinReplicas != nil && *spec.MinReplicas == 0 {
-		// We need to check that if they set min replicas to zero they have at least 1 object or external metric
-		// configured
-		valid := false
-		for _, metric := range spec.Metrics {
-			if metric.Type == autoscalingv2.ObjectMetricSourceType || metric.Type == autoscalingv2.ExternalMetricSourceType {
-				valid = true
-				break
-			}
-		}
-		if !valid {
-			return errors.New("spec.minReplicas can only be 0 if you have at least 1 object or external metric configured")
+	if behavior == nil {
+		return &autoscalingv2.HorizontalPodAutoscalerBehavior{
+			ScaleDown: defaultDownscale(),
+			ScaleUp:   defaultUpscale(),
 		}
 	}
 
-	for _, model := range spec.Models {
-		if model.Type == jamiethompsonmev1alpha1.TypeHoltWinters {
-			hw := model.HoltWinters
-			if hw == nil {
-				return fmt.Errorf("invalid model '%s', type is '%s' but no Holt Winters configuration provided",
-					model.Name, model.Type)
-			}
+	// We need to take a deep copy here, since we don't want any defaults we fill in to be persisted on the
+	// actual object
+	behavior = behavior.DeepCopy()
 
-			if hw.RuntimeTuningFetchHook != nil {
-				hook := hw.RuntimeTuningFetchHook
-				if hook.Type == jamiethompsonmev1alpha1.HookTypeHTTP && hook.HTTP == nil {
-					return fmt.Errorf("invalid model '%s', runtimeTuningFetchHook is type '%s' but no HTTP hook configuration provided",
-						model.Name, hook.Type)
-				}
-			}
-		}
+	behavior.ScaleUp = copyHPAScalingRules(behavior.ScaleUp, defaultUpscale())
+	behavior.ScaleDown = copyHPAScalingRules(behavior.ScaleDown, defaultDownscale())
 
-		if model.Type == jamiethompsonmev1alpha1.TypeLinear && model.Linear == nil {
-			return fmt.Errorf("invalid model '%s', type is '%s' but no Linear Regression configuration provided",
-				model.Name, model.Type)
-		}
+	return behavior
+}
+
+func copyHPAScalingRules(from, to *autoscalingv2.HPAScalingRules) *autoscalingv2.HPAScalingRules {
+	if from == nil {
+		return to
 	}
+	if from.SelectPolicy != nil {
+		to.SelectPolicy = from.SelectPolicy
+	}
+	if from.StabilizationWindowSeconds != nil {
+		to.StabilizationWindowSeconds = from.StabilizationWindowSeconds
+	}
+	if from.Policies != nil {
+		to.Policies = from.Policies
+	}
+	return to
+}
 
-	return nil
+func defaultDownscale() *autoscalingv2.HPAScalingRules {
+	return &autoscalingv2.HPAScalingRules{
+		StabilizationWindowSeconds: int32Ptr(defaultDownscaleStabilization),
+		SelectPolicy:               selectPolicyPtr(autoscalingv2.MaxChangePolicySelect),
+		Policies: []autoscalingv2.HPAScalingPolicy{
+			{
+				Type:          autoscalingv2.PercentScalingPolicy,
+				PeriodSeconds: defaultDownscalePercentagePolicyPeriodSeconds,
+				Value:         defaultDownscalePercentagePolicyValue,
+			},
+		},
+	}
+}
+
+func defaultUpscale() *autoscalingv2.HPAScalingRules {
+	return &autoscalingv2.HPAScalingRules{
+		StabilizationWindowSeconds: int32Ptr(0),
+		SelectPolicy:               selectPolicyPtr(autoscalingv2.MaxChangePolicySelect),
+		Policies: []autoscalingv2.HPAScalingPolicy{
+			{
+				Type:          autoscalingv2.PercentScalingPolicy,
+				PeriodSeconds: defaultUpscalePercentagePolicyPeriodSeconds,
+				Value:         defaultUpscalePercentagePolicyValue,
+			},
+			{
+				Type:          autoscalingv2.PodsScalingPolicy,
+				PeriodSeconds: defaultUpscalePodsPolicyPeriodSeconds,
+				Value:         defaultUpscalePodsPolicyValue,
+			},
+		},
+	}
+}
+
+func int32Ptr(i int32) *int32 {
+	return &i
+}
+
+func selectPolicyPtr(policy autoscalingv2.ScalingPolicySelect) *autoscalingv2.ScalingPolicySelect {
+	return &policy
 }
 
 // SetupWithManager sets up the controller with the Manager.

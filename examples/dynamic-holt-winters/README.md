@@ -43,21 +43,60 @@ operator](https://predictive-horizontal-pod-autoscaler.readthedocs.io/en/latest/
 This example was based on the [Horizontal Pod Autoscaler
 Walkthrough](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale-walkthrough/).
 
-1. Use `kubectl apply -f deployment.yaml` to spin up the app/deployment to manage, called `php-apache`.
-2. Build the tuning image `docker build -t tuning tuning` and import it into your Kubernetes cluster
-  (`k3d image import tuning`).
-4. Deploy the tuning service `kubectl apply -f tuning/tuning.yaml`.
-5. Use `kubectl apply -f phpa.yaml` to start the autoscaler, pointing at the previously created deployment.
-6. Build the load tester image `docker build -t load-tester load` and import it into your Kubernetes cluster
-  (`k3d image import load-tester`).
-7. Deploy the load tester, note the time as it will run for 30 seconds every minute `kubectl apply -f load/load.yaml`.
-8. Use `kubectl logs -l name=predictive-horizontal-pod-autoscaler -f` to see the autoscaler working and the log output
-it produces.
-9. Use `kubectl logs -l run=tuning -f` to see the logs of the tuning service, it will report any time it is queried and
-it will print the value provided to it.
-10. Use
-`kubectl get configmap predictive-horizontal-pod-autoscaler-dynamic-holt-winters-data -o=json | jq -r '.data.data | fromjson | .modelHistories["dynamic-holt-winters"].replicaHistory[] | .time,.replicas'`
-to see the replica history for the autoscaler stored in a configmap and tracked by the autoscaler.
+1. Run this command to spin up the app/deployment to manage, called `php-apache`:
+
+```bash
+kubectl apply -f deployment.yaml
+```
+
+2. Run this command to build the tuning image and import it into your Kubernetes cluster:
+
+```bash
+docker build -t tuning tuning && k3d image import tuning
+```
+
+3. Run this command to deploy the tuning service:
+
+```bash
+kubectl apply -f tuning/tuning.yaml
+```
+
+3. Run this command to start the autoscaler, pointing at the previously created deployment:
+
+```bash
+kubectl apply -f phpa.yaml
+```
+
+4. Run this command to build the load tester image and import it into your Kubernetes cluster:
+
+```bash
+docker build -t load-tester load && k3d image import load-tester
+```
+
+5. Run this command to deploy the load tester, note the time as it will run for 30 seconds every minute:
+
+```bash
+kubectl apply -f load/load.yaml
+```
+
+6. Run this command to see the autoscaler working and the log output it produces:
+
+```bash
+kubectl logs -l name=predictive-horizontal-pod-autoscaler -f
+```
+
+7. Run this command to see the logs of the tuning service, it will report any time it is queried and it will print the
+value provided to it:
+
+```bash
+kubectl logs -l run=tuning -f
+```
+
+8. Run this command to see the replica history for the autoscaler stored in a configmap and tracked by the autoscaler:
+
+```bash
+kubectl get configmap predictive-horizontal-pod-autoscaler-dynamic-holt-winters-data -o=json | jq -r '.data.data | fromjson | .modelHistories["HoltWintersPrediction"].replicaHistory[] | .time,.replicas'
+```
 
 Every minute the load tester will increase the load on the application we are autoscaling for 30 seconds. The PHPA will
 initially without any data just act like a Horizontal Pod Autoscaler and will reactively scale up to meet this demand
@@ -99,7 +138,9 @@ spec:
   minReplicas: 1
   maxReplicas: 10
   syncPeriod: 20000
-  downscaleStabilization: 30
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 30
   metrics:
   - type: Resource
     resource:
@@ -131,8 +172,9 @@ spec:
 between.
 - `syncPeriod` is how frequently this autoscaler will run in milliseconds, so this autoscaler will run every 20000
 milliseconds (20 seconds).
-- `downscaleStabilization` handles how quickly an autoscaler can scale down, ensuring that it will pick the highest evaluation that has occurred within the last time period described, by default it will pick the highest evaluation over
-the past 5 minutes. In this case it will pick the highest evaluation over the past 30 seconds.
+- `behavior.scaleDown.stabilizationWindowSeconds` handles how quickly an autoscaler can scale down, ensuring that it
+will pick the highest evaluation that has occurred within the last time period described, by default it will pick the
+highest evaluation over the past 5 minutes. In this case it will pick the highest evaluation over the past 30 seconds.
 - `metrics` defines the metrics that the PHPA should use to scale with, in this example it will try to keep average
 CPU utilization at 50% per pod.
 - `models` - predictive models to apply.

@@ -216,14 +216,11 @@ type PredictiveHorizontalPodAutoscalerSpec struct {
 	// +optional
 	Metrics []autoscalingv2.MetricSpec `json:"metrics"`
 
-	// downscaleStabilization defines in seconds the length of the downscale stabilization window; based on the
-	// Horizontal Pod Autoscaler downscale stabilization. Downscale stabilization works by recording all evaluations
-	// over the window specified and picking out the maximum target replicas from these evaluations. This results in a
-	// more smoothed downscaling and a cooldown, which can reduce the effect of thrashing.
-	// Default value 300 seconds (5 minutes).
-	// +kubebuilder:validation:Minimum=0
+	// behavior configures the scaling behavior of the target
+	// in both Up and Down directions (scaleUp and scaleDown fields respectively).
+	// If not set, the default HPAScalingRules for scale up and scale down are used.
 	// +optional
-	DownscaleStabilization *int `json:"downscaleStabilization"`
+	Behavior *autoscalingv2.HorizontalPodAutoscalerBehavior `json:"behavior,omitempty"`
 
 	// cpuInitializationPeriod is equivalent to --horizontal-pod-autoscaler-cpu-initialization-period; the period after
 	// pod start when CPU samples might be skipped.
@@ -274,10 +271,27 @@ type PredictiveHorizontalPodAutoscalerStatus struct {
 	// +optional
 	LastScaleTime *metav1.Time `json:"lastScaleTime,omitempty"`
 
-	// replicaHistory is a timestamped history of all the calculated replica values, used for calculating downscale
-	// stabilization.
+	// scaleUpReplicaHistory is a list of timestamped replicas within the scale up stabilization window.
+	// Used for calculating upscale stabilization.
 	// +optional
-	ReplicaHistory []TimestampedReplicas `json:"replicaHistory"`
+	ScaleUpReplicaHistory []TimestampedReplicas `json:"scaleUpReplicaHistory"`
+
+	// scaleDownReplicaHistory is a list of timestamped replicas within the scale down stabilization window.
+	// Used for calculating downscale stabilization.
+	// +optional
+	ScaleDownReplicaHistory []TimestampedReplicas `json:"scaleDownReplicaHistory"`
+
+	// scaleUpEventHistory is a list of timestamped changes in replicas for every time a scale up event occurs for
+	// this resource. A value of 5 means that at that scale event the resource was scaled up by 5 replicas.
+	// Used for applying scale up policies.
+	// +optional
+	ScaleUpEventHistory []TimestampedReplicas `json:"scaleUpEventHistory"`
+
+	// scaleDownEventHistory is a list of timestamped changes in replicas for every time a scale down event occurs for
+	// this resource. A value of 5 means that at that scale event the resource was scaled down by 5 replicas.
+	// Used for applying scale down policies.
+	// +optional
+	ScaleDownEventHistory []TimestampedReplicas `json:"scaleDownEventHistory"`
 
 	// reference is the resource being referenced and targeted for scaling.
 	Reference string `json:"reference"`

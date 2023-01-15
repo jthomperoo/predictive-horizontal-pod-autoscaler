@@ -302,10 +302,10 @@ func (in *PredictiveHorizontalPodAutoscalerSpec) DeepCopyInto(out *PredictiveHor
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
-	if in.DownscaleStabilization != nil {
-		in, out := &in.DownscaleStabilization, &out.DownscaleStabilization
-		*out = new(int)
-		**out = **in
+	if in.Behavior != nil {
+		in, out := &in.Behavior, &out.Behavior
+		*out = new(v2.HorizontalPodAutoscalerBehavior)
+		(*in).DeepCopyInto(*out)
 	}
 	if in.CPUInitializationPeriod != nil {
 		in, out := &in.CPUInitializationPeriod, &out.CPUInitializationPeriod
@@ -358,8 +358,29 @@ func (in *PredictiveHorizontalPodAutoscalerStatus) DeepCopyInto(out *PredictiveH
 		in, out := &in.LastScaleTime, &out.LastScaleTime
 		*out = (*in).DeepCopy()
 	}
-	if in.ReplicaHistory != nil {
-		in, out := &in.ReplicaHistory, &out.ReplicaHistory
+	if in.ScaleUpReplicaHistory != nil {
+		in, out := &in.ScaleUpReplicaHistory, &out.ScaleUpReplicaHistory
+		*out = make([]TimestampedReplicas, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
+	}
+	if in.ScaleDownReplicaHistory != nil {
+		in, out := &in.ScaleDownReplicaHistory, &out.ScaleDownReplicaHistory
+		*out = make([]TimestampedReplicas, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
+	}
+	if in.ScaleUpEventHistory != nil {
+		in, out := &in.ScaleUpEventHistory, &out.ScaleUpEventHistory
+		*out = make([]TimestampedReplicas, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
+	}
+	if in.ScaleDownEventHistory != nil {
+		in, out := &in.ScaleDownEventHistory, &out.ScaleDownEventHistory
 		*out = make([]TimestampedReplicas, len(*in))
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])

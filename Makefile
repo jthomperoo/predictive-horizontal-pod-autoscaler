@@ -27,9 +27,12 @@ format:
 	go mod tidy
 	find algorithms -name '*.py' -print0 | xargs -0 yapf -i
 
-test: generate
-	@echo "=============Running tests============="
+test: gotest pytest
+
+gotest:
 	go test ./... -cover -coverprofile unit_cover.out
+
+pytest:
 	pytest algorithms/ --cov-report term --cov-report=xml:algorithm_coverage.out --cov-report=html:.algorithm_coverage --cov=algorithms/
 
 docker:

@@ -10,7 +10,9 @@ spec:
   minReplicas: 1
   maxReplicas: 10
   syncPeriod: 20000
-  downscaleStabilization: 30
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 30
   metrics:
   - type: Resource
     resource:

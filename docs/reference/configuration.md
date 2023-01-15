@@ -40,21 +40,6 @@ Default value: `15000` (15 seconds).
 
 Set in milliseconds.
 
-## downscaleStabilization
-
-```yaml
-downscaleStabilization: 150
-```
-
-Equivalent to `--horizontal-pod-autoscaler-downscale-stabilization`; the length of the downscale stabilization window.
-Downscale stabilization works by recording all evaluations over the window specified and picking out the maximum target
-replicas from these evaluations. This results in a more smoothed downscaling and a cooldown, which can reduce the
-effect of thrashing.
-
-Set in seconds.
-
-Default value: `300` (5 minutes).
-
 ## cpuInitializationPeriod
 
 ```yaml
@@ -104,10 +89,19 @@ Possible values:
 
 - **maximum** - pick the highest evaluation of the models.
 - **minimum** - pick the lowest evaluation of the models.
-- **mean** - calculate the mean number of replicas between the models.
+- **mean** - calculate the mean number of replicas (rounded to nearest integer) between the models.
 - **median** - calculate the median number of replicas between the models.
 
 Default value: `maximum`.
+
+## behavior
+
+Scaling behavior to apply.
+
+Intended to be feature equivalent to Kubernetes HPA behavior.
+
+See the [Horizontal Pod Autoscaler docs
+here](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/#configurable-scaling-behavior).
 
 ## models
 
