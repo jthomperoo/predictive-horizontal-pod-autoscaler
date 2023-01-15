@@ -415,13 +415,84 @@ func (r *PredictiveHorizontalPodAutoscalerReconciler) processModels(ctx context.
 			modelHistory = jamiethompsonmev1alpha1.ModelHistory{
 				Type:              model.Type,
 				SyncPeriodsPassed: 1,
-				ReplicaHistroy:    []jamiethompsonmev1alpha1.TimestampedReplicas{},
+				ReplicaHistory:    []jamiethompsonmev1alpha1.TimestampedReplicas{},
+			}
+		}
+
+		if model.StartInterval != nil {
+			if modelHistory.StartTime == nil {
+				startTime := nextInterval(now, model.StartInterval.Duration)
+				modelHistory.StartTime = &metav1.Time{Time: startTime}
+				phpaData.ModelHistories[model.Name] = modelHistory
+
+				logger.V(1).Info("Skipping model for this sync period, start interval with no start time calculated, new start time calculated",
+					"scaleTargetRef", scaleTargetRef,
+					"startInterval", model.StartInterval.Duration,
+					"startTime", modelHistory.StartTime,
+					"timeUntilStart", modelHistory.StartTime.Sub(now),
+					"model", model.Name)
+				continue
+			}
+
+			if now.Before(modelHistory.StartTime.Time) {
+				logger.V(1).Info("Skipping model for this sync period, before the start time",
+					"scaleTargetRef", scaleTargetRef,
+					"startInterval", model.StartInterval.Duration,
+					"startTime", modelHistory.StartTime,
+					"timeUntilStart", modelHistory.StartTime.Sub(now),
+					"model", model.Name)
+				continue
+			}
+		}
+
+		// Calculate if it's been too long since the last data recorded
+		if model.ResetDuration != nil && len(modelHistory.ReplicaHistory) > 0 {
+			latest := modelHistory.ReplicaHistory[0].Time.Time
+			for _, timestampedReplica := range modelHistory.ReplicaHistory {
+				if timestampedReplica.Time.After(latest) {
+					latest = timestampedReplica.Time.Time
+				}
+			}
+
+			durationSinceLastData := now.Sub(latest)
+			if durationSinceLastData > model.ResetDuration.Duration {
+				// Clear replica history
+				modelHistory.ReplicaHistory = []jamiethompsonmev1alpha1.TimestampedReplicas{}
+
+				if model.StartInterval != nil {
+					// Recalculate start time
+					oldStartTime := modelHistory.StartTime
+					startTime := nextInterval(now, model.StartInterval.Duration)
+
+					modelHistory.StartTime = &metav1.Time{Time: startTime}
+					phpaData.ModelHistories[model.Name] = modelHistory
+
+					logger.V(1).Info("Skipping model for this sync period, too much time has elapsed since the last data recorded, new start time calculated",
+						"scaleTargetRef", scaleTargetRef,
+						"startInterval", model.StartInterval.Duration,
+						"latestData", metav1.Time{Time: latest},
+						"durationSinceLastData", durationSinceLastData,
+						"startIntervalResetDuration", model.ResetDuration.Duration,
+						"oldStartTime", oldStartTime,
+						"newStartTime", modelHistory.StartTime,
+						"timeUntilStart", modelHistory.StartTime.Sub(now),
+						"model", model.Name)
+					continue
+				}
+
+				phpaData.ModelHistories[model.Name] = modelHistory
+				logger.V(1).Info("Clearing replica history, too much time has elapsed since the last data recorded",
+					"scaleTargetRef", scaleTargetRef,
+					"latestData", metav1.Time{Time: latest},
+					"durationSinceLastData", durationSinceLastData,
+					"startIntervalResetDuration", model.ResetDuration.Duration,
+					"model", model.Name)
 			}
 		}
 
 		shouldRunOnThisSyncPeriod := modelHistory.SyncPeriodsPassed >= perSyncPeriod
 
-		modelHistory.ReplicaHistroy = append(modelHistory.ReplicaHistroy, jamiethompsonmev1alpha1.TimestampedReplicas{
+		modelHistory.ReplicaHistory = append(modelHistory.ReplicaHistory, jamiethompsonmev1alpha1.TimestampedReplicas{
 			Time: &metav1.Time{
 				Time: now,
 			},
@@ -432,7 +503,7 @@ func (r *PredictiveHorizontalPodAutoscalerReconciler) processModels(ctx context.
 			logger.V(1).Info("Using model to calculate predicted target replicas",
 				"scaleTargetRef", scaleTargetRef,
 				"model", model.Name)
-			replicas, err := r.Predicter.GetPrediction(&model, modelHistory.ReplicaHistroy)
+			replicas, err := r.Predicter.GetPrediction(&model, modelHistory.ReplicaHistory)
 			if err != nil {
 				// Skip this model, errored out
 				logger.Error(err, "failed to get predicted replica count",
@@ -452,7 +523,7 @@ func (r *PredictiveHorizontalPodAutoscalerReconciler) processModels(ctx context.
 			modelHistory.SyncPeriodsPassed += 1
 		}
 
-		prunedHistory, err := r.Predicter.PruneHistory(&model, modelHistory.ReplicaHistroy)
+		prunedHistory, err := r.Predicter.PruneHistory(&model, modelHistory.ReplicaHistory)
 		if err != nil {
 			// Skip this model, errored out
 			logger.Error(err, "failed to prune replica history",
@@ -460,7 +531,7 @@ func (r *PredictiveHorizontalPodAutoscalerReconciler) processModels(ctx context.
 			continue
 		}
 
-		modelHistory.ReplicaHistroy = prunedHistory
+		modelHistory.ReplicaHistory = prunedHistory
 		phpaData.ModelHistories[model.Name] = modelHistory
 	}
 
@@ -611,6 +682,16 @@ func defaultUpscale() *autoscalingv2.HPAScalingRules {
 			},
 		},
 	}
+}
+
+func nextInterval(t time.Time, d time.Duration) time.Time {
+	nextT := t.Round(d)
+	if nextT.Before(t) {
+		// If the calculated next time has already passed, lets add the duration onto it to get the next interval after
+		// the time
+		nextT = nextT.Add(d)
+	}
+	return nextT
 }
 
 func int32Ptr(i int32) *int32 {

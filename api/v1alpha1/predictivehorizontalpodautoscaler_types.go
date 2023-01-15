@@ -1,5 +1,5 @@
 /*
-Copyright 2022 The Predictive Horizontal Pod Autoscaler Authors.
+Copyright 2023 The Predictive Horizontal Pod Autoscaler Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -132,6 +132,20 @@ type Model struct {
 	// you have multiple and to keep track of model data if you modify your model parameters.
 	Name string `json:"name"`
 
+	// startInterval is the next interval to start applying this model at. This allows you to make sure a model starts
+	// recording and being calculated only after a certain interval has passed, e.g. a Holt Winters model that only
+	// runs at the top of every hour.
+	// This value is a string duration, e.g. 2m30s is 2 minutes and 30 seconds.
+	// +optional
+	StartInterval *metav1.Duration `json:"startInterval"`
+
+	// resetDuration is how long can pass without data for the model before the model should reset.
+	// This is useful in case a model hasn't been calculated in a long time (e.g. a cluster being powered off) to
+	// prevent it from operating on old data and to ensure that the start interval is recalculated.
+	// This value is a string duration, e.g. 2m30s is 2 minutes and 30 seconds.
+	// +optional
+	ResetDuration *metav1.Duration `json:"resetDuration"`
+
 	// calculationTimeout is how long the PHPA should allow for the model to calculate a value in milliseconds, if it
 	// takes longer than this timeout it should skip processing the model.
 	// Default varies based on model type:
@@ -185,7 +199,11 @@ type ModelHistory struct {
 	// when determining if a model should run based on the perSyncPeriod
 	SyncPeriodsPassed int `json:"syncPeriodsPassed"`
 	// replicaHistory is a list of timestamped replicas, this data is fed into the model to calculate a predicted value.
-	ReplicaHistroy []TimestampedReplicas `json:"replicaHistory"`
+	ReplicaHistory []TimestampedReplicas `json:"replicaHistory"`
+	// startTime is the time after which the model should start applying and recording data. If it is before this time
+	// no data will be recorded and the model will be skipped.
+	// +optional
+	StartTime *metav1.Time `json:"startTime"`
 }
 
 // PredictiveHorizontalPodAutoscalerSpec defines the desired state of PredictiveHorizontalPodAutoscaler

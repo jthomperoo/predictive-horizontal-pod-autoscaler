@@ -155,6 +155,9 @@ spec:
     name: php-apache
   minReplicas: 1
   maxReplicas: 10
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 0
   metrics:
     - type: Resource
       resource:
@@ -171,7 +174,6 @@ spec:
         historySize: 6
   decisionType: "maximum"
   syncPeriod: 10000
-  downscaleStabilization: 0
 ```
 
 This autoscaler works by using the same logic that the Horizontal Pod Autoscaler uses to calculate the number of
@@ -221,7 +223,9 @@ syncPeriod: 10000
 target and will not pick the highest across a window of time.
 
 ```yaml
-downscaleStabilization: 0
+behavior:
+  scaleDown:
+    stabilizationWindowSeconds: 0
 ```
 
 - A single *model* is configured as a linear regression model.

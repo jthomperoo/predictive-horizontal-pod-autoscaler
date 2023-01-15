@@ -23,6 +23,8 @@ spec:
   models:
   - type: HoltWinters
     name: HoltWintersPrediction
+    startInterval: 60s
+    resetDuration: 5m
     holtWinters:
       runtimeTuningFetchHook:
         type: "http"
