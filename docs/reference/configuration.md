@@ -94,6 +94,15 @@ Possible values:
 
 Default value: `maximum`.
 
+## behavior
+
+Scaling behavior to apply.
+
+Intended to be feature equivalent to Kubernetes HPA behavior.
+
+See the [Horizontal Pod Autoscaler docs
+here](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/#configurable-scaling-behavior).
+
 ## models
 
 List of statistical models to apply.

@@ -20,15 +20,36 @@ operator](https://predictive-horizontal-pod-autoscaler.readthedocs.io/en/latest/
 
 This example was based on the [Horizontal Pod Autoscaler Walkthrough](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale-walkthrough/).
 
-1. Use `kubectl apply -f deployment.yaml` to spin up the app/deployment to manage, called `php-apache`.
-2. Use `kubectl apply -f phpa.yaml` to start the autoscaler, pointing at the previously created deployment.
-3. Use `kubectl logs -l name=predictive-horizontal-pod-autoscaler -f` to see the autoscaler working and the log output
-it produces.
-4. Increase the load with: `kubectl run -i --tty load-generator --rm --image=busybox --restart=Never -- /bin/sh -c "while sleep 0.01; do wget -q -O- http://php-apache; done"`
+1. Run this command to spin up the app/deployment to manage, called `php-apache`:
+
+```bash
+kubectl apply -f deployment.yaml
+```
+
+2. Run this command to start the autoscaler, pointing at the previously created deployment:
+
+```bash
+kubectl apply -f phpa.yaml
+```
+
+3. Run this command to see the autoscaler working and the log output it produces:
+
+```bash
+kubectl logs -l name=predictive-horizontal-pod-autoscaler -f
+```
+
+4. Run this command to increase the load:
+
+```bash
+kubectl run -i --tty load-generator --rm --image=busybox --restart=Never -- /bin/sh -c "while sleep 0.01; do wget -q -O- http://php-apache; done"
+```
+
 5. Watch as the number of replicas increases.
-6. Use
-`kubectl get configmap predictive-horizontal-pod-autoscaler-simple-linear-data -o=json | jq -r '.data.data | fromjson | .modelHistories["simple-linear"].replicaHistory[] | .time,.replicas'`
-to see the replica history for the autoscaler stored in a configmap and tracked by the autoscaler.
+6. Run this command to see the replica history for the autoscaler stored in a configmap and tracked by the autoscaler:
+
+```bash
+kubectl get configmap predictive-horizontal-pod-autoscaler-simple-linear-data -o=json | jq -r '.data.data | fromjson | .modelHistories["simple-linear"].replicaHistory[] | .time,.replicas'
+```
 
 As the load is increased the replica count will increase as the PHPA detects average CPU utilization of the pods has
 gone above 50%, so will provision more pods to try and bring this value down. As the replica count changes the PHPA
@@ -63,8 +84,9 @@ spec:
     name: php-apache
   minReplicas: 1
   maxReplicas: 10
-  syncPeriod: 10000
-  downscaleStabilization: 0
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 0
   metrics:
     - type: Resource
       resource:
@@ -85,8 +107,10 @@ spec:
 between.
 - `syncPeriod` is how frequently this autoscaler will run in milliseconds, so this autoscaler will run every 10000
 milliseconds (10 seconds).
-- `downscaleStabilization` handles how quickly an autoscaler can scale down, ensuring that it will pick the highest evaluation that has occurred within the last time period described, by default it will pick the highest evaluation over
-the past 5 minutes. To stop this from happening we have set the downscale stablilization to `0` to disable it.
+- `behavior.scaleDown.stabilizationWindowSeconds` handles how quickly an autoscaler can scale down, ensuring that it
+will pick the highest evaluation that has occurred within the last time period described, by default it will pick the
+highest evaluation over the past 5 minutes. To stop this from happening we have set the downscale stablilization to
+`0` to disable it.
 - `metrics` defines the metrics that the PHPA should use to scale with, in this example it will try to keep average
 CPU utilization at 50% per pod.
 - `models` contains the statistical models we're applying to the resulting replica count, this this example it's just

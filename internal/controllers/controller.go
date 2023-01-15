@@ -298,7 +298,7 @@ func (r *PredictiveHorizontalPodAutoscalerReconciler) Reconcile(ctx context.Cont
 
 	targetReplicas = scalebehavior.DecideTargetReplicasByBehavior(behavior, currentReplicas, targetReplicas, minReplicas,
 		instance.Spec.MaxReplicas, scaleUpReplicaHistory, scaleDownReplicaHistory, scaleUpEventHistory,
-		scaleDownEventHistory)
+		scaleDownEventHistory, now)
 
 	// Only scale if the current replicas is different than the target
 	if currentReplicas != targetReplicas {
@@ -558,8 +558,8 @@ func fillBehaviorDefaults(behavior *autoscalingv2.HorizontalPodAutoscalerBehavio
 	// actual object
 	behavior = behavior.DeepCopy()
 
+	behavior.ScaleUp = copyHPAScalingRules(behavior.ScaleUp, defaultUpscale())
 	behavior.ScaleDown = copyHPAScalingRules(behavior.ScaleDown, defaultDownscale())
-	behavior.ScaleUp = copyHPAScalingRules(behavior.ScaleDown, defaultUpscale())
 
 	return behavior
 }
