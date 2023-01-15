@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [v0.12.0] - 2023-01-15
 ### Changed
 - See the [migration guide from `v0.11.2`
 here](https://predictive-horizontal-pod-autoscaler.readthedocs.io/en/latest/user-guide/migration/v0_11_2-to-v0_12_0).
@@ -145,7 +147,9 @@ Holt-Winters configuration.
 - Added the ability to use Linear Regression models to predict future scaling.
 
 [Unreleased]:
-https://github.com/jthomperoo/predictive-horizontal-pod-autoscaler/compare/v0.11.2...HEAD
+https://github.com/jthomperoo/predictive-horizontal-pod-autoscaler/compare/v0.12.0...HEAD
+[v0.11.2]:
+https://github.com/jthomperoo/predictive-horizontal-pod-autoscaler/compare/v0.11.2...v0.12.0
 [v0.11.2]:
 https://github.com/jthomperoo/predictive-horizontal-pod-autoscaler/compare/v0.11.1...v0.11.2
 [v0.11.1]:
