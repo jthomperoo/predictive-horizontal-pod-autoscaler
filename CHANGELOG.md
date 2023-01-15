@@ -162,7 +162,7 @@ Holt-Winters configuration.
 
 [Unreleased]:
 https://github.com/jthomperoo/predictive-horizontal-pod-autoscaler/compare/v0.12.0...HEAD
-[v0.11.2]:
+[v0.12.0]:
 https://github.com/jthomperoo/predictive-horizontal-pod-autoscaler/compare/v0.11.2...v0.12.0
 [v0.11.2]:
 https://github.com/jthomperoo/predictive-horizontal-pod-autoscaler/compare/v0.11.1...v0.11.2
