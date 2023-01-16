@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [v0.13.0] - 2023-01-16
 ### Added
 - New ability to choose a start interval for a model, e.g. a holt winters model that only starts at the next full hour.
   - `startInterval` is an optional [duration](https://pkg.go.dev/time#ParseDuration) that defines the next interval to
@@ -161,7 +163,9 @@ Holt-Winters configuration.
 - Added the ability to use Linear Regression models to predict future scaling.
 
 [Unreleased]:
-https://github.com/jthomperoo/predictive-horizontal-pod-autoscaler/compare/v0.12.0...HEAD
+https://github.com/jthomperoo/predictive-horizontal-pod-autoscaler/compare/v0.13.0...HEAD
+[v0.13.0]:
+https://github.com/jthomperoo/predictive-horizontal-pod-autoscaler/compare/v0.12.0...v0.13.0
 [v0.12.0]:
 https://github.com/jthomperoo/predictive-horizontal-pod-autoscaler/compare/v0.11.2...v0.12.0
 [v0.11.2]:

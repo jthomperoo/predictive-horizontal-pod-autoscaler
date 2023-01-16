@@ -15,7 +15,7 @@ is skipped. Defaults set based on the algorithm used, see below.
 For example a value of `1m` would mean the model would only start to apply at the top of the next minute. This is
 useful if you have seasonal data that you need the model synced to, such as Holt-Winters, which allows you to do things
 like making sure the model defines the start of a Holt-Winters season as starting at midnight (with the season being)
-the whole day.
+and lasting the whole day.
 - **resetDuration** - The [duration](https://pkg.go.dev/time#ParseDuration) that the model can go for without recording
 any data before the data is too old and is cleared out. A new start time will be calculated from the `startInterval`
 if it's provided at this point too.

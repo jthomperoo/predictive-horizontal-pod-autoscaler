@@ -31,13 +31,13 @@ k3d cluster create phpa-test-cluster
 
 Installing PHPAs requires you to have installed the PHPA operator first onto your cluster.
 
-In this guide we are using `v0.12.0` of the PHPA operator, but check out the [installation
+In this guide we are using `v0.13.0` of the PHPA operator, but check out the [installation
 guide](./installation.md) for more up to date instructions for later releases.
 
 Run the following commands to install the PHPA operator:
 
 ```bash
-VERSION=v0.12.0
+VERSION=v0.13.0
 HELM_CHART=predictive-horizontal-pod-autoscaler-operator
 helm install ${HELM_CHART} https://github.com/jthomperoo/predictive-horizontal-pod-autoscaler/releases/download/${VERSION}/predictive-horizontal-pod-autoscaler-${VERSION}.tgz
 ```

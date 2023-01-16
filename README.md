@@ -90,7 +90,7 @@ This PHPA acts like a Horizontal Pod Autoscaler and autoscales to try and keep t
 The operator for managing Predictive Horizontal Pod Autoscalers can be installed using Helm:
 
 ```bash
-VERSION=v0.12.0
+VERSION=v0.13.0
 HELM_CHART=predictive-horizontal-pod-autoscaler-operator
 helm install ${HELM_CHART} https://github.com/jthomperoo/predictive-horizontal-pod-autoscaler/releases/download/${VERSION}/predictive-horizontal-pod-autoscaler-${VERSION}.tgz
 ```
