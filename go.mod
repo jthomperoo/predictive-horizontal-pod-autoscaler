@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/cosmtrek/air v1.42.0
 	github.com/google/go-cmp v0.5.9
-	github.com/jthomperoo/k8shorizmetrics/v2 v2.0.0
+	github.com/jthomperoo/k8shorizmetrics/v2 v2.0.1
 	honnef.co/go/tools v0.4.2
 	k8s.io/api v0.26.2
 	k8s.io/apimachinery v0.26.2
@@ -73,7 +73,7 @@ require (
 	k8s.io/component-base v0.26.1 // indirect
 	k8s.io/klog/v2 v2.80.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20221202012554-9a5fe2dc74e8 // indirect
-	k8s.io/metrics v0.25.4 // indirect
+	k8s.io/metrics v0.26.2 // indirect
 	k8s.io/utils v0.0.0-20221128185143-99ec85e7a448 // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.3 // indirect
