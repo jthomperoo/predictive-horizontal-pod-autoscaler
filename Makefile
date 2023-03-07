@@ -18,7 +18,7 @@ deploy: generate
 
 lint: generate
 	@echo "=============Linting============="
-	go run honnef.co/go/tools/cmd/staticcheck@v0.3.3 ./...
+	go run honnef.co/go/tools/cmd/staticcheck@v0.4.2 ./...
 	pylint algorithms --rcfile=.pylintrc
 
 format:
@@ -30,7 +30,7 @@ format:
 test: gotest pytest
 
 gotest:
-	go test ./... -cover -coverprofile unit_cover.out
+	export GOCOVERDIR='.' && go test ./... -cover -coverprofile unit_cover.out
 
 pytest:
 	pytest algorithms/ --cov-report term --cov-report=xml:algorithm_coverage.out --cov-report=html:.algorithm_coverage --cov=algorithms/

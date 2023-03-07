@@ -57,10 +57,21 @@ func TestShellProcess(t *testing.T) {
 func fakeExecCommandAndStart(name string, process process) command {
 	processes[name] = process
 	return func(command string, args ...string) *exec.Cmd {
+		// As of Go 1.20 we need a temporary directory set up to send any coverage that might be generated to
+		dir, err := os.MkdirTemp("", "gotest")
+		if err != nil {
+			panic(err)
+		}
 		cs := []string{"-test.run=TestShellProcess", "--", fmt.Sprintf("-process=%s", name), command}
-		cs = append(cs, args...)
+		argsWithoutCoverage := []string{}
+		for _, arg := range args {
+			if arg != "-cover" {
+				argsWithoutCoverage = append(argsWithoutCoverage, arg)
+			}
+		}
+		cs = append(cs, argsWithoutCoverage...)
 		cmd := exec.Command(os.Args[0], cs...)
-		cmd.Env = []string{"GO_TEST_PROCESS=1"}
+		cmd.Env = []string{"GO_TEST_PROCESS=1", fmt.Sprintf("GOCOVERDIR=%s", dir)}
 		cmd.Start()
 		return cmd
 	}
@@ -69,10 +80,17 @@ func fakeExecCommandAndStart(name string, process process) command {
 func fakeExecCommand(name string, process process) command {
 	processes[name] = process
 	return func(command string, args ...string) *exec.Cmd {
+		// As of Go 1.20 we need a temporary directory set up to send any coverage that might be generated to
+		dir, err := os.MkdirTemp("", "gotest")
+		if err != nil {
+			panic(err)
+		}
 		cs := []string{"-test.run=TestShellProcess", "--", fmt.Sprintf("-process=%s", name), command}
+		fmt.Println("hello world!!")
 		cs = append(cs, args...)
 		cmd := exec.Command(os.Args[0], cs...)
-		cmd.Env = []string{"GO_TEST_PROCESS=1"}
+		cmd.Env = []string{"GO_TEST_PROCESS=1", fmt.Sprintf("GOCOVERDIR=%s", dir)}
+		fmt.Println(os.Args[0])
 		return cmd
 	}
 }
