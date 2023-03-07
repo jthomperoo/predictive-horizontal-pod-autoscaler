@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Changed
+- Upgraded to Go `v1.20`.
+- Upgraded package dependencies.
 
 ## [v0.13.0] - 2023-01-16
 ### Added
