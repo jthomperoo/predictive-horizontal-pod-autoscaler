@@ -56,7 +56,7 @@ jobs:
       env:
         DOCKER_USER: ${{ secrets.DOCKER_USER }}
         DOCKER_PASS: ${{ secrets.DOCKER_PASS }}
-      if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/master' && github.repository == 'jthomperoo/predictive-horizontal-pod-autoscaler' }}
+      if: ${{ github.event_name != 'pull_request' && (github.event_name == 'release' || github.ref == 'refs/heads/master') && github.repository == 'jthomperoo/predictive-horizontal-pod-autoscaler' }}
       run: |
 
         if [ ${{ github.event_name }} == "release" ]; then
@@ -75,7 +75,7 @@ jobs:
         fi
 
     - name: Bundle YAML config
-      if: ${{ github.event_name == 'release' && github.ref == 'refs/heads/master' && github.repository == 'jthomperoo/predictive-horizontal-pod-autoscaler' }}
+      if: ${{ github.event_name == 'release' && github.repository == 'jthomperoo/predictive-horizontal-pod-autoscaler' }}
       run: |
 
         # Variables to sub into k8s templates
@@ -90,7 +90,7 @@ jobs:
         helm package helm/
 
     - name: Deploy helm package
-      if: ${{ github.event_name == 'release' && github.ref == 'refs/heads/master' && github.repository == 'jthomperoo/predictive-horizontal-pod-autoscaler' }}
+      if: ${{ github.event_name == 'release' && github.repository == 'jthomperoo/predictive-horizontal-pod-autoscaler' }}
       uses: Shopify/upload-to-release@1.0.0
       with:
         name: predictive-horizontal-pod-autoscaler-${{ github.ref_name }}.tgz
