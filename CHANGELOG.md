@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [v0.13.2] - 2023-07-01
 ### Changed
 - Upgraded `statsmodels` to `0.14.0`.
 - Upgraded `dataclasses-json` to `0.5.8`.
@@ -171,7 +173,9 @@ Holt-Winters configuration.
 - Added the ability to use Linear Regression models to predict future scaling.
 
 [Unreleased]:
-https://github.com/jthomperoo/predictive-horizontal-pod-autoscaler/compare/v0.13.1...HEAD
+https://github.com/jthomperoo/predictive-horizontal-pod-autoscaler/compare/v0.13.2...HEAD
+[v0.13.2]:
+https://github.com/jthomperoo/predictive-horizontal-pod-autoscaler/compare/v0.13.1...v0.13.2
 [v0.13.1]:
 https://github.com/jthomperoo/predictive-horizontal-pod-autoscaler/compare/v0.13.0...v0.13.1
 [v0.13.0]:
