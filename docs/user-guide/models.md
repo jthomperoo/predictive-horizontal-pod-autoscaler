@@ -130,12 +130,16 @@ models:
         url: "http://tuning/holt_winters"
         successCodes:
           - 200
-        parameterMode: query
+        parameterMode: body
     seasonalPeriods: 6
     storedSeasons: 4
     trend: additive
     seasonal: additive
 ```
+
+> Note this uses the `parameterMode: body` instead of `parameterMode: query`, this is because for large amounts of
+> data the URL generated can become too long and invalid. See
+> [#89](https://github.com/jthomperoo/predictive-horizontal-pod-autoscaler/issues/89).
 
 The hook is defined with the name `runtimeTuningFetchHook`.
 
@@ -173,7 +177,7 @@ models:
         url: "http://tuning/holt_winters"
         successCodes:
           - 200
-        parameterMode: query
+        parameterMode: body
     beta: 0.9
     gamma: 0.9
     seasonalPeriods: 6
@@ -199,7 +203,7 @@ models:
         url: "http://tuning/holt_winters"
         successCodes:
           - 200
-        parameterMode: query
+        parameterMode: body
     alpha: 0.9
     beta: 0.9
     gamma: 0.9
@@ -237,7 +241,7 @@ The data that the external source will recieve will be formatted as:
           "successCodes": [
             200
           ],
-          "parameterMode": "query"
+          "parameterMode": "body"
         }
       },
       "seasonalPeriods": 6,

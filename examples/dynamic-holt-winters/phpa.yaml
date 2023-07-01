@@ -34,7 +34,7 @@ spec:
           url: "http://tuning/holt_winters"
           successCodes:
             - 200
-          parameterMode: query
+          parameterMode: body
       seasonalPeriods: 6
       storedSeasons: 4
       trend: "additive"
