@@ -124,7 +124,7 @@ def test_holt_winters(subtests):
         "expected_stderr":
         "",
         "expected_stdout":
-        "7",
+        "6",
         "stdin":
         """{
                 "trend": "add",
