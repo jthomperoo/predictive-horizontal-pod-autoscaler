@@ -6,44 +6,52 @@
 
 # Predictive Horizontal Pod Autoscaler
 
-Predictive Horizontal Pod Autoscalers (PHPAs) are Horizontal Pod Autoscalers (HPAs) with extra predictive capabilities
-baked in, allowing you to apply statistical models to the results of HPA calculations to make proactive scaling
-decisions.
+Predictive Horizontal Pod Autoscalers (PHPAs) are Horizontal Pod Autoscalers (HPAs) with extra predictive capabilities,
+allowing you to autoscale using statistical models for ahead of time predictions.
 
-This extensively uses the the [jthomperoo/k8shorizmetrics](https://github.com/jthomperoo/k8shorizmetrics) library
-to gather metrics and to evaluate them as the Kubernetes Horizontal Pod Autoscaler does.
+## Why would I use it?
 
-# Why would I use it?
+PHPAs can better scaling results by making proactive decisions to scale up ahead of demand, meaning that a
+resource does not have to wait for performance to degrade before autoscaling kicks in.
 
-PHPAs lets you choose models and fine tune them in order to predict how many replicas a resource should have,
-preempting events such as regular, repeated high load. This allows for proactive rather than simply reactive scaling
-that can make intelligent ahead of time decisions.
+## What systems would need it?
 
-# What systems would need it?
+Any systems that have regular/predictable demand peaks/troughs.
 
-Systems that have predictable changes in load, for example; if over a 24 hour period the load on a resource is
-generally higher between 3pm and 5pm - with enough data and use of correct models and tuning the autoscaler could
-predict this and preempt the load, increasing responsiveness of the system to changes in load. This could be useful for
-handling different userbases across different timezones, or understanding that if a load is rapidly increasing we can
-prempt the load by predicting replica counts.
+Some use cases:
+
+* A service that sees demand peak between 3pm and 5pm every week day, this is a regular and predictable load which
+could be pre-empted.
+* A service which sees a surge in demand at 12pm every day for 10 minutes, this is such a short time interval that
+by the time a regular HPA made the decision to scale up there could already be major performance/availablity issues.
+
+PHPAs are not a silver bullet, and require tuning using real data for there to be any benefits of using it. A poorly
+tuned PHPA could easily end up being worse than a normal HPA.
+
+## How does it work?
+
+This project works by doing the same calculations as the Horizontal Pod Autoscaler does to determine how many replicas
+a resource should have, then applies statistical models against the calculated replica count and the replica history.
+
+## Supported Kubernetes versions
+
+The minimum Kubernetes version the autoscaler can run on is `v1.23` because it relies on the `autoscaling/v2` API which
+was only available in `v1.23` and above.
+
+The autoscaler is only tested against the latest Kubernetes version - if there are bugs that affect older Kubernetes
+versions we will try to fix them, but there is no guarantee of support.
 
 ## Features
 
 * Functionally identical to Horizontal Pod Autoscaler for calculating replica counts without prediction.
 * Choice of statistical models to apply over Horizontal Pod Autoscaler replica counting logic.
-    * Holt-Winters Smoothing
-    * Linear Regression
+  * Holt-Winters Smoothing
+  * Linear Regression
 * Allows customisation of Kubernetes autoscaling options without master node access. Can therefore work on managed
 solutions such as EKS or GCP.
-    * CPU Initialization Period.
-    * Downscale Stabilization.
-    * Sync Period.
-
-## How does it work?
-
-This project works by calculating the number of replicas a resource should have, then storing these values and using
-statistical models against them to produce predictions for the future. These predictions are compared and can be used
-instead of the raw replica count calculated by the Horizontal Pod Autoscaler logic.
+  * CPU Initialization Period.
+  * Downscale Stabilization.
+  * Sync Period.
 
 ## What does a Predictive Horizontal Pod Autoscaler look like?
 
@@ -122,6 +130,9 @@ Any Python dependencies must be installed by running:
 pip install -r requirements-dev.txt
 ```
 
+This extensively uses the the [jthomperoo/k8shorizmetrics](https://github.com/jthomperoo/k8shorizmetrics) library
+to gather metrics and to evaluate them as the Kubernetes Horizontal Pod Autoscaler does.
+
 It is recommended to test locally using a local Kubernetes managment system, such as
 [k3d](https://github.com/rancher/k3d) (allows running a small Kubernetes cluster locally using Docker).
 
@@ -134,5 +145,5 @@ You can deploy a PHPA example (see the [`examples/` directory](./examples) for c
 * `make lint` - lints the code.
 * `make format` - beautifies the code, must be run to pass the CI.
 * `make test` - runs the unit tests.
-* `make doc` - hosts the documentation locally, at `127.0.0.1:8000`.
+* `make doc` - hosts the documentation locally at <https://localhost:8000>.
 * `make coverage` - opens up any generated coverage reports in the browser.

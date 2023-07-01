@@ -10,10 +10,10 @@ example](https://github.com/jthomperoo/predictive-horizontal-pod-autoscaler/tree
 
 This guide requires the following tools installed:
 
-- [kubectl](https://kubernetes.io/docs/tasks/tools/#kubectl) == `v1.X`
-- [helm](https://helm.sh/docs/intro/install/) == `v3.X`
-- [k3d](https://k3d.io/#installation) == `v4.X`
-- [jq](https://stedolan.github.io/jq/) >= `1.6`
+- [kubectl](https://kubernetes.io/docs/tasks/tools/#kubectl) == `v1`
+- [helm](https://helm.sh/docs/intro/install/) == `v3`
+- [k3d](https://k3d.io/#installation) == `v5`
+- [jq](https://stedolan.github.io/jq/) >= `v1.6`
 
 ## Set up the cluster
 
