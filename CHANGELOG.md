@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Changed
+- Upgraded `statsmodels` to `0.14.0`.
+- Upgraded `dataclasses-json` to `0.5.8`.
 
 ## [v0.13.1] - 2023-03-07
 ### Changed

@@ -105,7 +105,8 @@ model = sm.ExponentialSmoothing(algorithm_input.series,
 
 fitted_model = model.fit(smoothing_level=algorithm_input.alpha,
                          smoothing_trend=algorithm_input.beta,
-                         smoothing_seasonal=algorithm_input.gamma)
+                         smoothing_seasonal=algorithm_input.gamma,
+                         optimized=False)
 
 # Predict the value one ahead
 print(math.ceil(fitted_model.forecast(steps=1)[0]), end="")

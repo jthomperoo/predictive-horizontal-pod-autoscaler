@@ -1,2 +1,2 @@
-statsmodels==0.13.2
-dataclasses-json==0.5.7
+statsmodels==0.14.0
+dataclasses-json==0.5.8
